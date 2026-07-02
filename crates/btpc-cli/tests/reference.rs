@@ -7,6 +7,12 @@ fn btpc() -> Command {
     Command::cargo_bin("btpc").unwrap()
 }
 
+fn normalized_help(output: &[u8]) -> String {
+    String::from_utf8_lossy(output)
+        .replace("\r\n", "\n")
+        .replace("btpc.exe", "btpc")
+}
+
 // Spec: CLI-DOC-001
 #[test]
 fn completions_and_manpage_are_generated_from_the_cli_definition() {
@@ -97,8 +103,8 @@ fn checked_in_help_reference_matches_the_binary() {
         let output = btpc().args(arguments).output().unwrap();
         assert!(output.status.success());
         assert_eq!(
-            output.stdout,
-            fs::read(root.join(name)).unwrap(),
+            normalized_help(&output.stdout),
+            fs::read_to_string(root.join(name)).unwrap(),
             "stale help reference {name}"
         );
     }
