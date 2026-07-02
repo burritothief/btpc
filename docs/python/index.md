@@ -149,7 +149,7 @@ exception from a callback cancels the core operation before propagating.
 
 The extension itself currently requires the GIL, including on free-threaded
 CPython builds. Subinterpreters are rejected by PyO3 and are not supported; see
-the [compatibility guide](compatibility.md#python-runtime-model).
+the [compatibility guide](../compatibility.md#python-runtime-model).
 
 ## Errors
 

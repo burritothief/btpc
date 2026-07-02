@@ -7,18 +7,48 @@ repo_url: https://github.com/burritothief/btpc
 edit_uri: edit/main/docs/
 use_directory_urls: true
 strict: true
+exclude_docs: |
+  overrides/
 
 nav:
   - Home: index.md
-  - CLI Guide: cli.md
-  - Python API Guide: python-api.md
-  - Rust API Guide: rust-api.md
+  - Getting Started:
+      - Overview: getting-started/index.md
+      - Installation: getting-started/installation.md
+      - CLI Quick Start: getting-started/cli.md
+      - Python Quick Start: getting-started/python.md
+      - Rust Quick Start: getting-started/rust.md
+  - Guides:
+      - Overview: guides/index.md
+      - Creating Torrents: guides/creating.md
+      - Inspecting and Validating: guides/inspecting-validating.md
+      - Verifying Payloads: guides/verifying.md
+      - Editing Metainfo: guides/editing.md
+      - Configuration and Presets: guides/configuration-presets.md
+  - Concepts:
+      - Overview: concepts/index.md
+      - BitTorrent v1: concepts/v1.md
+      - BitTorrent v2: concepts/v2.md
+      - Hybrid Torrents: concepts/hybrid.md
+      - Piece Length: concepts/piece-length.md
+      - Reproducibility and Bytes: concepts/reproducibility-bytes.md
+  - CLI:
+      - Overview: cli/index.md
+      - Configuration: cli/configuration.md
+      - Shell Completion: cli/completion.md
+  - Python:
+      - Overview: python/index.md
+      - Examples: python/examples.md
+  - Rust:
+      - Overview: rust/index.md
+  - Performance: performance.md
   - Compatibility: compatibility.md
   - Security: security.md
-
+  - Contributing: contributing.md
 theme:
   name: material
   language: en
+  custom_dir: docs/overrides
   font: false
   features:
     - navigation.indexes
@@ -31,10 +61,16 @@ theme:
       scheme: default
       primary: indigo
       accent: indigo
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
       primary: indigo
       accent: indigo
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
 
 plugins:
   - search
@@ -66,3 +102,19 @@ markdown_extensions:
       custom_checkbox: true
 
 copyright: Copyright &copy; 2026 Jeff. Licensed under MIT.
+
+extra_css:
+  - stylesheets/extra.css
+
+extra:
+  generator: false
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/burritothief/btpc
+      name: BTPC source repository
+    - icon: material/bug
+      link: https://github.com/burritothief/btpc/issues
+      name: Report a BTPC issue
+    - icon: material/license
+      link: https://github.com/burritothief/btpc/blob/main/LICENSE
+      name: MIT License

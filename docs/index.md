@@ -11,9 +11,9 @@ raw protocol bytes where identity matters.
 
 ## Start here
 
-- Follow the [CLI guide](cli.md) to create and inspect torrents from a terminal.
-- Use the [Python API guide](python-api.md) for typed creation, parsing, editing,
+- Follow the [CLI guide](cli/index.md) to create and inspect torrents from a terminal.
+- Use the [Python API guide](python/index.md) for typed creation, parsing, editing,
   magnet generation, and verification.
-- Read the [Rust API guide](rust-api.md) to embed `btpc-core`.
+- Read the [Rust API guide](rust/index.md) to embed `btpc-core`.
 - Review [compatibility](compatibility.md) and [security](security.md) policies before
   publishing or integrating BTPC.

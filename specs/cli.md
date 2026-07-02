@@ -6,7 +6,7 @@ owners:
   - "CLI maintainers"
 source_paths:
   - "crates/btpc-cli/src"
-  - "docs/cli.md"
+  - "docs/cli/index.md"
 test_paths:
   - "crates/btpc-cli/tests"
 last_reviewed: "2026-07-01"
@@ -29,7 +29,7 @@ The `btpc` binary **MUST** provide `create`, `inspect`, `validate`, `verify`,
 ### CLI-DOC-001 — Generate reference artifacts from the command model
 
 - **Status:** Implemented
-- **Sources:** `crates/btpc-cli/src/command/mod.rs`, `crates/btpc-cli/src/reference.rs`, `docs/cli.md`, `docs/reference`, `docs/completions`
+- **Sources:** `crates/btpc-cli/src/command/mod.rs`, `crates/btpc-cli/src/reference.rs`, `docs/cli/index.md`, `docs/reference`, `docs/completions`
 - **Verification:** `crates/btpc-cli/tests/reference.rs`, `crates/btpc-cli/tests/documentation.rs`
 - **Depends on:** `CLI-CMD-001`
 
@@ -288,7 +288,7 @@ and file attributes without reading or rehashing payload files. Reserved fields
 ### CLI-COMPLETE-001 — Generate and install shell integration safely
 
 - **Status:** Implemented
-- **Sources:** `crates/btpc-cli/src/command/mod.rs`, `crates/btpc-cli/src/reference.rs`, `docs/cli.md`
+- **Sources:** `crates/btpc-cli/src/command/mod.rs`, `crates/btpc-cli/src/reference.rs`, `docs/cli/index.md`
 - **Verification:** `crates/btpc-cli/tests/completion.rs`, `crates/btpc-cli/tests/reference.rs`
 - **Depends on:** `CLI-DOC-001`, `RELEASE-CLI-DOC-001`
 

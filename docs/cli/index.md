@@ -1,7 +1,7 @@
 # CLI Guide
 
 `btpc` is a thin adapter over `btpc-core`. Run `btpc --help` or use the checked-in
-[reference](reference/btpc.txt). Generated completion files and the manual page
+[reference](../reference/btpc.txt). Generated completion files and the manual page
 are outputs of the same Clap command definition used by the executable.
 
 ## Commands
@@ -225,4 +225,5 @@ directories, creates only the required parent directories, writes atomically, an
 never edits shell startup files. Existing unrelated files require `--force`, and
 uninstall removes only BTPC-marked content. The hidden `completions SHELL` alias is
 retained for compatibility for one minor release. Pre-generated artifacts live in
-[`completions/`](completions/) and [`reference/btpc.1`](reference/btpc.1).
+the [shell completion guide](completion.md) and
+[`reference/btpc.1`](../reference/btpc.1).

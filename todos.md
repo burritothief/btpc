@@ -4473,8 +4473,8 @@ remain adapters over `btpc-core` throughout.
    - CLI generation and rustdoc stages intentionally validate their current source
      inputs only; Todos 99 and 100 replace them with fresh generated-site content.
 
-97. [ ] Build the production information architecture and accessible Material theme
-   Claimed by:
+97. [x] Build the production information architecture and accessible Material theme
+   Claimed by: Codex implementer (2026-07-02 14:15 PDT)
    Requirements:
    `DOCSITE-ARCH-001`, `DOCSITE-UX-001`, `DOCSITE-BUILD-001`, `TEST-TDD-001`.
    Context:
@@ -4514,7 +4514,31 @@ remain adapters over `btpc-core` throughout.
    copy, narrow viewport layout, and the 404 page. Record screenshots or precise
    observations without committing temporary captures. Run spec validation.
    Evidence:
+   - TDD navigation/content baseline: `uv run pytest
+     tests/docs/test_information_architecture.py -q` initially reported 2 failed,
+     1 passed before the production navigation, pages, and theme were added; the
+     retained suite now reports 3 passed.
+   - `uv run pytest tests/docs -q` reports 8 passed, including generated-HTML
+     checks for titles, one H1, image alt text, local runtime assets, viewport,
+     search, palettes, code-copy configuration, announcement, and the deployed
+     root `404.html`.
+   - `make docs-site` completes the strict deterministic build; `uv run python
+     scripts/check_docs.py` validates links in 58 Markdown files; `uv run
+     codespell docs --skip='docs/completions/*,docs/reference/*'`, targeted Ruff
+     lint/format checks, and `git diff --check` pass.
+   - `uv run python scripts/check_specs.py` validates 16 specs and 118
+     requirements after the public CLI, Python, and Rust documentation paths were
+     updated to their production locations.
+   - An HTTP smoke server mounted the generated site at `/btpc/`; the home page,
+     local Material CSS, search index, and custom `/btpc/404.html` returned 200,
+     while generated markup exposed the responsive viewport, search and palette
+     controls, and development notice. The stylesheet contains narrow-layout
+     media rules, keyboard-visible focus styles, and reduced-motion handling.
    Notes:
+   - The in-app browser backend was unavailable: documented browser discovery
+     returned no browsers. Generated-HTML inspection and direct HTTP requests
+     supplied precise smoke observations instead; no temporary captures were
+     committed.
 
 98. [ ] Generate a complete Python API reference from public btpc modules
    Claimed by:

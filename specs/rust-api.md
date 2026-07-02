@@ -6,7 +6,7 @@ owners:
   - "API maintainers"
 source_paths:
   - "crates/btpc-core/src/lib.rs"
-  - "docs/rust-api.md"
+  - "docs/rust/index.md"
   - "crates/btpc-core/src/error.rs"
 test_paths:
   - "crates/btpc-core/tests"
@@ -59,7 +59,7 @@ against the latest accepted release baseline.
 ### RUSTAPI-DOC-001 — Keep guide examples executable
 
 - **Status:** Implemented
-- **Sources:** `README.md`, `docs/rust-api.md`
+- **Sources:** `README.md`, `docs/rust/index.md`
 - **Verification:** `crates/btpc-core/tests/documentation.rs`, Rust doctests
 - **Depends on:** `RUSTAPI-FACADE-001`
 

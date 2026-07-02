@@ -48,13 +48,16 @@ def _stage_mkdocs(output: Path) -> None:
 
 
 def _stage_rustdoc() -> None:
-    required = ROOT / "docs/rust-api.md"
+    required = ROOT / "docs/rust/index.md"
     if not required.is_file():
         message = f"missing Rust documentation landing page: {required}"
         raise RuntimeError(message)
 
 
 def _stage_validate(output: Path) -> None:
+    custom_not_found = output / "404/index.html"
+    if custom_not_found.is_file():
+        shutil.copyfile(custom_not_found, output / "404.html")
     for relative in ("index.html", "404.html"):
         if not (output / relative).is_file():
             message = f"generated documentation is missing {relative}"

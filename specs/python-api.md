@@ -8,7 +8,7 @@ source_paths:
   - "crates/btpc-python/src/lib.rs"
   - "python/btpc/__init__.py"
   - "python/btpc/_native.pyi"
-  - "docs/python-api.md"
+  - "docs/python/index.md"
 test_paths:
   - "tests/python/test_import.py"
   - "tests/python/test_create.py"
@@ -79,7 +79,7 @@ would be lossy.
 ### PYAPI-DOC-001 — Keep public examples executable
 
 - **Status:** Implemented
-- **Sources:** `README.md`, `docs/python-api.md`
+- **Sources:** `README.md`, `docs/python/index.md`
 - **Verification:** `tests/python/test_documentation.py`, `scripts/smoke_wheel.py`
 - **Depends on:** `PYAPI-PARITY-001`, `PYAPI-TYPES-001`
 
