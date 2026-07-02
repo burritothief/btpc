@@ -1230,8 +1230,8 @@ remain adapters over `btpc-core` throughout.
      remains intentionally manual until the PyPI project, trusted publisher, GitHub
      environment, and package ownership are configured.
 
-36. [ ] Run the release-candidate correctness and performance gate
-   Claimed by:
+36. [x] Run the release-candidate correctness and performance gate
+   Claimed by: Codex implementer (2026-07-01 22:52 PDT)
    Context:
    The project should not claim high performance or stable support until the final
    artifacts pass protocol, interoperability, API, and benchmark gates together.
@@ -1259,15 +1259,23 @@ remain adapters over `btpc-core` throughout.
    60-second fuzz targets, the standard competitor matrix, and the Criterion
    regression gate. Final macOS arm64 artifact hashes and raw benchmark paths are
    frozen in the report.
+   - Hosted PR CI passed every required Rust, Python, dependency-policy, wheel,
+     coverage, and Rust/Python CodeQL check on pull request #1:
+     `https://github.com/burritothief/btpc/pull/1`.
+   - The non-publishing release workflow passed all 30 jobs, including CPython
+     3.11-3.14 wheels for Linux x86_64/aarch64, macOS x86_64/aarch64, and Windows
+     x86_64; five native CLI archives; the Python sdist; source archive; public API
+     compatibility; clean artifact validation; and aggregate checksums. The
+     34,851,118-byte assembled candidate is retained as
+     `release-candidate-0.1.0`:
+     `https://github.com/burritothief/btpc/actions/runs/28567226819`.
+   - The complete five-target hosted fuzz campaign ran for 26 minutes without a
+     crash after building each target with nightly Rust and ASan on GNU libc:
+     `https://github.com/burritothief/btpc/actions/runs/28567529151`.
    Notes:
-   Blocked on the required remote CI and release-workflow artifact matrix. As of
-   2026-07-02, `origin` points to private `burritothief/btpc`, but GitHub reports an
-   empty default branch and no workflow runs or pull requests. Completing this gate
-   requires publishing a reviewed revision and triggering hosted release jobs; no
-   commit or push was authorized. Todo 59 resolved
-   the previously recorded Cargo license warning: workspace metadata now reports
-   SPDX `MIT`, Cargo dependency-license policy passes, and built Cargo packages
-   contain the standard project license.
+   - Publishing remained disabled (`publish=false`); attestation, PyPI upload, and
+     draft-release jobs were correctly skipped. Todo 59 resolved the prior Cargo
+     license warning: workspace metadata and all packaged artifacts use SPDX `MIT`.
 
 37. [x] [Review] Correct the BEP 52 Merkle padding contract before v2 implementation
    Claimed by: Codex implementer (2026-07-01 15:33 PDT)
@@ -1648,8 +1656,8 @@ remain adapters over `btpc-core` throughout.
    Notes:
    - Local Git installation verification is complete.
 
-45. [ ] Consolidate and harden pull-request GitHub Actions quality gates
-   Claimed by:
+45. [x] Consolidate and harden pull-request GitHub Actions quality gates
+   Claimed by: Codex implementer (2026-07-01 22:52 PDT)
    Context:
    Todo 3 creates the initial `.github/workflows/ci.yml`; this follow-up must audit
    the completed workflow instead of replacing its intent. Pull requests should
@@ -1709,15 +1717,25 @@ remain adapters over `btpc-core` throughout.
      41/41, specifications 15/74, links across 30 Markdown files, and cargo-deny.
      `CONTRIBUTING.md` records the exact 13 required check names and recommended
      branch-protection settings.
+   - Pull request #1 exercised all 13 documented required contexts plus Dependency
+     Review, coverage, and Rust/Python CodeQL. The final candidate passed Linux,
+     macOS, Windows, MSRV, CPython 3.11-3.14, repository, API, dependency, and
+     clean-wheel jobs: `https://github.com/burritothief/btpc/pull/1` and
+     `https://github.com/burritothief/btpc/actions/runs/28567029414`.
+   - Superseding pushes cancelled stale Coverage and CodeQL executions, while
+     platform-specific Windows failures remained independently visible and were
+     corrected before merge. Hosted job permissions showed read-only contents and
+     metadata access; checkout credentials were removed and no build job used a
+     write token or `pull_request_target`.
+   - `main` branch protection now requires the exact 13 documented contexts with
+     strict/current-branch enforcement, one approval, stale-review dismissal, and
+     conversation resolution; force pushes and deletion are disabled.
    Notes:
-   - Blocked on remote-only acceptance evidence. As of 2026-07-02, the private
-     `burritothief/btpc` remote exists but has no default branch, workflow runs, or
-     pull requests. Cancellation, fork-token permissions, effective hosted-run
-     permissions, and matrix visibility require a published test PR; no commit or
-     push was authorized. Local workflow syntax/security and job commands are green.
+   - PR #1 merged as `cd9bf52be48d880c8355d8501b161a8c1d7beef3` after every
+     hosted check passed; subsequent `main` CI also passed.
 
-46. [ ] Add open-source security, dependency, coverage, and maintenance automation
-   Claimed by:
+46. [x] Add open-source security, dependency, coverage, and maintenance automation
+   Claimed by: Codex implementer (2026-07-01 22:52 PDT)
    Context:
    Test CI alone does not cover vulnerable dependency changes, static security
    analysis, workflow supply-chain risk, stale dependency pins, or repository
@@ -1785,14 +1803,28 @@ remain adapters over `btpc-core` throughout.
      project gate passed: rustfmt, strict Clippy, Nextest 131/131, doctest 1/1,
      strict rustdoc, Ruff, mypy, pytest 41/41, specs 15/74, links across 31
      Markdown files, and cargo-deny.
+   - Hosted Dependency Review passed on pull request #1:
+     `https://github.com/burritothief/btpc/actions/runs/28567029435`. Rust and
+     Python CodeQL passed on the final PR and on `main`:
+     `https://github.com/burritothief/btpc/actions/runs/28567528057`.
+   - OpenSSF Scorecard completed successfully with SARIF upload on `main`:
+     `https://github.com/burritothief/btpc/actions/runs/28567528053`. Informational
+     Rust/Python coverage passed and retained the combined evidence artifact
+     `coverage-28567528045-1`:
+     `https://github.com/burritothief/btpc/actions/runs/28567528045`.
+   - The manually dispatched maintenance workflow passed documentation and spelling
+     checks: `https://github.com/burritothief/btpc/actions/runs/28567389376`.
+     The dependency/toolchain refresh audit passed policy, Clippy, Rust/Python
+     tests, and retained `dependency-refresh-review-28567227613-1`:
+     `https://github.com/burritothief/btpc/actions/runs/28567227613`.
+   - Dependabot executed successful Cargo, uv, and GitHub Actions update audits on
+     the published default branch. Vulnerability alerts, security updates, private
+     vulnerability reporting, secret scanning, and push protection are enabled;
+     branch protection requires review and all documented CI contexts.
    Notes:
-   - Blocked on hosted-only acceptance evidence. As of 2026-07-02, the private
-     `burritothief/btpc` remote has no default branch, workflow runs, or pull
-     requests, so Dependency Review, Rust/Python CodeQL,
-     Scorecard SARIF, coverage artifacts/summaries, scheduled maintenance runs,
-     Dependabot-created pull requests, and their required workflow URLs cannot be
-     triggered or inspected. Publishing and hosted execution were not authorized;
-     all local schemas, security lint, commands, pins, and dry runs are green.
+   - The repository is public under MIT. Dependabot found no dependency changes
+     requiring a pull request in the current locked manifests; all three ecosystem
+     audit runs completed successfully instead.
 
 47. [x] Build the benchmark harness foundation and canonical ISO preflight
    Claimed by: Codex implementer (2026-07-01 16:05 PDT)
