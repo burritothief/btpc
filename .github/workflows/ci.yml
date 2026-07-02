@@ -80,6 +80,8 @@ jobs:
       - name: Install and smoke-test wheel outside the source tree
         run: |
           uv venv --python 3.11 "$RUNNER_TEMP/btpc-wheel-venv"
-          uv pip install --python "$RUNNER_TEMP/btpc-wheel-venv/bin/python" target/wheels/*.whl
+          wheel=$(find target/wheels -name '*manylinux*.whl' -print -quit)
+          test -n "$wheel"
+          uv pip install --python "$RUNNER_TEMP/btpc-wheel-venv/bin/python" "$wheel"
           cd "$RUNNER_TEMP"
           "$RUNNER_TEMP/btpc-wheel-venv/bin/python" "$GITHUB_WORKSPACE/scripts/smoke_wheel.py" "$RUNNER_TEMP/btpc-wheel-smoke"
