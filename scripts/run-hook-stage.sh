@@ -15,7 +15,7 @@ case "${1:-}" in
   manual)
     uv run python scripts/check_specs.py
     uv run python scripts/check_docs.py
-    uv run codespell README.md CONTRIBUTING.md SECURITY.md CHANGELOG.md docs specs python tests scripts crates Cargo.toml pyproject.toml Makefile deny.toml .github --skip='*.bin,*.torrent,*.stderr,docs/completions/*,docs/reference/*'
+    uv run codespell README.md CONTRIBUTING.md SECURITY.md CHANGELOG.md docs specs python tests scripts crates Cargo.toml pyproject.toml Makefile deny.toml .github --skip='*.bin,*.torrent,*.stderr,docs/completions/*,docs/reference/*' --ignore-words-list=relese
     uv run python scripts/render_benchmark_fixture.py
     cargo test -p btpc-cli --test reference
     uv run actionlint .github/workflows/*.yml

@@ -7,7 +7,7 @@ fuzz_target!(|data: &[u8]| {
     let Ok(parsed) = parse(data) else {
         return;
     };
-    let Ok(owned) = to_owned(&parsed) else {
+    let Some(owned) = to_owned(&parsed) else {
         return;
     };
     let encoded = owned.to_vec().expect("Vec writes cannot fail");
@@ -15,22 +15,23 @@ fuzz_target!(|data: &[u8]| {
     parse(&encoded).expect("owned encoding reparses");
 });
 
-fn to_owned(value: &Value<'_>) -> btpc_core::Result<OwnedValue> {
+fn to_owned(value: &Value<'_>) -> Option<OwnedValue> {
     match value.kind() {
-        ValueKind::Integer(value) => Ok(OwnedValue::integer(*value)),
-        ValueKind::Bytes(bytes) => Ok(OwnedValue::bytes(bytes.to_vec())),
+        ValueKind::Integer(value) => value.to_i64().map(OwnedValue::integer),
+        ValueKind::Bytes(bytes) => Some(OwnedValue::bytes(bytes.to_vec())),
         ValueKind::List(values) => values
             .iter()
             .map(to_owned)
-            .collect::<btpc_core::Result<Vec<_>>>()
+            .collect::<Option<Vec<_>>>()
             .map(OwnedValue::list),
-        ValueKind::Dictionary(entries) => OwnedValue::dictionary(
-            entries
+        ValueKind::Dictionary(entries) => {
+            let entries = entries
                 .iter()
                 .map(|(key, value): &(ByteString<'_>, Value<'_>)| {
                     to_owned(value).map(|value| (key.bytes().to_vec(), value))
                 })
-                .collect::<btpc_core::Result<Vec<_>>>()?,
-        ),
+                .collect::<Option<Vec<_>>>()?;
+            OwnedValue::dictionary(entries).ok()
+        }
     }
 }
