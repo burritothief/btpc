@@ -11,6 +11,7 @@ import btpc.errors
 import btpc.metainfo
 import btpc.types
 import btpc.verification
+import pytest
 
 
 # Spec: PYAPI-PACKAGE-001
@@ -80,6 +81,10 @@ def test_public_modules_import_independently() -> None:
         subprocess.run([sys.executable, "-c", script], check=True)  # noqa: S603
 
 
+@pytest.mark.skipif(
+    sys.version_info < (3, 14),
+    reason="rejection is enforceable through the supported CPython 3.14 API",
+)
 def test_second_subinterpreter_import_is_rejected() -> None:
     script = """
 import btpc._native
