@@ -4888,8 +4888,8 @@ remain adapters over `btpc-core` throughout.
      pushed. If Pages repository settings reject deployment, Todo 104 retains the
      owner-setting and first-production verification work.
 
-103. [ ] Add documentation discoverability, package metadata, and maintainer runbooks
-   Claimed by:
+103. [x] Add documentation discoverability, package metadata, and maintainer runbooks
+   Claimed by: Codex implementer (2026-07-02 15:10 PDT)
    Requirements:
    `DOCSITE-ARCH-001`, `DOCSITE-UX-001`, `DOCSITE-OPS-001`,
    `RELEASE-VERSION-001`.
@@ -4925,7 +4925,42 @@ remain adapters over `btpc-core` throughout.
    unsupported docs.rs claims. Confirm generated pages include the canonical Pages
    URL, sitemap, edit links, license link, and development-docs label.
    Evidence:
+   - Added `tests/docs/test_documentation_metadata.py` first; its initial run
+     reported 3 failures for stale Cargo ownership, absent README/runbook links,
+     and missing generated edit/license expectations. The retained suite now
+     reports 3 passed and validates Cargo/Python metadata, README and site
+     discoverability, operations/release guidance, canonical/sitemap output, edit
+     links, and license links.
+   - Corrected Cargo workspace and all three package metadata fields to
+     `https://github.com/burritothief/btpc` plus the canonical Pages homepage and
+     documentation URL. `cargo metadata --no-deps --format-version 1` confirms the
+     same repository, homepage, and documentation values for every package.
+   - Added canonical Python `Project-URL` entries for Documentation, Homepage,
+     Issues, Repository, and Source. A CPython 3.14 release wheel and source
+     distribution built with Maturin; both generated METADATA/PKG-INFO files contain
+     all five expected URLs.
+   - Added prominent README Documentation/Source/Issues links, a Documentation
+     footer link, edit-page controls, and a documentation release checklist. The
+     complete generated site contains canonical URLs, `sitemap.xml`, repository
+     edit links, license links, and the current-`main` development label.
+   - Added documentation operations guidance covering locked prerequisites, local
+     preview and strict validation, generated-source ownership, Pages source and
+     `github-pages` environment settings, manual `workflow_dispatch`, deployment
+     inspection, project-subpath/404 debugging, artifact inspection, and rollback
+     through a known-good commit without a `gh-pages` branch or secret.
+   - Corrected stale `btpc-dev/btpc` release links in `CHANGELOG.md`; regression
+     tests and repository search find no stale owner URLs outside historical todo
+     context, no localhost production URLs, and no unsupported live btpc docs.rs
+     claim.
+   - The README CLI tour test passes for every mode, Python docstring tests report
+     6 passed, and `make docs-check` reports 37 docs tests, 398 files, 186 HTML
+     pages, 12,496,194 uncompressed bytes, and 3,233,654 normalized gzip bytes.
+     Link validation covers 92 Markdown files and spec validation reports 16 specs
+     and 118 requirements.
    Notes:
+   - The first live workflow run built the site successfully but GitHub Pages was
+     not enabled; Todo 104 owns that one-time repository setting and production
+     verification.
 
 104. [ ] Enable GitHub Pages and verify the first production deployment end to end
    Claimed by:

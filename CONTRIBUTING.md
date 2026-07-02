@@ -83,6 +83,40 @@ normalized gzip bytes. The baseline recorded on July 2, 2026 is 12,295,435 and
 3,195,405 bytes respectively. Increase either budget only with measured artifact
 evidence recorded in the relevant todo or review.
 
+### Documentation operations
+
+Prerequisites are the pinned Rust toolchain, uv, and the locked dependency groups:
+
+```console
+uv sync --all-groups --locked
+make docs-check
+make docs-serve
+```
+
+The preview is served under the `/btpc/` project subpath. A root-relative asset,
+incorrect canonical URL, or copied `404.html` that resolves above that project
+subpath will fail generated-site QA. Inspect `site/` after `make docs-site` when a
+page, asset, search index, sitemap, or custom 404 behaves differently in preview.
+Generated HTML is disposable; fix handwritten Markdown, Python docstrings, Rust
+rustdoc, the Clap command model, or the builder instead.
+
+One-time repository administration uses **Settings → Pages → Source: GitHub
+Actions**. The `github-pages` environment must permit deployments only from the
+default `main` branch without mandatory human approval. Normal pushes deploy
+automatically; maintainers can use the `workflow_dispatch` control on the
+Documentation workflow to rebuild a known commit. Review the workflow run and the
+`github-pages` environment deployment status before announcing recovery.
+
+**Rollback:** revert or reset the source through the normal reviewed
+workflow to a known-good commit and manually dispatch the Documentation workflow
+for that commit. Do not create a `gh-pages` branch, hand-upload `site/`, or add a
+deployment token. If deployment fails, first distinguish a successful build from
+Pages source/environment rejection, then verify the uploaded artifact structure
+and the project subpath/404 behavior locally.
+
+The release checklist is maintained in
+[`docs/release-checklist.md`](docs/release-checklist.md).
+
 ### Required pull-request checks
 
 Protect `main` by requiring a pull request, one approving review, dismissal of

@@ -5,6 +5,10 @@ a native `btpc` CLI and typed Python bindings. It reads, validates, creates,
 inspects, edits, writes, generates magnets for, and verifies v1, v2, and hybrid
 metainfo. It is not a downloader, peer, tracker, DHT node, or payload editor.
 
+**[Documentation](https://burritothief.github.io/btpc/)** ·
+**[Source](https://github.com/burritothief/btpc)** ·
+**[Issues](https://github.com/burritothief/btpc/issues)**
+
 ## Installation
 
 BTPC is pre-1.0 and is not published yet. Build the CLI from a checkout with the

@@ -84,7 +84,9 @@ nav:
   - Performance: performance.md
   - Compatibility: compatibility.md
   - Security: security.md
-  - Contributing: contributing.md
+  - Contributing:
+      - Guide: contributing.md
+      - Release Checklist: release-checklist.md
 theme:
   name: material
   language: en
@@ -96,6 +98,7 @@ theme:
     - search.highlight
     - search.suggest
     - content.code.copy
+    - content.action.edit
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
@@ -154,6 +157,9 @@ extra_css:
 extra:
   generator: false
   social:
+    - icon: material/book-open-page-variant
+      link: https://burritothief.github.io/btpc/
+      name: Documentation
     - icon: fontawesome/brands/github
       link: https://github.com/burritothief/btpc
       name: BTPC source repository

@@ -19,5 +19,5 @@ breaking changes documented in their release notes.
   native CLI, typed Python bindings, interoperability fixtures, fuzzing, and
   reproducible benchmark infrastructure.
 
-[Unreleased]: https://github.com/btpc-dev/btpc/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/btpc-dev/btpc/releases/tag/v0.1.0
+[Unreleased]: https://github.com/burritothief/btpc/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/burritothief/btpc/releases/tag/v0.1.0
