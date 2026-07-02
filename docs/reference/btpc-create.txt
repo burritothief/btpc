@@ -1,0 +1,110 @@
+Create canonical v1, v2, or hybrid metainfo from a file or directory
+
+Usage: btpc create [OPTIONS] [INPUTS]...
+
+Arguments:
+  [INPUTS]...  Payload files or directories
+
+Options:
+      --batch <BATCH>
+          Versioned TOML batch manifest
+      --config <PATH>
+          Use this configuration file when configuration loading is enabled
+      --mode <MODE>
+          Torrent protocol representation [possible values: v1, v2, hybrid]
+      --no-config
+          Disable implicit and environment-selected configuration
+      --color <COLOR>
+          Control colored terminal output [possible values: auto, always, never]
+  -o, --output <OUTPUT>
+          Destination .torrent path (defaults beside the payload)
+      --output-dir <OUTPUT_DIR>
+          
+  -v, --verbose...
+          Increase diagnostic verbosity; may be repeated
+      --jobs <JOBS>
+          [default: 1]
+  -q, --quiet
+          Suppress human summaries, warnings, and progress
+      --fail-fast
+          
+  -f, --force
+          Replace an existing destination
+      --durable
+          Sync the destination directory after atomic publication where supported
+      --preset <PRESETS>
+          Apply a named creation preset; may be repeated
+      --piece-length <PIECE_LENGTH>
+          Explicit piece length in bytes
+      --target-pieces <TARGET_PIECES>
+          
+      --max-piece-length <MAX_PIECE_LENGTH>
+          
+  -a, --tracker <TRACKERS>
+          Add a tracker as its own tier; may be repeated
+      --clear-trackers
+          Clear configured and preset trackers before CLI additions
+      --tracker-tier <TRACKER_TIER>
+          Add one comma-separated tracker tier; may be repeated
+      --tracker-alias <TRACKER_ALIASES>
+          
+      --tracker-group <TRACKER_GROUPS>
+          
+      --web-seed <WEB_SEEDS>
+          Add a web seed URL; may be repeated
+      --clear-web-seeds
+          Clear configured and preset web seeds before CLI additions
+      --node <NODES>
+          Add a DHT node as HOST:PORT; may be repeated
+      --private
+          Set the private flag
+      --public
+          
+      --source <SOURCE>
+          Set the source field
+      --clear-source
+          
+      --comment <COMMENT>
+          Set the top-level comment
+      --clear-comment
+          
+      --created-by <CREATED_BY>
+          Set the creator string
+      --no-created-by
+          Omit the creator string instead of using the versioned default
+      --creation-date <CREATION_DATE>
+          Include an explicit Unix creation timestamp
+      --entropy <ENTROPY>
+          
+      --name <NAME>
+          Override the torrent root name
+      --exclude-hidden
+          Exclude dot-prefixed files and directories
+      --symlinks <SYMLINKS>
+          Symbolic-link policy [possible values: reject, skip, follow]
+      --special-files <SPECIAL_FILES>
+          Special-file policy [possible values: reject, skip]
+      --exclude-empty-files
+          Exclude zero-length files
+      --reject-empty-directories
+          Reject empty directories instead of ignoring them
+      --include <INCLUDES>
+          Include only paths matching this glob; may be repeated
+      --clear-includes
+          Clear configured and preset include patterns before CLI additions
+      --exclude <EXCLUDES>
+          Exclude paths matching this glob; may be repeated
+      --clear-excludes
+          Clear configured and preset exclude patterns before CLI additions
+      --threads <THREADS>
+          v1 hashing threads; 0 selects a conservative automatic count, 1 is sequential
+      --dry-run
+          
+      --print <PRINT>
+          [possible values: path, info-hash-v1, info-hash-v2, magnet]
+      --json
+          Emit a versioned JSON result to stdout
+      --pretty
+          Use the expanded human completion renderer
+  -h, --help
+          Print help

@@ -1,0 +1,10 @@
+fail-on-severity: high
+license-check: true
+allow-licenses:
+  - Apache-2.0
+  - Apache-2.0 WITH LLVM-exception
+  - MIT
+  - Unicode-3.0
+
+# Any allow-ghsas or license exception must link to a maintainer-approved issue
+# with an owner, rationale, remediation, and expiration date. See docs/security.md.

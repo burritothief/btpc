@@ -1,0 +1,44 @@
+Inspect validated metainfo without reading payload files
+
+Usage: btpc inspect [OPTIONS] <INPUT>
+
+Arguments:
+  <INPUT>  Metainfo file to read
+
+Options:
+      --config <PATH>
+          Use this configuration file when configuration loading is enabled
+      --json
+          Emit versioned JSON to stdout
+      --field <FIELDS>
+          Select a field; may be repeated [possible values: mode, name, total-size, piece-length, piece-count, file-count, hash-v1, hash-v2, private, trackers, web-seeds, nodes, comment, creator, creation-date, source, canonicality, warnings, files, unknown-fields]
+      --no-config
+          Disable implicit and environment-selected configuration
+      --color <COLOR>
+          Control colored terminal output [possible values: auto, always, never]
+      --files
+          Include the flat file listing
+      --tree
+          Render files as a deterministic tree
+  -v, --verbose...
+          Increase diagnostic verbosity; may be repeated
+      --path-encoding <PATH_ENCODING>
+          Encode raw torrent paths [default: utf8] [possible values: utf8, escaped, hex]
+  -q, --quiet
+          Suppress human summaries, warnings, and progress
+      --offset <OFFSET>
+          Skip this many file rows [default: 0]
+      --limit <LIMIT>
+          Limit returned file rows
+      --format <FORMAT>
+          Select output representation [possible values: human, plain, json, json-pretty, tsv]
+      --pretty
+          Use the expanded human renderer
+      --max-input-bytes <MAX_INPUT_BYTES>
+          Maximum metainfo bytes accepted while loading
+      --max-owned-bytes <MAX_OWNED_BYTES>
+          Maximum estimated owned allocation while loading
+      --max-integer-digits <MAX_INTEGER_DIGITS>
+          Maximum decimal digits accepted in one bencode integer
+  -h, --help
+          Print help

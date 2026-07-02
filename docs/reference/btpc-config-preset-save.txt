@@ -1,0 +1,62 @@
+Save or replace a preset
+
+Usage: btpc config preset save [OPTIONS] <NAME>
+
+Arguments:
+  <NAME>  
+
+Options:
+      --config <PATH>
+          Use this configuration file when configuration loading is enabled
+      --extends <EXTENDS>
+          Parent preset; may be repeated
+      --mode <MODE>
+          [possible values: v1, v2, hybrid]
+      --no-config
+          Disable implicit and environment-selected configuration
+      --color <COLOR>
+          Control colored terminal output [possible values: auto, always, never]
+      --piece-length <PIECE_LENGTH>
+          
+      --private
+          
+  -v, --verbose...
+          Increase diagnostic verbosity; may be repeated
+  -q, --quiet
+          Suppress human summaries, warnings, and progress
+      --source <SOURCE>
+          
+      --comment <COMMENT>
+          
+      --created-by <CREATED_BY>
+          
+      --creation-date <CREATION_DATE>
+          
+      --name <NAME_OVERRIDE>
+          
+      --exclude-hidden
+          
+      --symlinks <SYMLINKS>
+          [possible values: reject, skip, follow]
+      --special-files <SPECIAL_FILES>
+          [possible values: reject, skip]
+      --exclude-empty-files
+          
+      --reject-empty-directories
+          
+      --tracker <TRACKERS>
+          
+      --tracker-alias <TRACKER_ALIASES>
+          
+      --tracker-group <TRACKER_GROUPS>
+          
+      --web-seed <WEB_SEEDS>
+          
+      --include <INCLUDES>
+          
+      --exclude <EXCLUDES>
+          
+      --threads <THREADS>
+          
+  -h, --help
+          Print help

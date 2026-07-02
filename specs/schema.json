@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://btpc.dev/specs/schema.json",
+  "title": "BTPC specification front matter",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "spec_id",
+    "title",
+    "status",
+    "owners",
+    "source_paths",
+    "test_paths",
+    "last_reviewed"
+  ],
+  "properties": {
+    "spec_id": {"type": "string", "pattern": "^[A-Z][A-Z0-9]*$"},
+    "title": {"type": "string", "minLength": 1},
+    "status": {
+      "type": "string",
+      "enum": ["Draft", "Accepted", "Implemented", "Deprecated"]
+    },
+    "owners": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+    "source_paths": {"type": "array", "items": {"type": "string"}},
+    "test_paths": {"type": "array", "items": {"type": "string"}},
+    "last_reviewed": {"type": "string", "format": "date"}
+  }
+}

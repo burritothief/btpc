@@ -1,0 +1,187 @@
+source_roots = [
+  "crates/btpc-core/src",
+  "crates/btpc-cli/src",
+  "crates/btpc-python/src",
+  "python/btpc",
+]
+extensions = ["rs", "py", "pyi"]
+
+[[ownership]]
+path = "crates/btpc-core/src/lib.rs"
+specs = ["ARCH", "RUSTAPI"]
+
+[[ownership]]
+path = "crates/btpc-core/src/bencode.rs"
+specs = ["BENC", "SEC", "PERF"]
+
+[[ownership]]
+path = "crates/btpc-core/src/create/mod.rs"
+specs = ["CREATE", "PERF", "SEC", "ARCH"]
+
+[[ownership]]
+path = "crates/btpc-core/src/create/atomic_output.rs"
+specs = ["CREATE", "SEC", "ARCH"]
+
+[[ownership]]
+path = "crates/btpc-core/src/create/piece_length.rs"
+specs = ["CREATE", "ARCH"]
+
+[[ownership]]
+path = "crates/btpc-core/src/create/progress.rs"
+specs = ["CREATE", "ARCH"]
+
+[[ownership]]
+path = "crates/btpc-core/src/edit.rs"
+specs = ["META", "RUSTAPI"]
+
+[[ownership]]
+path = "crates/btpc-core/src/magnet.rs"
+specs = ["META", "RUSTAPI"]
+
+[[ownership]]
+path = "crates/btpc-core/src/error.rs"
+specs = ["ERR", "RUSTAPI"]
+
+[[ownership]]
+path = "crates/btpc-core/src/limits.rs"
+specs = ["BENC", "SEC"]
+
+[[ownership]]
+path = "crates/btpc-core/src/metadata.rs"
+specs = ["RUSTAPI", "BENC", "ARCH"]
+
+[[ownership]]
+path = "crates/btpc-core/src/metainfo/mod.rs"
+specs = ["META", "RUSTAPI", "ARCH"]
+
+[[ownership]]
+path = "crates/btpc-core/src/metainfo/path_types.rs"
+specs = ["META", "RUSTAPI", "ARCH"]
+
+[[ownership]]
+path = "crates/btpc-core/src/verify.rs"
+specs = ["VERIFY", "RUSTAPI", "SEC"]
+
+[[ownership]]
+path = "crates/btpc-cli/src/main.rs"
+specs = ["CLI", "ARCH"]
+
+[[ownership]]
+path = "crates/btpc-cli/src/command/mod.rs"
+specs = ["CLI", "ARCH"]
+
+[[ownership]]
+path = "crates/btpc-cli/src/command/parsers.rs"
+specs = ["CLI", "ARCH"]
+
+[[ownership]]
+path = "crates/btpc-cli/src/config/mod.rs"
+specs = ["CLI", "SEC", "ARCH"]
+
+[[ownership]]
+path = "crates/btpc-cli/src/config/path_policy.rs"
+specs = ["CLI", "ARCH"]
+
+[[ownership]]
+path = "crates/btpc-cli/src/context.rs"
+specs = ["CLI", "ARCH", "SEC"]
+
+[[ownership]]
+path = "crates/btpc-cli/src/diagnostics.rs"
+specs = ["CLI", "ERR", "ARCH"]
+
+[[ownership]]
+path = "crates/btpc-cli/src/handlers/mod.rs"
+specs = ["CLI", "ARCH", "SEC"]
+
+[[ownership]]
+path = "crates/btpc-cli/src/handlers/inspect_format.rs"
+specs = ["CLI", "ARCH", "SEC"]
+
+[[ownership]]
+path = "crates/btpc-cli/src/output.rs"
+specs = ["CLI", "ARCH"]
+
+[[ownership]]
+path = "crates/btpc-cli/src/progress.rs"
+specs = ["CLI", "ARCH"]
+
+[[ownership]]
+path = "crates/btpc-cli/src/render.rs"
+specs = ["CLI", "ARCH"]
+
+[[ownership]]
+path = "crates/btpc-cli/src/reference.rs"
+specs = ["CLI", "RELEASE", "ARCH"]
+
+[[ownership]]
+path = "crates/btpc-python/src/lib.rs"
+specs = ["PYAPI", "ARCH"]
+
+[[ownership]]
+path = "crates/btpc-python/src/creation.rs"
+specs = ["PYAPI", "ARCH"]
+
+[[ownership]]
+path = "crates/btpc-python/src/editing.rs"
+specs = ["PYAPI", "ARCH"]
+
+[[ownership]]
+path = "crates/btpc-python/src/errors.rs"
+specs = ["PYAPI", "ERR", "ARCH"]
+
+[[ownership]]
+path = "crates/btpc-python/src/inspection.rs"
+specs = ["PYAPI", "ARCH"]
+
+[[ownership]]
+path = "crates/btpc-python/src/module.rs"
+specs = ["PYAPI", "ARCH"]
+
+[[ownership]]
+path = "crates/btpc-python/src/progress.rs"
+specs = ["PYAPI", "ARCH"]
+
+[[ownership]]
+path = "crates/btpc-python/src/verification.rs"
+specs = ["PYAPI", "VERIFY", "ARCH"]
+
+[[ownership]]
+path = "crates/btpc-python/src/views.rs"
+specs = ["PYAPI", "ARCH"]
+
+[[ownership]]
+path = "python/btpc/__init__.py"
+specs = ["PYAPI"]
+
+[[ownership]]
+path = "python/btpc/_conversion.py"
+specs = ["PYAPI", "ARCH"]
+
+[[ownership]]
+path = "python/btpc/creation.py"
+specs = ["PYAPI", "ARCH"]
+
+[[ownership]]
+path = "python/btpc/errors.py"
+specs = ["PYAPI", "ERR", "ARCH"]
+
+[[ownership]]
+path = "python/btpc/metainfo.py"
+specs = ["PYAPI", "META", "ARCH"]
+
+[[ownership]]
+path = "python/btpc/types.py"
+specs = ["PYAPI", "ARCH"]
+
+[[ownership]]
+path = "python/btpc/verification.py"
+specs = ["PYAPI", "VERIFY", "ARCH"]
+
+[[ownership]]
+path = "python/btpc/_native.pyi"
+specs = ["PYAPI"]
+
+[[ownership]]
+path = "benches/btpc_bench/python_boundary.py"
+specs = ["PERF", "BENCH", "PYAPI"]

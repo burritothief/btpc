@@ -1,0 +1,35 @@
+Verify payload files against metainfo hashes
+
+Usage: btpc verify [OPTIONS] <TORRENT> <PAYLOAD>
+
+Arguments:
+  <TORRENT>  Metainfo file to read
+  <PAYLOAD>  Payload file or directory to verify
+
+Options:
+      --config <PATH>
+          Use this configuration file when configuration loading is enabled
+      --fail-fast
+          Stop after the first deterministic mismatch
+      --extra-files
+          Report regular files absent from metainfo
+      --no-config
+          Disable implicit and environment-selected configuration
+      --color <COLOR>
+          Control colored terminal output [possible values: auto, always, never]
+      --json
+          Emit versioned JSON to stdout
+      --pretty
+          Use the expanded human renderer
+  -v, --verbose...
+          Increase diagnostic verbosity; may be repeated
+      --max-input-bytes <MAX_INPUT_BYTES>
+          Maximum metainfo bytes accepted while loading
+  -q, --quiet
+          Suppress human summaries, warnings, and progress
+      --max-owned-bytes <MAX_OWNED_BYTES>
+          Maximum estimated owned allocation while loading
+      --max-integer-digits <MAX_INTEGER_DIGITS>
+          Maximum decimal digits accepted in one bencode integer
+  -h, --help
+          Print help

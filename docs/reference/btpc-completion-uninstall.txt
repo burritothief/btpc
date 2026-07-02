@@ -1,0 +1,16 @@
+Remove BTPC-generated shell completions
+
+Usage: btpc completion uninstall [OPTIONS] [SHELL]
+
+Arguments:
+  [SHELL]  Shell to install; detected from environment hints when omitted [possible values: bash, elvish, fish, powershell, zsh]
+
+Options:
+      --config <PATH>  Use this configuration file when configuration loading is enabled
+      --dry-run        Print the target and generated content without changing files
+      --force          Replace an unrelated existing completion file
+      --no-config      Disable implicit and environment-selected configuration
+      --color <COLOR>  Control colored terminal output [possible values: auto, always, never]
+  -v, --verbose...     Increase diagnostic verbosity; may be repeated
+  -q, --quiet          Suppress human summaries, warnings, and progress
+  -h, --help           Print help

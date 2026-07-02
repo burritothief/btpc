@@ -1,0 +1,74 @@
+Edit metainfo metadata without reading payload files
+
+Usage: btpc edit [OPTIONS] <INPUT>
+
+Arguments:
+  <INPUT>  
+
+Options:
+      --config <PATH>
+          Use this configuration file when configuration loading is enabled
+  -o, --output <OUTPUT>
+          
+      --in-place
+          
+      --no-config
+          Disable implicit and environment-selected configuration
+      --color <COLOR>
+          Control colored terminal output [possible values: auto, always, never]
+  -f, --force
+          
+      --durable
+          
+  -v, --verbose...
+          Increase diagnostic verbosity; may be repeated
+      --dry-run
+          
+  -q, --quiet
+          Suppress human summaries, warnings, and progress
+      --diff
+          
+      --json
+          
+  -a, --tracker <TRACKERS>
+          
+      --tracker-alias <TRACKER_ALIASES>
+          
+      --tracker-group <TRACKER_GROUPS>
+          
+      --clear-trackers
+          
+      --web-seed <WEB_SEEDS>
+          
+      --clear-web-seeds
+          
+      --node <NODES>
+          
+      --clear-nodes
+          
+      --comment <COMMENT>
+          
+      --clear-comment
+          
+      --created-by <CREATED_BY>
+          
+      --clear-created-by
+          
+      --creation-date <CREATION_DATE>
+          
+      --clear-creation-date
+          
+      --private
+          
+      --public
+          
+      --clear-private
+          
+      --source <SOURCE>
+          
+      --clear-source
+          
+      --file-attributes <FILE_ATTRIBUTES>
+          
+  -h, --help
+          Print help

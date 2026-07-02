@@ -1,0 +1,32 @@
+Print a deterministic magnet URI
+
+Usage: btpc magnet [OPTIONS] <INPUT>
+
+Arguments:
+  <INPUT>  Metainfo file to read
+
+Options:
+      --config <PATH>
+          Use this configuration file when configuration loading is enabled
+      --no-display-name
+          Omit the display name parameter
+      --no-config
+          Disable implicit and environment-selected configuration
+      --no-trackers
+          Omit tracker parameters
+      --color <COLOR>
+          Control colored terminal output [possible values: auto, always, never]
+      --no-web-seeds
+          Omit web seed parameters
+      --max-input-bytes <MAX_INPUT_BYTES>
+          Maximum metainfo bytes accepted while loading
+  -v, --verbose...
+          Increase diagnostic verbosity; may be repeated
+      --max-owned-bytes <MAX_OWNED_BYTES>
+          Maximum estimated owned allocation while loading
+  -q, --quiet
+          Suppress human summaries, warnings, and progress
+      --max-integer-digits <MAX_INTEGER_DIGITS>
+          Maximum decimal digits accepted in one bencode integer
+  -h, --help
+          Print help

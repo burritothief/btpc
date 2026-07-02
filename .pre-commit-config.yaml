@@ -1,0 +1,57 @@
+default_install_hook_types: [pre-commit, pre-push]
+default_stages: [pre-commit]
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-added-large-files
+      - id: check-json
+      - id: check-merge-conflict
+      - id: detect-private-key
+      - id: check-toml
+      - id: check-yaml
+      - id: end-of-file-fixer
+        exclude: ^(fuzz/corpus/|docs/reference/|docs/completions/|tests/fixtures/.*\.torrent$|python/btpc/py\.typed$)
+      - id: mixed-line-ending
+      - id: trailing-whitespace
+        exclude: ^(fuzz/corpus/|docs/reference/|docs/completions/|tests/fixtures/.*\.torrent$|python/btpc/py\.typed$)
+
+  - repo: local
+    hooks:
+      - id: specs
+        name: validate contract specifications
+        entry: uv run python scripts/check_specs.py
+        language: system
+        pass_filenames: false
+        always_run: true
+      - id: ruff-check
+        name: ruff check with safe fixes
+        entry: uv run ruff check --fix
+        language: system
+        types_or: [python, pyi]
+      - id: ruff-format
+        name: ruff format
+        entry: uv run ruff format
+        language: system
+        types_or: [python, pyi]
+      - id: cargo-fmt
+        name: cargo fmt
+        entry: cargo fmt --all --check
+        language: system
+        pass_filenames: false
+        types: [rust]
+      - id: pre-push-gate
+        name: full Rust and Python gate
+        entry: scripts/run-hook-stage.sh pre-push
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push]
+      - id: manual-repository-gate
+        name: documentation and workflow gate
+        entry: scripts/run-hook-stage.sh manual
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [manual]

@@ -1,0 +1,862 @@
+
+using namespace System.Management.Automation
+using namespace System.Management.Automation.Language
+
+Register-ArgumentCompleter -Native -CommandName 'btpc' -ScriptBlock {
+    param($wordToComplete, $commandAst, $cursorPosition)
+
+    $commandElements = $commandAst.CommandElements
+    $command = @(
+        'btpc'
+        for ($i = 1; $i -lt $commandElements.Count; $i++) {
+            $element = $commandElements[$i]
+            if ($element -isnot [StringConstantExpressionAst] -or
+                $element.StringConstantType -ne [StringConstantType]::BareWord -or
+                $element.Value.StartsWith('-') -or
+                $element.Value -eq $wordToComplete) {
+                break
+        }
+        $element.Value
+    }) -join ';'
+
+    $completions = @(switch ($command) {
+        'btpc' {
+            [CompletionResult]::new('--config', '--config', [CompletionResultType]::ParameterName, 'Use this configuration file when configuration loading is enabled')
+            [CompletionResult]::new('--color', '--color', [CompletionResultType]::ParameterName, 'Control colored terminal output')
+            [CompletionResult]::new('--no-config', '--no-config', [CompletionResultType]::ParameterName, 'Disable implicit and environment-selected configuration')
+            [CompletionResult]::new('-v', '-v', [CompletionResultType]::ParameterName, 'Increase diagnostic verbosity; may be repeated')
+            [CompletionResult]::new('--verbose', '--verbose', [CompletionResultType]::ParameterName, 'Increase diagnostic verbosity; may be repeated')
+            [CompletionResult]::new('-q', '-q', [CompletionResultType]::ParameterName, 'Suppress human summaries, warnings, and progress')
+            [CompletionResult]::new('--quiet', '--quiet', [CompletionResultType]::ParameterName, 'Suppress human summaries, warnings, and progress')
+            [CompletionResult]::new('-h', '-h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', '--help', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('-V', '-V ', [CompletionResultType]::ParameterName, 'Print version')
+            [CompletionResult]::new('--version', '--version', [CompletionResultType]::ParameterName, 'Print version')
+            [CompletionResult]::new('create', 'create', [CompletionResultType]::ParameterValue, 'Create canonical v1, v2, or hybrid metainfo from a file or directory')
+            [CompletionResult]::new('inspect', 'inspect', [CompletionResultType]::ParameterValue, 'Inspect validated metainfo without reading payload files')
+            [CompletionResult]::new('validate', 'validate', [CompletionResultType]::ParameterValue, 'Validate metainfo structure without reading payload files')
+            [CompletionResult]::new('verify', 'verify', [CompletionResultType]::ParameterValue, 'Verify payload files against metainfo hashes')
+            [CompletionResult]::new('edit', 'edit', [CompletionResultType]::ParameterValue, 'Edit metainfo metadata without reading payload files')
+            [CompletionResult]::new('magnet', 'magnet', [CompletionResultType]::ParameterValue, 'Print a deterministic magnet URI')
+            [CompletionResult]::new('config', 'config', [CompletionResultType]::ParameterValue, 'Locate, inspect, validate, and update configuration')
+            [CompletionResult]::new('completion', 'completion', [CompletionResultType]::ParameterValue, 'Generate, install, or uninstall shell completions')
+            [CompletionResult]::new('completions', 'completions', [CompletionResultType]::ParameterValue, 'Generate a shell completion script on stdout (deprecated)')
+            [CompletionResult]::new('manpage', 'manpage', [CompletionResultType]::ParameterValue, 'Generate the btpc(1) manual page on stdout')
+            [CompletionResult]::new('help', 'help', [CompletionResultType]::ParameterValue, 'Print this message or the help of the given subcommand(s)')
+            break
+        }
+        'btpc;create' {
+            [CompletionResult]::new('--batch', '--batch', [CompletionResultType]::ParameterName, 'Versioned TOML batch manifest')
+            [CompletionResult]::new('--mode', '--mode', [CompletionResultType]::ParameterName, 'Torrent protocol representation')
+            [CompletionResult]::new('-o', '-o', [CompletionResultType]::ParameterName, 'Destination .torrent path (defaults beside the payload)')
+            [CompletionResult]::new('--output', '--output', [CompletionResultType]::ParameterName, 'Destination .torrent path (defaults beside the payload)')
+            [CompletionResult]::new('--output-dir', '--output-dir', [CompletionResultType]::ParameterName, 'output-dir')
+            [CompletionResult]::new('--jobs', '--jobs', [CompletionResultType]::ParameterName, 'jobs')
+            [CompletionResult]::new('--preset', '--preset', [CompletionResultType]::ParameterName, 'Apply a named creation preset; may be repeated')
+            [CompletionResult]::new('--piece-length', '--piece-length', [CompletionResultType]::ParameterName, 'Explicit piece length in bytes')
+            [CompletionResult]::new('--target-pieces', '--target-pieces', [CompletionResultType]::ParameterName, 'target-pieces')
+            [CompletionResult]::new('--max-piece-length', '--max-piece-length', [CompletionResultType]::ParameterName, 'max-piece-length')
+            [CompletionResult]::new('-a', '-a', [CompletionResultType]::ParameterName, 'Add a tracker as its own tier; may be repeated')
+            [CompletionResult]::new('--tracker', '--tracker', [CompletionResultType]::ParameterName, 'Add a tracker as its own tier; may be repeated')
+            [CompletionResult]::new('--tracker-tier', '--tracker-tier', [CompletionResultType]::ParameterName, 'Add one comma-separated tracker tier; may be repeated')
+            [CompletionResult]::new('--tracker-alias', '--tracker-alias', [CompletionResultType]::ParameterName, 'tracker-alias')
+            [CompletionResult]::new('--tracker-group', '--tracker-group', [CompletionResultType]::ParameterName, 'tracker-group')
+            [CompletionResult]::new('--web-seed', '--web-seed', [CompletionResultType]::ParameterName, 'Add a web seed URL; may be repeated')
+            [CompletionResult]::new('--node', '--node', [CompletionResultType]::ParameterName, 'Add a DHT node as HOST:PORT; may be repeated')
+            [CompletionResult]::new('--source', '--source', [CompletionResultType]::ParameterName, 'Set the source field')
+            [CompletionResult]::new('--comment', '--comment', [CompletionResultType]::ParameterName, 'Set the top-level comment')
+            [CompletionResult]::new('--created-by', '--created-by', [CompletionResultType]::ParameterName, 'Set the creator string')
+            [CompletionResult]::new('--creation-date', '--creation-date', [CompletionResultType]::ParameterName, 'Include an explicit Unix creation timestamp')
+            [CompletionResult]::new('--entropy', '--entropy', [CompletionResultType]::ParameterName, 'entropy')
+            [CompletionResult]::new('--name', '--name', [CompletionResultType]::ParameterName, 'Override the torrent root name')
+            [CompletionResult]::new('--symlinks', '--symlinks', [CompletionResultType]::ParameterName, 'Symbolic-link policy')
+            [CompletionResult]::new('--special-files', '--special-files', [CompletionResultType]::ParameterName, 'Special-file policy')
+            [CompletionResult]::new('--include', '--include', [CompletionResultType]::ParameterName, 'Include only paths matching this glob; may be repeated')
+            [CompletionResult]::new('--exclude', '--exclude', [CompletionResultType]::ParameterName, 'Exclude paths matching this glob; may be repeated')
+            [CompletionResult]::new('--threads', '--threads', [CompletionResultType]::ParameterName, 'v1 hashing threads; 0 selects a conservative automatic count, 1 is sequential')
+            [CompletionResult]::new('--print', '--print', [CompletionResultType]::ParameterName, 'print')
+            [CompletionResult]::new('--config', '--config', [CompletionResultType]::ParameterName, 'Use this configuration file when configuration loading is enabled')
+            [CompletionResult]::new('--color', '--color', [CompletionResultType]::ParameterName, 'Control colored terminal output')
+            [CompletionResult]::new('--fail-fast', '--fail-fast', [CompletionResultType]::ParameterName, 'fail-fast')
+            [CompletionResult]::new('-f', '-f', [CompletionResultType]::ParameterName, 'Replace an existing destination')
+            [CompletionResult]::new('--force', '--force', [CompletionResultType]::ParameterName, 'Replace an existing destination')
+            [CompletionResult]::new('--durable', '--durable', [CompletionResultType]::ParameterName, 'Sync the destination directory after atomic publication where supported')
+            [CompletionResult]::new('--clear-trackers', '--clear-trackers', [CompletionResultType]::ParameterName, 'Clear configured and preset trackers before CLI additions')
+            [CompletionResult]::new('--clear-web-seeds', '--clear-web-seeds', [CompletionResultType]::ParameterName, 'Clear configured and preset web seeds before CLI additions')
+            [CompletionResult]::new('--private', '--private', [CompletionResultType]::ParameterName, 'Set the private flag')
+            [CompletionResult]::new('--public', '--public', [CompletionResultType]::ParameterName, 'public')
+            [CompletionResult]::new('--clear-source', '--clear-source', [CompletionResultType]::ParameterName, 'clear-source')
+            [CompletionResult]::new('--clear-comment', '--clear-comment', [CompletionResultType]::ParameterName, 'clear-comment')
+            [CompletionResult]::new('--no-created-by', '--no-created-by', [CompletionResultType]::ParameterName, 'Omit the creator string instead of using the versioned default')
+            [CompletionResult]::new('--exclude-hidden', '--exclude-hidden', [CompletionResultType]::ParameterName, 'Exclude dot-prefixed files and directories')
+            [CompletionResult]::new('--exclude-empty-files', '--exclude-empty-files', [CompletionResultType]::ParameterName, 'Exclude zero-length files')
+            [CompletionResult]::new('--reject-empty-directories', '--reject-empty-directories', [CompletionResultType]::ParameterName, 'Reject empty directories instead of ignoring them')
+            [CompletionResult]::new('--clear-includes', '--clear-includes', [CompletionResultType]::ParameterName, 'Clear configured and preset include patterns before CLI additions')
+            [CompletionResult]::new('--clear-excludes', '--clear-excludes', [CompletionResultType]::ParameterName, 'Clear configured and preset exclude patterns before CLI additions')
+            [CompletionResult]::new('--dry-run', '--dry-run', [CompletionResultType]::ParameterName, 'dry-run')
+            [CompletionResult]::new('--json', '--json', [CompletionResultType]::ParameterName, 'Emit a versioned JSON result to stdout')
+            [CompletionResult]::new('--pretty', '--pretty', [CompletionResultType]::ParameterName, 'Use the expanded human completion renderer')
+            [CompletionResult]::new('--no-config', '--no-config', [CompletionResultType]::ParameterName, 'Disable implicit and environment-selected configuration')
+            [CompletionResult]::new('-v', '-v', [CompletionResultType]::ParameterName, 'Increase diagnostic verbosity; may be repeated')
+            [CompletionResult]::new('--verbose', '--verbose', [CompletionResultType]::ParameterName, 'Increase diagnostic verbosity; may be repeated')
+            [CompletionResult]::new('-q', '-q', [CompletionResultType]::ParameterName, 'Suppress human summaries, warnings, and progress')
+            [CompletionResult]::new('--quiet', '--quiet', [CompletionResultType]::ParameterName, 'Suppress human summaries, warnings, and progress')
+            [CompletionResult]::new('-h', '-h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', '--help', [CompletionResultType]::ParameterName, 'Print help')
+            break
+        }
+        'btpc;inspect' {
+            [CompletionResult]::new('--field', '--field', [CompletionResultType]::ParameterName, 'Select a field; may be repeated')
+            [CompletionResult]::new('--path-encoding', '--path-encoding', [CompletionResultType]::ParameterName, 'Encode raw torrent paths')
+            [CompletionResult]::new('--offset', '--offset', [CompletionResultType]::ParameterName, 'Skip this many file rows')
+            [CompletionResult]::new('--limit', '--limit', [CompletionResultType]::ParameterName, 'Limit returned file rows')
+            [CompletionResult]::new('--format', '--format', [CompletionResultType]::ParameterName, 'Select output representation')
+            [CompletionResult]::new('--max-input-bytes', '--max-input-bytes', [CompletionResultType]::ParameterName, 'Maximum metainfo bytes accepted while loading')
+            [CompletionResult]::new('--max-owned-bytes', '--max-owned-bytes', [CompletionResultType]::ParameterName, 'Maximum estimated owned allocation while loading')
+            [CompletionResult]::new('--max-integer-digits', '--max-integer-digits', [CompletionResultType]::ParameterName, 'Maximum decimal digits accepted in one bencode integer')
+            [CompletionResult]::new('--config', '--config', [CompletionResultType]::ParameterName, 'Use this configuration file when configuration loading is enabled')
+            [CompletionResult]::new('--color', '--color', [CompletionResultType]::ParameterName, 'Control colored terminal output')
+            [CompletionResult]::new('--json', '--json', [CompletionResultType]::ParameterName, 'Emit versioned JSON to stdout')
+            [CompletionResult]::new('--files', '--files', [CompletionResultType]::ParameterName, 'Include the flat file listing')
+            [CompletionResult]::new('--tree', '--tree', [CompletionResultType]::ParameterName, 'Render files as a deterministic tree')
+            [CompletionResult]::new('--pretty', '--pretty', [CompletionResultType]::ParameterName, 'Use the expanded human renderer')
+            [CompletionResult]::new('--no-config', '--no-config', [CompletionResultType]::ParameterName, 'Disable implicit and environment-selected configuration')
+            [CompletionResult]::new('-v', '-v', [CompletionResultType]::ParameterName, 'Increase diagnostic verbosity; may be repeated')
+            [CompletionResult]::new('--verbose', '--verbose', [CompletionResultType]::ParameterName, 'Increase diagnostic verbosity; may be repeated')
+            [CompletionResult]::new('-q', '-q', [CompletionResultType]::ParameterName, 'Suppress human summaries, warnings, and progress')
+            [CompletionResult]::new('--quiet', '--quiet', [CompletionResultType]::ParameterName, 'Suppress human summaries, warnings, and progress')
+            [CompletionResult]::new('-h', '-h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', '--help', [CompletionResultType]::ParameterName, 'Print help')
+            break
+        }
+        'btpc;validate' {
+            [CompletionResult]::new('--format', '--format', [CompletionResultType]::ParameterName, 'format')
+            [CompletionResult]::new('--max-input-bytes', '--max-input-bytes', [CompletionResultType]::ParameterName, 'Maximum metainfo bytes accepted while loading')
+            [CompletionResult]::new('--max-owned-bytes', '--max-owned-bytes', [CompletionResultType]::ParameterName, 'Maximum estimated owned allocation while loading')
+            [CompletionResult]::new('--max-integer-digits', '--max-integer-digits', [CompletionResultType]::ParameterName, 'Maximum decimal digits accepted in one bencode integer')
+            [CompletionResult]::new('--config', '--config', [CompletionResultType]::ParameterName, 'Use this configuration file when configuration loading is enabled')
+            [CompletionResult]::new('--color', '--color', [CompletionResultType]::ParameterName, 'Control colored terminal output')
+            [CompletionResult]::new('--json', '--json', [CompletionResultType]::ParameterName, 'json')
+            [CompletionResult]::new('--canonical', '--canonical', [CompletionResultType]::ParameterName, 'canonical')
+            [CompletionResult]::new('--warnings-as-errors', '--warnings-as-errors', [CompletionResultType]::ParameterName, 'warnings-as-errors')
+            [CompletionResult]::new('--pretty', '--pretty', [CompletionResultType]::ParameterName, 'pretty')
+            [CompletionResult]::new('--no-config', '--no-config', [CompletionResultType]::ParameterName, 'Disable implicit and environment-selected configuration')
+            [CompletionResult]::new('-v', '-v', [CompletionResultType]::ParameterName, 'Increase diagnostic verbosity; may be repeated')
+            [CompletionResult]::new('--verbose', '--verbose', [CompletionResultType]::ParameterName, 'Increase diagnostic verbosity; may be repeated')
+            [CompletionResult]::new('-q', '-q', [CompletionResultType]::ParameterName, 'Suppress human summaries, warnings, and progress')
+            [CompletionResult]::new('--quiet', '--quiet', [CompletionResultType]::ParameterName, 'Suppress human summaries, warnings, and progress')
+            [CompletionResult]::new('-h', '-h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', '--help', [CompletionResultType]::ParameterName, 'Print help')
+            break
+        }
+        'btpc;verify' {
+            [CompletionResult]::new('--max-input-bytes', '--max-input-bytes', [CompletionResultType]::ParameterName, 'Maximum metainfo bytes accepted while loading')
+            [CompletionResult]::new('--max-owned-bytes', '--max-owned-bytes', [CompletionResultType]::ParameterName, 'Maximum estimated owned allocation while loading')
+            [CompletionResult]::new('--max-integer-digits', '--max-integer-digits', [CompletionResultType]::ParameterName, 'Maximum decimal digits accepted in one bencode integer')
+            [CompletionResult]::new('--config', '--config', [CompletionResultType]::ParameterName, 'Use this configuration file when configuration loading is enabled')
+            [CompletionResult]::new('--color', '--color', [CompletionResultType]::ParameterName, 'Control colored terminal output')
+            [CompletionResult]::new('--fail-fast', '--fail-fast', [CompletionResultType]::ParameterName, 'Stop after the first deterministic mismatch')
+            [CompletionResult]::new('--extra-files', '--extra-files', [CompletionResultType]::ParameterName, 'Report regular files absent from metainfo')
+            [CompletionResult]::new('--json', '--json', [CompletionResultType]::ParameterName, 'Emit versioned JSON to stdout')
+            [CompletionResult]::new('--pretty', '--pretty', [CompletionResultType]::ParameterName, 'Use the expanded human renderer')
+            [CompletionResult]::new('--no-config', '--no-config', [CompletionResultType]::ParameterName, 'Disable implicit and environment-selected configuration')
+            [CompletionResult]::new('-v', '-v', [CompletionResultType]::ParameterName, 'Increase diagnostic verbosity; may be repeated')
+            [CompletionResult]::new('--verbose', '--verbose', [CompletionResultType]::ParameterName, 'Increase diagnostic verbosity; may be repeated')
+            [CompletionResult]::new('-q', '-q', [CompletionResultType]::ParameterName, 'Suppress human summaries, warnings, and progress')
+            [CompletionResult]::new('--quiet', '--quiet', [CompletionResultType]::ParameterName, 'Suppress human summaries, warnings, and progress')
+            [CompletionResult]::new('-h', '-h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', '--help', [CompletionResultType]::ParameterName, 'Print help')
+            break
+        }
+        'btpc;edit' {
+            [CompletionResult]::new('-o', '-o', [CompletionResultType]::ParameterName, 'o')
+            [CompletionResult]::new('--output', '--output', [CompletionResultType]::ParameterName, 'output')
+            [CompletionResult]::new('-a', '-a', [CompletionResultType]::ParameterName, 'a')
+            [CompletionResult]::new('--tracker', '--tracker', [CompletionResultType]::ParameterName, 'tracker')
+            [CompletionResult]::new('--tracker-alias', '--tracker-alias', [CompletionResultType]::ParameterName, 'tracker-alias')
+            [CompletionResult]::new('--tracker-group', '--tracker-group', [CompletionResultType]::ParameterName, 'tracker-group')
+            [CompletionResult]::new('--web-seed', '--web-seed', [CompletionResultType]::ParameterName, 'web-seed')
+            [CompletionResult]::new('--node', '--node', [CompletionResultType]::ParameterName, 'node')
+            [CompletionResult]::new('--comment', '--comment', [CompletionResultType]::ParameterName, 'comment')
+            [CompletionResult]::new('--created-by', '--created-by', [CompletionResultType]::ParameterName, 'created-by')
+            [CompletionResult]::new('--creation-date', '--creation-date', [CompletionResultType]::ParameterName, 'creation-date')
+            [CompletionResult]::new('--source', '--source', [CompletionResultType]::ParameterName, 'source')
+            [CompletionResult]::new('--file-attributes', '--file-attributes', [CompletionResultType]::ParameterName, 'file-attributes')
+            [CompletionResult]::new('--config', '--config', [CompletionResultType]::ParameterName, 'Use this configuration file when configuration loading is enabled')
+            [CompletionResult]::new('--color', '--color', [CompletionResultType]::ParameterName, 'Control colored terminal output')
+            [CompletionResult]::new('--in-place', '--in-place', [CompletionResultType]::ParameterName, 'in-place')
+            [CompletionResult]::new('-f', '-f', [CompletionResultType]::ParameterName, 'f')
+            [CompletionResult]::new('--force', '--force', [CompletionResultType]::ParameterName, 'force')
+            [CompletionResult]::new('--durable', '--durable', [CompletionResultType]::ParameterName, 'durable')
+            [CompletionResult]::new('--dry-run', '--dry-run', [CompletionResultType]::ParameterName, 'dry-run')
+            [CompletionResult]::new('--diff', '--diff', [CompletionResultType]::ParameterName, 'diff')
+            [CompletionResult]::new('--json', '--json', [CompletionResultType]::ParameterName, 'json')
+            [CompletionResult]::new('--clear-trackers', '--clear-trackers', [CompletionResultType]::ParameterName, 'clear-trackers')
+            [CompletionResult]::new('--clear-web-seeds', '--clear-web-seeds', [CompletionResultType]::ParameterName, 'clear-web-seeds')
+            [CompletionResult]::new('--clear-nodes', '--clear-nodes', [CompletionResultType]::ParameterName, 'clear-nodes')
+            [CompletionResult]::new('--clear-comment', '--clear-comment', [CompletionResultType]::ParameterName, 'clear-comment')
+            [CompletionResult]::new('--clear-created-by', '--clear-created-by', [CompletionResultType]::ParameterName, 'clear-created-by')
+            [CompletionResult]::new('--clear-creation-date', '--clear-creation-date', [CompletionResultType]::ParameterName, 'clear-creation-date')
+            [CompletionResult]::new('--private', '--private', [CompletionResultType]::ParameterName, 'private')
+            [CompletionResult]::new('--public', '--public', [CompletionResultType]::ParameterName, 'public')
+            [CompletionResult]::new('--clear-private', '--clear-private', [CompletionResultType]::ParameterName, 'clear-private')
+            [CompletionResult]::new('--clear-source', '--clear-source', [CompletionResultType]::ParameterName, 'clear-source')
+            [CompletionResult]::new('--no-config', '--no-config', [CompletionResultType]::ParameterName, 'Disable implicit and environment-selected configuration')
+            [CompletionResult]::new('-v', '-v', [CompletionResultType]::ParameterName, 'Increase diagnostic verbosity; may be repeated')
+            [CompletionResult]::new('--verbose', '--verbose', [CompletionResultType]::ParameterName, 'Increase diagnostic verbosity; may be repeated')
+            [CompletionResult]::new('-q', '-q', [CompletionResultType]::ParameterName, 'Suppress human summaries, warnings, and progress')
+            [CompletionResult]::new('--quiet', '--quiet', [CompletionResultType]::ParameterName, 'Suppress human summaries, warnings, and progress')
+            [CompletionResult]::new('-h', '-h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', '--help', [CompletionResultType]::ParameterName, 'Print help')
+            break
+        }
+        'btpc;magnet' {
+            [CompletionResult]::new('--max-input-bytes', '--max-input-bytes', [CompletionResultType]::ParameterName, 'Maximum metainfo bytes accepted while loading')
+            [CompletionResult]::new('--max-owned-bytes', '--max-owned-bytes', [CompletionResultType]::ParameterName, 'Maximum estimated owned allocation while loading')
+            [CompletionResult]::new('--max-integer-digits', '--max-integer-digits', [CompletionResultType]::ParameterName, 'Maximum decimal digits accepted in one bencode integer')
+            [CompletionResult]::new('--config', '--config', [CompletionResultType]::ParameterName, 'Use this configuration file when configuration loading is enabled')
+            [CompletionResult]::new('--color', '--color', [CompletionResultType]::ParameterName, 'Control colored terminal output')
+            [CompletionResult]::new('--no-display-name', '--no-display-name', [CompletionResultType]::ParameterName, 'Omit the display name parameter')
+            [CompletionResult]::new('--no-trackers', '--no-trackers', [CompletionResultType]::ParameterName, 'Omit tracker parameters')
+            [CompletionResult]::new('--no-web-seeds', '--no-web-seeds', [CompletionResultType]::ParameterName, 'Omit web seed parameters')
+            [CompletionResult]::new('--no-config', '--no-config', [CompletionResultType]::ParameterName, 'Disable implicit and environment-selected configuration')
+            [CompletionResult]::new('-v', '-v', [CompletionResultType]::ParameterName, 'Increase diagnostic verbosity; may be repeated')
+            [CompletionResult]::new('--verbose', '--verbose', [CompletionResultType]::ParameterName, 'Increase diagnostic verbosity; may be repeated')
+            [CompletionResult]::new('-q', '-q', [CompletionResultType]::ParameterName, 'Suppress human summaries, warnings, and progress')
+            [CompletionResult]::new('--quiet', '--quiet', [CompletionResultType]::ParameterName, 'Suppress human summaries, warnings, and progress')
+            [CompletionResult]::new('-h', '-h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', '--help', [CompletionResultType]::ParameterName, 'Print help')
+            break
+        }
+        'btpc;config' {
+            [CompletionResult]::new('--config', '--config', [CompletionResultType]::ParameterName, 'Use this configuration file when configuration loading is enabled')
+            [CompletionResult]::new('--color', '--color', [CompletionResultType]::ParameterName, 'Control colored terminal output')
+            [CompletionResult]::new('--no-config', '--no-config', [CompletionResultType]::ParameterName, 'Disable implicit and environment-selected configuration')
+            [CompletionResult]::new('-v', '-v', [CompletionResultType]::ParameterName, 'Increase diagnostic verbosity; may be repeated')
+            [CompletionResult]::new('--verbose', '--verbose', [CompletionResultType]::ParameterName, 'Increase diagnostic verbosity; may be repeated')
+            [CompletionResult]::new('-q', '-q', [CompletionResultType]::ParameterName, 'Suppress human summaries, warnings, and progress')
+            [CompletionResult]::new('--quiet', '--quiet', [CompletionResultType]::ParameterName, 'Suppress human summaries, warnings, and progress')
+            [CompletionResult]::new('-h', '-h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', '--help', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('path', 'path', [CompletionResultType]::ParameterValue, 'Print the selected configuration path')
+            [CompletionResult]::new('init', 'init', [CompletionResultType]::ParameterValue, 'Create a minimal configuration file')
+            [CompletionResult]::new('show', 'show', [CompletionResultType]::ParameterValue, 'Print configuration with secrets redacted by default')
+            [CompletionResult]::new('check', 'check', [CompletionResultType]::ParameterValue, 'Validate schema, references, cycles, conflicts, and permissions')
+            [CompletionResult]::new('explain', 'explain', [CompletionResultType]::ParameterValue, 'Explain resolved command values without executing the command')
+            [CompletionResult]::new('tracker', 'tracker', [CompletionResultType]::ParameterValue, 'Manage named tracker aliases')
+            [CompletionResult]::new('preset', 'preset', [CompletionResultType]::ParameterValue, 'Manage named creation presets')
+            [CompletionResult]::new('help', 'help', [CompletionResultType]::ParameterValue, 'Print this message or the help of the given subcommand(s)')
+            break
+        }
+        'btpc;config;path' {
+            [CompletionResult]::new('--config', '--config', [CompletionResultType]::ParameterName, 'Use this configuration file when configuration loading is enabled')
+            [CompletionResult]::new('--color', '--color', [CompletionResultType]::ParameterName, 'Control colored terminal output')
+            [CompletionResult]::new('--no-config', '--no-config', [CompletionResultType]::ParameterName, 'Disable implicit and environment-selected configuration')
+            [CompletionResult]::new('-v', '-v', [CompletionResultType]::ParameterName, 'Increase diagnostic verbosity; may be repeated')
+            [CompletionResult]::new('--verbose', '--verbose', [CompletionResultType]::ParameterName, 'Increase diagnostic verbosity; may be repeated')
+            [CompletionResult]::new('-q', '-q', [CompletionResultType]::ParameterName, 'Suppress human summaries, warnings, and progress')
+            [CompletionResult]::new('--quiet', '--quiet', [CompletionResultType]::ParameterName, 'Suppress human summaries, warnings, and progress')
+            [CompletionResult]::new('-h', '-h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', '--help', [CompletionResultType]::ParameterName, 'Print help')
+            break
+        }
+        'btpc;config;init' {
+            [CompletionResult]::new('--config', '--config', [CompletionResultType]::ParameterName, 'Use this configuration file when configuration loading is enabled')
+            [CompletionResult]::new('--color', '--color', [CompletionResultType]::ParameterName, 'Control colored terminal output')
+            [CompletionResult]::new('--force', '--force', [CompletionResultType]::ParameterName, 'Replace an existing file')
+            [CompletionResult]::new('--no-config', '--no-config', [CompletionResultType]::ParameterName, 'Disable implicit and environment-selected configuration')
+            [CompletionResult]::new('-v', '-v', [CompletionResultType]::ParameterName, 'Increase diagnostic verbosity; may be repeated')
+            [CompletionResult]::new('--verbose', '--verbose', [CompletionResultType]::ParameterName, 'Increase diagnostic verbosity; may be repeated')
+            [CompletionResult]::new('-q', '-q', [CompletionResultType]::ParameterName, 'Suppress human summaries, warnings, and progress')
+            [CompletionResult]::new('--quiet', '--quiet', [CompletionResultType]::ParameterName, 'Suppress human summaries, warnings, and progress')
+            [CompletionResult]::new('-h', '-h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', '--help', [CompletionResultType]::ParameterName, 'Print help')
+            break
+        }
+        'btpc;config;show' {
+            [CompletionResult]::new('--config', '--config', [CompletionResultType]::ParameterName, 'Use this configuration file when configuration loading is enabled')
+            [CompletionResult]::new('--color', '--color', [CompletionResultType]::ParameterName, 'Control colored terminal output')
+            [CompletionResult]::new('--resolved', '--resolved', [CompletionResultType]::ParameterName, 'Validate and print the parsed deterministic representation')
+            [CompletionResult]::new('--show-secrets', '--show-secrets', [CompletionResultType]::ParameterName, 'Reveal configured secrets')
+            [CompletionResult]::new('--json', '--json', [CompletionResultType]::ParameterName, 'Emit JSON instead of TOML')
+            [CompletionResult]::new('--no-config', '--no-config', [CompletionResultType]::ParameterName, 'Disable implicit and environment-selected configuration')
+            [CompletionResult]::new('-v', '-v', [CompletionResultType]::ParameterName, 'Increase diagnostic verbosity; may be repeated')
+            [CompletionResult]::new('--verbose', '--verbose', [CompletionResultType]::ParameterName, 'Increase diagnostic verbosity; may be repeated')
+            [CompletionResult]::new('-q', '-q', [CompletionResultType]::ParameterName, 'Suppress human summaries, warnings, and progress')
+            [CompletionResult]::new('--quiet', '--quiet', [CompletionResultType]::ParameterName, 'Suppress human summaries, warnings, and progress')
+            [CompletionResult]::new('-h', '-h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', '--help', [CompletionResultType]::ParameterName, 'Print help')
+            break
+        }
+        'btpc;config;check' {
+            [CompletionResult]::new('--config', '--config', [CompletionResultType]::ParameterName, 'Use this configuration file when configuration loading is enabled')
+            [CompletionResult]::new('--color', '--color', [CompletionResultType]::ParameterName, 'Control colored terminal output')
+            [CompletionResult]::new('--no-config', '--no-config', [CompletionResultType]::ParameterName, 'Disable implicit and environment-selected configuration')
+            [CompletionResult]::new('-v', '-v', [CompletionResultType]::ParameterName, 'Increase diagnostic verbosity; may be repeated')
+            [CompletionResult]::new('--verbose', '--verbose', [CompletionResultType]::ParameterName, 'Increase diagnostic verbosity; may be repeated')
+            [CompletionResult]::new('-q', '-q', [CompletionResultType]::ParameterName, 'Suppress human summaries, warnings, and progress')
+            [CompletionResult]::new('--quiet', '--quiet', [CompletionResultType]::ParameterName, 'Suppress human summaries, warnings, and progress')
+            [CompletionResult]::new('-h', '-h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', '--help', [CompletionResultType]::ParameterName, 'Print help')
+            break
+        }
+        'btpc;config;explain' {
+            [CompletionResult]::new('--config', '--config', [CompletionResultType]::ParameterName, 'Use this configuration file when configuration loading is enabled')
+            [CompletionResult]::new('--color', '--color', [CompletionResultType]::ParameterName, 'Control colored terminal output')
+            [CompletionResult]::new('--no-config', '--no-config', [CompletionResultType]::ParameterName, 'Disable implicit and environment-selected configuration')
+            [CompletionResult]::new('-v', '-v', [CompletionResultType]::ParameterName, 'Increase diagnostic verbosity; may be repeated')
+            [CompletionResult]::new('--verbose', '--verbose', [CompletionResultType]::ParameterName, 'Increase diagnostic verbosity; may be repeated')
+            [CompletionResult]::new('-q', '-q', [CompletionResultType]::ParameterName, 'Suppress human summaries, warnings, and progress')
+            [CompletionResult]::new('--quiet', '--quiet', [CompletionResultType]::ParameterName, 'Suppress human summaries, warnings, and progress')
+            [CompletionResult]::new('-h', '-h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', '--help', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('create', 'create', [CompletionResultType]::ParameterValue, 'Explain effective create values and provenance')
+            [CompletionResult]::new('help', 'help', [CompletionResultType]::ParameterValue, 'Print this message or the help of the given subcommand(s)')
+            break
+        }
+        'btpc;config;explain;create' {
+            [CompletionResult]::new('--batch', '--batch', [CompletionResultType]::ParameterName, 'Versioned TOML batch manifest')
+            [CompletionResult]::new('--mode', '--mode', [CompletionResultType]::ParameterName, 'Torrent protocol representation')
+            [CompletionResult]::new('-o', '-o', [CompletionResultType]::ParameterName, 'Destination .torrent path (defaults beside the payload)')
+            [CompletionResult]::new('--output', '--output', [CompletionResultType]::ParameterName, 'Destination .torrent path (defaults beside the payload)')
+            [CompletionResult]::new('--output-dir', '--output-dir', [CompletionResultType]::ParameterName, 'output-dir')
+            [CompletionResult]::new('--jobs', '--jobs', [CompletionResultType]::ParameterName, 'jobs')
+            [CompletionResult]::new('--preset', '--preset', [CompletionResultType]::ParameterName, 'Apply a named creation preset; may be repeated')
+            [CompletionResult]::new('--piece-length', '--piece-length', [CompletionResultType]::ParameterName, 'Explicit piece length in bytes')
+            [CompletionResult]::new('--target-pieces', '--target-pieces', [CompletionResultType]::ParameterName, 'target-pieces')
+            [CompletionResult]::new('--max-piece-length', '--max-piece-length', [CompletionResultType]::ParameterName, 'max-piece-length')
+            [CompletionResult]::new('-a', '-a', [CompletionResultType]::ParameterName, 'Add a tracker as its own tier; may be repeated')
+            [CompletionResult]::new('--tracker', '--tracker', [CompletionResultType]::ParameterName, 'Add a tracker as its own tier; may be repeated')
+            [CompletionResult]::new('--tracker-tier', '--tracker-tier', [CompletionResultType]::ParameterName, 'Add one comma-separated tracker tier; may be repeated')
+            [CompletionResult]::new('--tracker-alias', '--tracker-alias', [CompletionResultType]::ParameterName, 'tracker-alias')
+            [CompletionResult]::new('--tracker-group', '--tracker-group', [CompletionResultType]::ParameterName, 'tracker-group')
+            [CompletionResult]::new('--web-seed', '--web-seed', [CompletionResultType]::ParameterName, 'Add a web seed URL; may be repeated')
+            [CompletionResult]::new('--node', '--node', [CompletionResultType]::ParameterName, 'Add a DHT node as HOST:PORT; may be repeated')
+            [CompletionResult]::new('--source', '--source', [CompletionResultType]::ParameterName, 'Set the source field')
+            [CompletionResult]::new('--comment', '--comment', [CompletionResultType]::ParameterName, 'Set the top-level comment')
+            [CompletionResult]::new('--created-by', '--created-by', [CompletionResultType]::ParameterName, 'Set the creator string')
+            [CompletionResult]::new('--creation-date', '--creation-date', [CompletionResultType]::ParameterName, 'Include an explicit Unix creation timestamp')
+            [CompletionResult]::new('--entropy', '--entropy', [CompletionResultType]::ParameterName, 'entropy')
+            [CompletionResult]::new('--name', '--name', [CompletionResultType]::ParameterName, 'Override the torrent root name')
+            [CompletionResult]::new('--symlinks', '--symlinks', [CompletionResultType]::ParameterName, 'Symbolic-link policy')
+            [CompletionResult]::new('--special-files', '--special-files', [CompletionResultType]::ParameterName, 'Special-file policy')
+            [CompletionResult]::new('--include', '--include', [CompletionResultType]::ParameterName, 'Include only paths matching this glob; may be repeated')
+            [CompletionResult]::new('--exclude', '--exclude', [CompletionResultType]::ParameterName, 'Exclude paths matching this glob; may be repeated')
+            [CompletionResult]::new('--threads', '--threads', [CompletionResultType]::ParameterName, 'v1 hashing threads; 0 selects a conservative automatic count, 1 is sequential')
+            [CompletionResult]::new('--print', '--print', [CompletionResultType]::ParameterName, 'print')
+            [CompletionResult]::new('--config', '--config', [CompletionResultType]::ParameterName, 'Use this configuration file when configuration loading is enabled')
+            [CompletionResult]::new('--color', '--color', [CompletionResultType]::ParameterName, 'Control colored terminal output')
+            [CompletionResult]::new('--fail-fast', '--fail-fast', [CompletionResultType]::ParameterName, 'fail-fast')
+            [CompletionResult]::new('-f', '-f', [CompletionResultType]::ParameterName, 'Replace an existing destination')
+            [CompletionResult]::new('--force', '--force', [CompletionResultType]::ParameterName, 'Replace an existing destination')
+            [CompletionResult]::new('--durable', '--durable', [CompletionResultType]::ParameterName, 'Sync the destination directory after atomic publication where supported')
+            [CompletionResult]::new('--clear-trackers', '--clear-trackers', [CompletionResultType]::ParameterName, 'Clear configured and preset trackers before CLI additions')
+            [CompletionResult]::new('--clear-web-seeds', '--clear-web-seeds', [CompletionResultType]::ParameterName, 'Clear configured and preset web seeds before CLI additions')
+            [CompletionResult]::new('--private', '--private', [CompletionResultType]::ParameterName, 'Set the private flag')
+            [CompletionResult]::new('--public', '--public', [CompletionResultType]::ParameterName, 'public')
+            [CompletionResult]::new('--clear-source', '--clear-source', [CompletionResultType]::ParameterName, 'clear-source')
+            [CompletionResult]::new('--clear-comment', '--clear-comment', [CompletionResultType]::ParameterName, 'clear-comment')
+            [CompletionResult]::new('--no-created-by', '--no-created-by', [CompletionResultType]::ParameterName, 'Omit the creator string instead of using the versioned default')
+            [CompletionResult]::new('--exclude-hidden', '--exclude-hidden', [CompletionResultType]::ParameterName, 'Exclude dot-prefixed files and directories')
+            [CompletionResult]::new('--exclude-empty-files', '--exclude-empty-files', [CompletionResultType]::ParameterName, 'Exclude zero-length files')
+            [CompletionResult]::new('--reject-empty-directories', '--reject-empty-directories', [CompletionResultType]::ParameterName, 'Reject empty directories instead of ignoring them')
+            [CompletionResult]::new('--clear-includes', '--clear-includes', [CompletionResultType]::ParameterName, 'Clear configured and preset include patterns before CLI additions')
+            [CompletionResult]::new('--clear-excludes', '--clear-excludes', [CompletionResultType]::ParameterName, 'Clear configured and preset exclude patterns before CLI additions')
+            [CompletionResult]::new('--dry-run', '--dry-run', [CompletionResultType]::ParameterName, 'dry-run')
+            [CompletionResult]::new('--json', '--json', [CompletionResultType]::ParameterName, 'Emit a versioned JSON result to stdout')
+            [CompletionResult]::new('--pretty', '--pretty', [CompletionResultType]::ParameterName, 'Use the expanded human completion renderer')
+            [CompletionResult]::new('--no-config', '--no-config', [CompletionResultType]::ParameterName, 'Disable implicit and environment-selected configuration')
+            [CompletionResult]::new('-v', '-v', [CompletionResultType]::ParameterName, 'Increase diagnostic verbosity; may be repeated')
+            [CompletionResult]::new('--verbose', '--verbose', [CompletionResultType]::ParameterName, 'Increase diagnostic verbosity; may be repeated')
+            [CompletionResult]::new('-q', '-q', [CompletionResultType]::ParameterName, 'Suppress human summaries, warnings, and progress')
+            [CompletionResult]::new('--quiet', '--quiet', [CompletionResultType]::ParameterName, 'Suppress human summaries, warnings, and progress')
+            [CompletionResult]::new('-h', '-h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', '--help', [CompletionResultType]::ParameterName, 'Print help')
+            break
+        }
+        'btpc;config;explain;help' {
+            [CompletionResult]::new('create', 'create', [CompletionResultType]::ParameterValue, 'Explain effective create values and provenance')
+            [CompletionResult]::new('help', 'help', [CompletionResultType]::ParameterValue, 'Print this message or the help of the given subcommand(s)')
+            break
+        }
+        'btpc;config;explain;help;create' {
+            break
+        }
+        'btpc;config;explain;help;help' {
+            break
+        }
+        'btpc;config;tracker' {
+            [CompletionResult]::new('--config', '--config', [CompletionResultType]::ParameterName, 'Use this configuration file when configuration loading is enabled')
+            [CompletionResult]::new('--color', '--color', [CompletionResultType]::ParameterName, 'Control colored terminal output')
+            [CompletionResult]::new('--no-config', '--no-config', [CompletionResultType]::ParameterName, 'Disable implicit and environment-selected configuration')
+            [CompletionResult]::new('-v', '-v', [CompletionResultType]::ParameterName, 'Increase diagnostic verbosity; may be repeated')
+            [CompletionResult]::new('--verbose', '--verbose', [CompletionResultType]::ParameterName, 'Increase diagnostic verbosity; may be repeated')
+            [CompletionResult]::new('-q', '-q', [CompletionResultType]::ParameterName, 'Suppress human summaries, warnings, and progress')
+            [CompletionResult]::new('--quiet', '--quiet', [CompletionResultType]::ParameterName, 'Suppress human summaries, warnings, and progress')
+            [CompletionResult]::new('-h', '-h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', '--help', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('list', 'list', [CompletionResultType]::ParameterValue, 'List tracker aliases')
+            [CompletionResult]::new('add', 'add', [CompletionResultType]::ParameterValue, 'Add or replace a tracker alias')
+            [CompletionResult]::new('remove', 'remove', [CompletionResultType]::ParameterValue, 'Remove a tracker alias')
+            [CompletionResult]::new('help', 'help', [CompletionResultType]::ParameterValue, 'Print this message or the help of the given subcommand(s)')
+            break
+        }
+        'btpc;config;tracker;list' {
+            [CompletionResult]::new('--config', '--config', [CompletionResultType]::ParameterName, 'Use this configuration file when configuration loading is enabled')
+            [CompletionResult]::new('--color', '--color', [CompletionResultType]::ParameterName, 'Control colored terminal output')
+            [CompletionResult]::new('--show-secrets', '--show-secrets', [CompletionResultType]::ParameterName, 'Reveal tracker URLs')
+            [CompletionResult]::new('--json', '--json', [CompletionResultType]::ParameterName, 'Emit JSON')
+            [CompletionResult]::new('--no-config', '--no-config', [CompletionResultType]::ParameterName, 'Disable implicit and environment-selected configuration')
+            [CompletionResult]::new('-v', '-v', [CompletionResultType]::ParameterName, 'Increase diagnostic verbosity; may be repeated')
+            [CompletionResult]::new('--verbose', '--verbose', [CompletionResultType]::ParameterName, 'Increase diagnostic verbosity; may be repeated')
+            [CompletionResult]::new('-q', '-q', [CompletionResultType]::ParameterName, 'Suppress human summaries, warnings, and progress')
+            [CompletionResult]::new('--quiet', '--quiet', [CompletionResultType]::ParameterName, 'Suppress human summaries, warnings, and progress')
+            [CompletionResult]::new('-h', '-h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', '--help', [CompletionResultType]::ParameterName, 'Print help')
+            break
+        }
+        'btpc;config;tracker;add' {
+            [CompletionResult]::new('--config', '--config', [CompletionResultType]::ParameterName, 'Use this configuration file when configuration loading is enabled')
+            [CompletionResult]::new('--color', '--color', [CompletionResultType]::ParameterName, 'Control colored terminal output')
+            [CompletionResult]::new('--no-config', '--no-config', [CompletionResultType]::ParameterName, 'Disable implicit and environment-selected configuration')
+            [CompletionResult]::new('-v', '-v', [CompletionResultType]::ParameterName, 'Increase diagnostic verbosity; may be repeated')
+            [CompletionResult]::new('--verbose', '--verbose', [CompletionResultType]::ParameterName, 'Increase diagnostic verbosity; may be repeated')
+            [CompletionResult]::new('-q', '-q', [CompletionResultType]::ParameterName, 'Suppress human summaries, warnings, and progress')
+            [CompletionResult]::new('--quiet', '--quiet', [CompletionResultType]::ParameterName, 'Suppress human summaries, warnings, and progress')
+            [CompletionResult]::new('-h', '-h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', '--help', [CompletionResultType]::ParameterName, 'Print help')
+            break
+        }
+        'btpc;config;tracker;remove' {
+            [CompletionResult]::new('--config', '--config', [CompletionResultType]::ParameterName, 'Use this configuration file when configuration loading is enabled')
+            [CompletionResult]::new('--color', '--color', [CompletionResultType]::ParameterName, 'Control colored terminal output')
+            [CompletionResult]::new('--no-config', '--no-config', [CompletionResultType]::ParameterName, 'Disable implicit and environment-selected configuration')
+            [CompletionResult]::new('-v', '-v', [CompletionResultType]::ParameterName, 'Increase diagnostic verbosity; may be repeated')
+            [CompletionResult]::new('--verbose', '--verbose', [CompletionResultType]::ParameterName, 'Increase diagnostic verbosity; may be repeated')
+            [CompletionResult]::new('-q', '-q', [CompletionResultType]::ParameterName, 'Suppress human summaries, warnings, and progress')
+            [CompletionResult]::new('--quiet', '--quiet', [CompletionResultType]::ParameterName, 'Suppress human summaries, warnings, and progress')
+            [CompletionResult]::new('-h', '-h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', '--help', [CompletionResultType]::ParameterName, 'Print help')
+            break
+        }
+        'btpc;config;tracker;help' {
+            [CompletionResult]::new('list', 'list', [CompletionResultType]::ParameterValue, 'List tracker aliases')
+            [CompletionResult]::new('add', 'add', [CompletionResultType]::ParameterValue, 'Add or replace a tracker alias')
+            [CompletionResult]::new('remove', 'remove', [CompletionResultType]::ParameterValue, 'Remove a tracker alias')
+            [CompletionResult]::new('help', 'help', [CompletionResultType]::ParameterValue, 'Print this message or the help of the given subcommand(s)')
+            break
+        }
+        'btpc;config;tracker;help;list' {
+            break
+        }
+        'btpc;config;tracker;help;add' {
+            break
+        }
+        'btpc;config;tracker;help;remove' {
+            break
+        }
+        'btpc;config;tracker;help;help' {
+            break
+        }
+        'btpc;config;preset' {
+            [CompletionResult]::new('--config', '--config', [CompletionResultType]::ParameterName, 'Use this configuration file when configuration loading is enabled')
+            [CompletionResult]::new('--color', '--color', [CompletionResultType]::ParameterName, 'Control colored terminal output')
+            [CompletionResult]::new('--no-config', '--no-config', [CompletionResultType]::ParameterName, 'Disable implicit and environment-selected configuration')
+            [CompletionResult]::new('-v', '-v', [CompletionResultType]::ParameterName, 'Increase diagnostic verbosity; may be repeated')
+            [CompletionResult]::new('--verbose', '--verbose', [CompletionResultType]::ParameterName, 'Increase diagnostic verbosity; may be repeated')
+            [CompletionResult]::new('-q', '-q', [CompletionResultType]::ParameterName, 'Suppress human summaries, warnings, and progress')
+            [CompletionResult]::new('--quiet', '--quiet', [CompletionResultType]::ParameterName, 'Suppress human summaries, warnings, and progress')
+            [CompletionResult]::new('-h', '-h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', '--help', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('list', 'list', [CompletionResultType]::ParameterValue, 'List preset names')
+            [CompletionResult]::new('show', 'show', [CompletionResultType]::ParameterValue, 'Show one preset')
+            [CompletionResult]::new('save', 'save', [CompletionResultType]::ParameterValue, 'Save or replace a preset')
+            [CompletionResult]::new('remove', 'remove', [CompletionResultType]::ParameterValue, 'Remove a preset')
+            [CompletionResult]::new('help', 'help', [CompletionResultType]::ParameterValue, 'Print this message or the help of the given subcommand(s)')
+            break
+        }
+        'btpc;config;preset;list' {
+            [CompletionResult]::new('--config', '--config', [CompletionResultType]::ParameterName, 'Use this configuration file when configuration loading is enabled')
+            [CompletionResult]::new('--color', '--color', [CompletionResultType]::ParameterName, 'Control colored terminal output')
+            [CompletionResult]::new('--json', '--json', [CompletionResultType]::ParameterName, 'Emit JSON')
+            [CompletionResult]::new('--no-config', '--no-config', [CompletionResultType]::ParameterName, 'Disable implicit and environment-selected configuration')
+            [CompletionResult]::new('-v', '-v', [CompletionResultType]::ParameterName, 'Increase diagnostic verbosity; may be repeated')
+            [CompletionResult]::new('--verbose', '--verbose', [CompletionResultType]::ParameterName, 'Increase diagnostic verbosity; may be repeated')
+            [CompletionResult]::new('-q', '-q', [CompletionResultType]::ParameterName, 'Suppress human summaries, warnings, and progress')
+            [CompletionResult]::new('--quiet', '--quiet', [CompletionResultType]::ParameterName, 'Suppress human summaries, warnings, and progress')
+            [CompletionResult]::new('-h', '-h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', '--help', [CompletionResultType]::ParameterName, 'Print help')
+            break
+        }
+        'btpc;config;preset;show' {
+            [CompletionResult]::new('--config', '--config', [CompletionResultType]::ParameterName, 'Use this configuration file when configuration loading is enabled')
+            [CompletionResult]::new('--color', '--color', [CompletionResultType]::ParameterName, 'Control colored terminal output')
+            [CompletionResult]::new('--show-secrets', '--show-secrets', [CompletionResultType]::ParameterName, 'Reveal configured URLs')
+            [CompletionResult]::new('--json', '--json', [CompletionResultType]::ParameterName, 'Emit JSON')
+            [CompletionResult]::new('--no-config', '--no-config', [CompletionResultType]::ParameterName, 'Disable implicit and environment-selected configuration')
+            [CompletionResult]::new('-v', '-v', [CompletionResultType]::ParameterName, 'Increase diagnostic verbosity; may be repeated')
+            [CompletionResult]::new('--verbose', '--verbose', [CompletionResultType]::ParameterName, 'Increase diagnostic verbosity; may be repeated')
+            [CompletionResult]::new('-q', '-q', [CompletionResultType]::ParameterName, 'Suppress human summaries, warnings, and progress')
+            [CompletionResult]::new('--quiet', '--quiet', [CompletionResultType]::ParameterName, 'Suppress human summaries, warnings, and progress')
+            [CompletionResult]::new('-h', '-h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', '--help', [CompletionResultType]::ParameterName, 'Print help')
+            break
+        }
+        'btpc;config;preset;save' {
+            [CompletionResult]::new('--extends', '--extends', [CompletionResultType]::ParameterName, 'Parent preset; may be repeated')
+            [CompletionResult]::new('--mode', '--mode', [CompletionResultType]::ParameterName, 'mode')
+            [CompletionResult]::new('--piece-length', '--piece-length', [CompletionResultType]::ParameterName, 'piece-length')
+            [CompletionResult]::new('--source', '--source', [CompletionResultType]::ParameterName, 'source')
+            [CompletionResult]::new('--comment', '--comment', [CompletionResultType]::ParameterName, 'comment')
+            [CompletionResult]::new('--created-by', '--created-by', [CompletionResultType]::ParameterName, 'created-by')
+            [CompletionResult]::new('--creation-date', '--creation-date', [CompletionResultType]::ParameterName, 'creation-date')
+            [CompletionResult]::new('--name', '--name', [CompletionResultType]::ParameterName, 'name')
+            [CompletionResult]::new('--symlinks', '--symlinks', [CompletionResultType]::ParameterName, 'symlinks')
+            [CompletionResult]::new('--special-files', '--special-files', [CompletionResultType]::ParameterName, 'special-files')
+            [CompletionResult]::new('--tracker', '--tracker', [CompletionResultType]::ParameterName, 'tracker')
+            [CompletionResult]::new('--tracker-alias', '--tracker-alias', [CompletionResultType]::ParameterName, 'tracker-alias')
+            [CompletionResult]::new('--tracker-group', '--tracker-group', [CompletionResultType]::ParameterName, 'tracker-group')
+            [CompletionResult]::new('--web-seed', '--web-seed', [CompletionResultType]::ParameterName, 'web-seed')
+            [CompletionResult]::new('--include', '--include', [CompletionResultType]::ParameterName, 'include')
+            [CompletionResult]::new('--exclude', '--exclude', [CompletionResultType]::ParameterName, 'exclude')
+            [CompletionResult]::new('--threads', '--threads', [CompletionResultType]::ParameterName, 'threads')
+            [CompletionResult]::new('--config', '--config', [CompletionResultType]::ParameterName, 'Use this configuration file when configuration loading is enabled')
+            [CompletionResult]::new('--color', '--color', [CompletionResultType]::ParameterName, 'Control colored terminal output')
+            [CompletionResult]::new('--private', '--private', [CompletionResultType]::ParameterName, 'private')
+            [CompletionResult]::new('--exclude-hidden', '--exclude-hidden', [CompletionResultType]::ParameterName, 'exclude-hidden')
+            [CompletionResult]::new('--exclude-empty-files', '--exclude-empty-files', [CompletionResultType]::ParameterName, 'exclude-empty-files')
+            [CompletionResult]::new('--reject-empty-directories', '--reject-empty-directories', [CompletionResultType]::ParameterName, 'reject-empty-directories')
+            [CompletionResult]::new('--no-config', '--no-config', [CompletionResultType]::ParameterName, 'Disable implicit and environment-selected configuration')
+            [CompletionResult]::new('-v', '-v', [CompletionResultType]::ParameterName, 'Increase diagnostic verbosity; may be repeated')
+            [CompletionResult]::new('--verbose', '--verbose', [CompletionResultType]::ParameterName, 'Increase diagnostic verbosity; may be repeated')
+            [CompletionResult]::new('-q', '-q', [CompletionResultType]::ParameterName, 'Suppress human summaries, warnings, and progress')
+            [CompletionResult]::new('--quiet', '--quiet', [CompletionResultType]::ParameterName, 'Suppress human summaries, warnings, and progress')
+            [CompletionResult]::new('-h', '-h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', '--help', [CompletionResultType]::ParameterName, 'Print help')
+            break
+        }
+        'btpc;config;preset;remove' {
+            [CompletionResult]::new('--config', '--config', [CompletionResultType]::ParameterName, 'Use this configuration file when configuration loading is enabled')
+            [CompletionResult]::new('--color', '--color', [CompletionResultType]::ParameterName, 'Control colored terminal output')
+            [CompletionResult]::new('--no-config', '--no-config', [CompletionResultType]::ParameterName, 'Disable implicit and environment-selected configuration')
+            [CompletionResult]::new('-v', '-v', [CompletionResultType]::ParameterName, 'Increase diagnostic verbosity; may be repeated')
+            [CompletionResult]::new('--verbose', '--verbose', [CompletionResultType]::ParameterName, 'Increase diagnostic verbosity; may be repeated')
+            [CompletionResult]::new('-q', '-q', [CompletionResultType]::ParameterName, 'Suppress human summaries, warnings, and progress')
+            [CompletionResult]::new('--quiet', '--quiet', [CompletionResultType]::ParameterName, 'Suppress human summaries, warnings, and progress')
+            [CompletionResult]::new('-h', '-h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', '--help', [CompletionResultType]::ParameterName, 'Print help')
+            break
+        }
+        'btpc;config;preset;help' {
+            [CompletionResult]::new('list', 'list', [CompletionResultType]::ParameterValue, 'List preset names')
+            [CompletionResult]::new('show', 'show', [CompletionResultType]::ParameterValue, 'Show one preset')
+            [CompletionResult]::new('save', 'save', [CompletionResultType]::ParameterValue, 'Save or replace a preset')
+            [CompletionResult]::new('remove', 'remove', [CompletionResultType]::ParameterValue, 'Remove a preset')
+            [CompletionResult]::new('help', 'help', [CompletionResultType]::ParameterValue, 'Print this message or the help of the given subcommand(s)')
+            break
+        }
+        'btpc;config;preset;help;list' {
+            break
+        }
+        'btpc;config;preset;help;show' {
+            break
+        }
+        'btpc;config;preset;help;save' {
+            break
+        }
+        'btpc;config;preset;help;remove' {
+            break
+        }
+        'btpc;config;preset;help;help' {
+            break
+        }
+        'btpc;config;help' {
+            [CompletionResult]::new('path', 'path', [CompletionResultType]::ParameterValue, 'Print the selected configuration path')
+            [CompletionResult]::new('init', 'init', [CompletionResultType]::ParameterValue, 'Create a minimal configuration file')
+            [CompletionResult]::new('show', 'show', [CompletionResultType]::ParameterValue, 'Print configuration with secrets redacted by default')
+            [CompletionResult]::new('check', 'check', [CompletionResultType]::ParameterValue, 'Validate schema, references, cycles, conflicts, and permissions')
+            [CompletionResult]::new('explain', 'explain', [CompletionResultType]::ParameterValue, 'Explain resolved command values without executing the command')
+            [CompletionResult]::new('tracker', 'tracker', [CompletionResultType]::ParameterValue, 'Manage named tracker aliases')
+            [CompletionResult]::new('preset', 'preset', [CompletionResultType]::ParameterValue, 'Manage named creation presets')
+            [CompletionResult]::new('help', 'help', [CompletionResultType]::ParameterValue, 'Print this message or the help of the given subcommand(s)')
+            break
+        }
+        'btpc;config;help;path' {
+            break
+        }
+        'btpc;config;help;init' {
+            break
+        }
+        'btpc;config;help;show' {
+            break
+        }
+        'btpc;config;help;check' {
+            break
+        }
+        'btpc;config;help;explain' {
+            [CompletionResult]::new('create', 'create', [CompletionResultType]::ParameterValue, 'Explain effective create values and provenance')
+            break
+        }
+        'btpc;config;help;explain;create' {
+            break
+        }
+        'btpc;config;help;tracker' {
+            [CompletionResult]::new('list', 'list', [CompletionResultType]::ParameterValue, 'List tracker aliases')
+            [CompletionResult]::new('add', 'add', [CompletionResultType]::ParameterValue, 'Add or replace a tracker alias')
+            [CompletionResult]::new('remove', 'remove', [CompletionResultType]::ParameterValue, 'Remove a tracker alias')
+            break
+        }
+        'btpc;config;help;tracker;list' {
+            break
+        }
+        'btpc;config;help;tracker;add' {
+            break
+        }
+        'btpc;config;help;tracker;remove' {
+            break
+        }
+        'btpc;config;help;preset' {
+            [CompletionResult]::new('list', 'list', [CompletionResultType]::ParameterValue, 'List preset names')
+            [CompletionResult]::new('show', 'show', [CompletionResultType]::ParameterValue, 'Show one preset')
+            [CompletionResult]::new('save', 'save', [CompletionResultType]::ParameterValue, 'Save or replace a preset')
+            [CompletionResult]::new('remove', 'remove', [CompletionResultType]::ParameterValue, 'Remove a preset')
+            break
+        }
+        'btpc;config;help;preset;list' {
+            break
+        }
+        'btpc;config;help;preset;show' {
+            break
+        }
+        'btpc;config;help;preset;save' {
+            break
+        }
+        'btpc;config;help;preset;remove' {
+            break
+        }
+        'btpc;config;help;help' {
+            break
+        }
+        'btpc;completion' {
+            [CompletionResult]::new('--config', '--config', [CompletionResultType]::ParameterName, 'Use this configuration file when configuration loading is enabled')
+            [CompletionResult]::new('--color', '--color', [CompletionResultType]::ParameterName, 'Control colored terminal output')
+            [CompletionResult]::new('--no-config', '--no-config', [CompletionResultType]::ParameterName, 'Disable implicit and environment-selected configuration')
+            [CompletionResult]::new('-v', '-v', [CompletionResultType]::ParameterName, 'Increase diagnostic verbosity; may be repeated')
+            [CompletionResult]::new('--verbose', '--verbose', [CompletionResultType]::ParameterName, 'Increase diagnostic verbosity; may be repeated')
+            [CompletionResult]::new('-q', '-q', [CompletionResultType]::ParameterName, 'Suppress human summaries, warnings, and progress')
+            [CompletionResult]::new('--quiet', '--quiet', [CompletionResultType]::ParameterName, 'Suppress human summaries, warnings, and progress')
+            [CompletionResult]::new('-h', '-h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', '--help', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('generate', 'generate', [CompletionResultType]::ParameterValue, 'Generate a shell completion script on stdout')
+            [CompletionResult]::new('install', 'install', [CompletionResultType]::ParameterValue, 'Install shell completions in the standard per-user directory')
+            [CompletionResult]::new('uninstall', 'uninstall', [CompletionResultType]::ParameterValue, 'Remove BTPC-generated shell completions')
+            [CompletionResult]::new('help', 'help', [CompletionResultType]::ParameterValue, 'Print this message or the help of the given subcommand(s)')
+            break
+        }
+        'btpc;completion;generate' {
+            [CompletionResult]::new('--config', '--config', [CompletionResultType]::ParameterName, 'Use this configuration file when configuration loading is enabled')
+            [CompletionResult]::new('--color', '--color', [CompletionResultType]::ParameterName, 'Control colored terminal output')
+            [CompletionResult]::new('--no-config', '--no-config', [CompletionResultType]::ParameterName, 'Disable implicit and environment-selected configuration')
+            [CompletionResult]::new('-v', '-v', [CompletionResultType]::ParameterName, 'Increase diagnostic verbosity; may be repeated')
+            [CompletionResult]::new('--verbose', '--verbose', [CompletionResultType]::ParameterName, 'Increase diagnostic verbosity; may be repeated')
+            [CompletionResult]::new('-q', '-q', [CompletionResultType]::ParameterName, 'Suppress human summaries, warnings, and progress')
+            [CompletionResult]::new('--quiet', '--quiet', [CompletionResultType]::ParameterName, 'Suppress human summaries, warnings, and progress')
+            [CompletionResult]::new('-h', '-h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', '--help', [CompletionResultType]::ParameterName, 'Print help')
+            break
+        }
+        'btpc;completion;install' {
+            [CompletionResult]::new('--config', '--config', [CompletionResultType]::ParameterName, 'Use this configuration file when configuration loading is enabled')
+            [CompletionResult]::new('--color', '--color', [CompletionResultType]::ParameterName, 'Control colored terminal output')
+            [CompletionResult]::new('--dry-run', '--dry-run', [CompletionResultType]::ParameterName, 'Print the target and generated content without changing files')
+            [CompletionResult]::new('--force', '--force', [CompletionResultType]::ParameterName, 'Replace an unrelated existing completion file')
+            [CompletionResult]::new('--no-config', '--no-config', [CompletionResultType]::ParameterName, 'Disable implicit and environment-selected configuration')
+            [CompletionResult]::new('-v', '-v', [CompletionResultType]::ParameterName, 'Increase diagnostic verbosity; may be repeated')
+            [CompletionResult]::new('--verbose', '--verbose', [CompletionResultType]::ParameterName, 'Increase diagnostic verbosity; may be repeated')
+            [CompletionResult]::new('-q', '-q', [CompletionResultType]::ParameterName, 'Suppress human summaries, warnings, and progress')
+            [CompletionResult]::new('--quiet', '--quiet', [CompletionResultType]::ParameterName, 'Suppress human summaries, warnings, and progress')
+            [CompletionResult]::new('-h', '-h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', '--help', [CompletionResultType]::ParameterName, 'Print help')
+            break
+        }
+        'btpc;completion;uninstall' {
+            [CompletionResult]::new('--config', '--config', [CompletionResultType]::ParameterName, 'Use this configuration file when configuration loading is enabled')
+            [CompletionResult]::new('--color', '--color', [CompletionResultType]::ParameterName, 'Control colored terminal output')
+            [CompletionResult]::new('--dry-run', '--dry-run', [CompletionResultType]::ParameterName, 'Print the target and generated content without changing files')
+            [CompletionResult]::new('--force', '--force', [CompletionResultType]::ParameterName, 'Replace an unrelated existing completion file')
+            [CompletionResult]::new('--no-config', '--no-config', [CompletionResultType]::ParameterName, 'Disable implicit and environment-selected configuration')
+            [CompletionResult]::new('-v', '-v', [CompletionResultType]::ParameterName, 'Increase diagnostic verbosity; may be repeated')
+            [CompletionResult]::new('--verbose', '--verbose', [CompletionResultType]::ParameterName, 'Increase diagnostic verbosity; may be repeated')
+            [CompletionResult]::new('-q', '-q', [CompletionResultType]::ParameterName, 'Suppress human summaries, warnings, and progress')
+            [CompletionResult]::new('--quiet', '--quiet', [CompletionResultType]::ParameterName, 'Suppress human summaries, warnings, and progress')
+            [CompletionResult]::new('-h', '-h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', '--help', [CompletionResultType]::ParameterName, 'Print help')
+            break
+        }
+        'btpc;completion;help' {
+            [CompletionResult]::new('generate', 'generate', [CompletionResultType]::ParameterValue, 'Generate a shell completion script on stdout')
+            [CompletionResult]::new('install', 'install', [CompletionResultType]::ParameterValue, 'Install shell completions in the standard per-user directory')
+            [CompletionResult]::new('uninstall', 'uninstall', [CompletionResultType]::ParameterValue, 'Remove BTPC-generated shell completions')
+            [CompletionResult]::new('help', 'help', [CompletionResultType]::ParameterValue, 'Print this message or the help of the given subcommand(s)')
+            break
+        }
+        'btpc;completion;help;generate' {
+            break
+        }
+        'btpc;completion;help;install' {
+            break
+        }
+        'btpc;completion;help;uninstall' {
+            break
+        }
+        'btpc;completion;help;help' {
+            break
+        }
+        'btpc;completions' {
+            [CompletionResult]::new('--config', '--config', [CompletionResultType]::ParameterName, 'Use this configuration file when configuration loading is enabled')
+            [CompletionResult]::new('--color', '--color', [CompletionResultType]::ParameterName, 'Control colored terminal output')
+            [CompletionResult]::new('--no-config', '--no-config', [CompletionResultType]::ParameterName, 'Disable implicit and environment-selected configuration')
+            [CompletionResult]::new('-v', '-v', [CompletionResultType]::ParameterName, 'Increase diagnostic verbosity; may be repeated')
+            [CompletionResult]::new('--verbose', '--verbose', [CompletionResultType]::ParameterName, 'Increase diagnostic verbosity; may be repeated')
+            [CompletionResult]::new('-q', '-q', [CompletionResultType]::ParameterName, 'Suppress human summaries, warnings, and progress')
+            [CompletionResult]::new('--quiet', '--quiet', [CompletionResultType]::ParameterName, 'Suppress human summaries, warnings, and progress')
+            [CompletionResult]::new('-h', '-h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', '--help', [CompletionResultType]::ParameterName, 'Print help')
+            break
+        }
+        'btpc;manpage' {
+            [CompletionResult]::new('--config', '--config', [CompletionResultType]::ParameterName, 'Use this configuration file when configuration loading is enabled')
+            [CompletionResult]::new('--color', '--color', [CompletionResultType]::ParameterName, 'Control colored terminal output')
+            [CompletionResult]::new('--no-config', '--no-config', [CompletionResultType]::ParameterName, 'Disable implicit and environment-selected configuration')
+            [CompletionResult]::new('-v', '-v', [CompletionResultType]::ParameterName, 'Increase diagnostic verbosity; may be repeated')
+            [CompletionResult]::new('--verbose', '--verbose', [CompletionResultType]::ParameterName, 'Increase diagnostic verbosity; may be repeated')
+            [CompletionResult]::new('-q', '-q', [CompletionResultType]::ParameterName, 'Suppress human summaries, warnings, and progress')
+            [CompletionResult]::new('--quiet', '--quiet', [CompletionResultType]::ParameterName, 'Suppress human summaries, warnings, and progress')
+            [CompletionResult]::new('-h', '-h', [CompletionResultType]::ParameterName, 'Print help')
+            [CompletionResult]::new('--help', '--help', [CompletionResultType]::ParameterName, 'Print help')
+            break
+        }
+        'btpc;help' {
+            [CompletionResult]::new('create', 'create', [CompletionResultType]::ParameterValue, 'Create canonical v1, v2, or hybrid metainfo from a file or directory')
+            [CompletionResult]::new('inspect', 'inspect', [CompletionResultType]::ParameterValue, 'Inspect validated metainfo without reading payload files')
+            [CompletionResult]::new('validate', 'validate', [CompletionResultType]::ParameterValue, 'Validate metainfo structure without reading payload files')
+            [CompletionResult]::new('verify', 'verify', [CompletionResultType]::ParameterValue, 'Verify payload files against metainfo hashes')
+            [CompletionResult]::new('edit', 'edit', [CompletionResultType]::ParameterValue, 'Edit metainfo metadata without reading payload files')
+            [CompletionResult]::new('magnet', 'magnet', [CompletionResultType]::ParameterValue, 'Print a deterministic magnet URI')
+            [CompletionResult]::new('config', 'config', [CompletionResultType]::ParameterValue, 'Locate, inspect, validate, and update configuration')
+            [CompletionResult]::new('completion', 'completion', [CompletionResultType]::ParameterValue, 'Generate, install, or uninstall shell completions')
+            [CompletionResult]::new('completions', 'completions', [CompletionResultType]::ParameterValue, 'Generate a shell completion script on stdout (deprecated)')
+            [CompletionResult]::new('manpage', 'manpage', [CompletionResultType]::ParameterValue, 'Generate the btpc(1) manual page on stdout')
+            [CompletionResult]::new('help', 'help', [CompletionResultType]::ParameterValue, 'Print this message or the help of the given subcommand(s)')
+            break
+        }
+        'btpc;help;create' {
+            break
+        }
+        'btpc;help;inspect' {
+            break
+        }
+        'btpc;help;validate' {
+            break
+        }
+        'btpc;help;verify' {
+            break
+        }
+        'btpc;help;edit' {
+            break
+        }
+        'btpc;help;magnet' {
+            break
+        }
+        'btpc;help;config' {
+            [CompletionResult]::new('path', 'path', [CompletionResultType]::ParameterValue, 'Print the selected configuration path')
+            [CompletionResult]::new('init', 'init', [CompletionResultType]::ParameterValue, 'Create a minimal configuration file')
+            [CompletionResult]::new('show', 'show', [CompletionResultType]::ParameterValue, 'Print configuration with secrets redacted by default')
+            [CompletionResult]::new('check', 'check', [CompletionResultType]::ParameterValue, 'Validate schema, references, cycles, conflicts, and permissions')
+            [CompletionResult]::new('explain', 'explain', [CompletionResultType]::ParameterValue, 'Explain resolved command values without executing the command')
+            [CompletionResult]::new('tracker', 'tracker', [CompletionResultType]::ParameterValue, 'Manage named tracker aliases')
+            [CompletionResult]::new('preset', 'preset', [CompletionResultType]::ParameterValue, 'Manage named creation presets')
+            break
+        }
+        'btpc;help;config;path' {
+            break
+        }
+        'btpc;help;config;init' {
+            break
+        }
+        'btpc;help;config;show' {
+            break
+        }
+        'btpc;help;config;check' {
+            break
+        }
+        'btpc;help;config;explain' {
+            [CompletionResult]::new('create', 'create', [CompletionResultType]::ParameterValue, 'Explain effective create values and provenance')
+            break
+        }
+        'btpc;help;config;explain;create' {
+            break
+        }
+        'btpc;help;config;tracker' {
+            [CompletionResult]::new('list', 'list', [CompletionResultType]::ParameterValue, 'List tracker aliases')
+            [CompletionResult]::new('add', 'add', [CompletionResultType]::ParameterValue, 'Add or replace a tracker alias')
+            [CompletionResult]::new('remove', 'remove', [CompletionResultType]::ParameterValue, 'Remove a tracker alias')
+            break
+        }
+        'btpc;help;config;tracker;list' {
+            break
+        }
+        'btpc;help;config;tracker;add' {
+            break
+        }
+        'btpc;help;config;tracker;remove' {
+            break
+        }
+        'btpc;help;config;preset' {
+            [CompletionResult]::new('list', 'list', [CompletionResultType]::ParameterValue, 'List preset names')
+            [CompletionResult]::new('show', 'show', [CompletionResultType]::ParameterValue, 'Show one preset')
+            [CompletionResult]::new('save', 'save', [CompletionResultType]::ParameterValue, 'Save or replace a preset')
+            [CompletionResult]::new('remove', 'remove', [CompletionResultType]::ParameterValue, 'Remove a preset')
+            break
+        }
+        'btpc;help;config;preset;list' {
+            break
+        }
+        'btpc;help;config;preset;show' {
+            break
+        }
+        'btpc;help;config;preset;save' {
+            break
+        }
+        'btpc;help;config;preset;remove' {
+            break
+        }
+        'btpc;help;completion' {
+            [CompletionResult]::new('generate', 'generate', [CompletionResultType]::ParameterValue, 'Generate a shell completion script on stdout')
+            [CompletionResult]::new('install', 'install', [CompletionResultType]::ParameterValue, 'Install shell completions in the standard per-user directory')
+            [CompletionResult]::new('uninstall', 'uninstall', [CompletionResultType]::ParameterValue, 'Remove BTPC-generated shell completions')
+            break
+        }
+        'btpc;help;completion;generate' {
+            break
+        }
+        'btpc;help;completion;install' {
+            break
+        }
+        'btpc;help;completion;uninstall' {
+            break
+        }
+        'btpc;help;completions' {
+            break
+        }
+        'btpc;help;manpage' {
+            break
+        }
+        'btpc;help;help' {
+            break
+        }
+    })
+
+    $completions.Where{ $_.CompletionText -like "$wordToComplete*" } |
+        Sort-Object -Property ListItemText
+}

@@ -1,0 +1,34 @@
+name: Scheduled fuzzing
+
+on:
+  schedule:
+    - cron: "17 4 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fuzz-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  fuzz:
+    name: Scheduled fuzz targets
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@fa04a1451ff1842e2626ccb99004d0195b455a88 # master
+        with:
+          toolchain: nightly
+      - uses: taiki-e/install-action@16b05812d776ae1dfaabc8277e421fb6d2506419 # v2
+        with:
+          tool: cargo-fuzz@0.13.2
+      - run: cargo fuzz run parse fuzz/corpus/parse -- -max_total_time=300
+      - run: cargo fuzz run canonical_roundtrip fuzz/corpus/canonical_roundtrip -- -max_total_time=300
+      - run: cargo fuzz run metainfo fuzz/corpus/metainfo -- -max_total_time=300
+      - run: cargo fuzz run metainfo_roundtrip fuzz/corpus/metainfo_roundtrip -- -max_total_time=300
+      - run: cargo fuzz run magnet fuzz/corpus/magnet -- -max_total_time=300
