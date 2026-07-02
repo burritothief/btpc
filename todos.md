@@ -1817,14 +1817,16 @@ remain adapters over `btpc-core` throughout.
      The dependency/toolchain refresh audit passed policy, Clippy, Rust/Python
      tests, and retained `dependency-refresh-review-28567227613-1`:
      `https://github.com/burritothief/btpc/actions/runs/28567227613`.
-   - Dependabot executed successful Cargo, uv, and GitHub Actions update audits on
-     the published default branch. Vulnerability alerts, security updates, private
-     vulnerability reporting, secret scanning, and push protection are enabled;
-     branch protection requires review and all documented CI contexts.
+   - Dependabot executed successful Cargo and uv update audits and opened GitHub
+     Actions update PR #2; its dependency review, CodeQL, coverage, and complete
+     13-context CI matrix all passed:
+     `https://github.com/burritothief/btpc/pull/2`. Vulnerability alerts, security
+     updates, private vulnerability reporting, secret scanning, and push protection
+     are enabled; branch protection requires review and all documented CI contexts.
    Notes:
-   - The repository is public under MIT. Dependabot found no dependency changes
-     requiring a pull request in the current locked manifests; all three ecosystem
-     audit runs completed successfully instead.
+   - The repository is public under MIT. Cargo and uv required no manifest changes;
+     PR #2 remains intentionally unmerged for explicit maintainer review because
+     automatic dependency merging is prohibited.
 
 47. [x] Build the benchmark harness foundation and canonical ISO preflight
    Claimed by: Codex implementer (2026-07-01 16:05 PDT)
