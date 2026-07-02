@@ -4540,8 +4540,8 @@ remain adapters over `btpc-core` throughout.
      supplied precise smoke observations instead; no temporary captures were
      committed.
 
-98. [ ] Generate a complete Python API reference from public btpc modules
-   Claimed by:
+98. [x] Generate a complete Python API reference from public btpc modules
+   Claimed by: Codex implementer (2026-07-02 14:18 PDT)
    Requirements:
    `DOCSITE-PYTHON-001`, `DOCSITE-BUILD-001`, `DOCSITE-QUALITY-001`,
    `PYAPI-DOCSTRING-001`, `PYAPI-MODULES-001`, `TEST-TDD-001`.
@@ -4580,7 +4580,31 @@ remain adapters over `btpc-core` throughout.
    Build from a clean checkout context with no editable `btpc` import available.
    Run Ruff, the Python test suite, spec validation, and generated-site link checks.
    Evidence:
+   - Added `tests/docs/test_python_reference.py` first; its initial run reported
+     3 failures for absent module pages, missing annotation-aware handler options,
+     and absent canonical generated anchors. The retained suite now reports 4
+     passed, and the complete docs suite reports 12 passed.
+   - Added explicit mkdocstrings pages for all exports in `btpc.creation`,
+     `btpc.metainfo`, `btpc.verification`, `btpc.types`, and `btpc.errors`, plus a
+     root-alias API index. Tests derive the inventory from each source `__all__`,
+     require one generated defining-module anchor per symbol, and reject private
+     native/conversion anchors.
+   - Configured the locked Griffe handler for the `python` source path, Google
+     docstrings, source ordering, annotated signatures, cross-reference links,
+     brief annotation paths, and hidden source. A test copies the package without
+     native binaries and loads every public module with runtime inspection disabled.
+   - Generated HTML preserves callback annotations, `Raises` sections,
+     `Metainfo.from_bytes` parameter/return types, and a live cross-reference from
+     `ParseOptions` to its canonical types page. `make docs-site` completes in
+     strict mode and `scripts/check_docs.py` validates 63 Markdown files.
+   - Todo 95's docstring suite reports 6 passed; `scripts/check_python_types.sh`
+     passes Pyrefly and Pyright consumer checks; native stub parity passes; the
+     complete Python suite reports 71 passed. Repository Ruff lint/format,
+     codespell, `git diff --check`, and spec validation (16 specs, 118
+     requirements) pass.
    Notes:
+   - Reference generation is static and does not import `btpc` or require the
+     checkout's compiled `_native` extension.
 
 99. [ ] Embed fresh warning-free btpc-core rustdoc into the unified site
    Claimed by:

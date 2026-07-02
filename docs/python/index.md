@@ -19,6 +19,61 @@ The public package is `btpc`; `btpc._native` is private. The package is typed,
 ships `py.typed`, supports CPython 3.11–3.14, and delegates parsing, hashing,
 traversal, Merkle construction, creation, and verification to Rust.
 
+## Workflow Reference
+
+- Create torrent bytes with [`create_bytes`](reference/creation.md#btpc.creation.create_bytes)
+  or publish atomically with [`create`](reference/creation.md#btpc.creation.create),
+  configured by [`CreateOptions`](reference/creation.md#btpc.creation.CreateOptions).
+- Parse with [`Metainfo.from_bytes`](reference/metainfo.md#btpc.metainfo.Metainfo.from_bytes)
+  or [`Metainfo.read`](reference/metainfo.md#btpc.metainfo.Metainfo.read), then inspect
+  [`TorrentFile`](reference/metainfo.md#btpc.metainfo.TorrentFile) values.
+- Edit with [`Metainfo.edit`](reference/metainfo.md#btpc.metainfo.Metainfo.edit),
+  serialize with [`Metainfo.to_bytes`](reference/metainfo.md#btpc.metainfo.Metainfo.to_bytes),
+  or build a magnet URI with [`Metainfo.magnet`](reference/metainfo.md#btpc.metainfo.Metainfo.magnet).
+- Verify through [`Metainfo.verify`](reference/metainfo.md#btpc.metainfo.Metainfo.verify)
+  or [`verify`](reference/verification.md#btpc.verification.verify) and inspect the
+  resulting [`PayloadVerificationReport`](reference/verification.md#btpc.verification.PayloadVerificationReport).
+
+## Public API Index
+
+Root imports are aliases of the canonical objects below. Each object is documented
+once on its defining-module page.
+
+- **Creation:** [`CancellationToken`](reference/creation.md#btpc.creation.CancellationToken),
+  [`CreateMetrics`](reference/creation.md#btpc.creation.CreateMetrics),
+  [`CreateOptions`](reference/creation.md#btpc.creation.CreateOptions),
+  [`CreateResult`](reference/creation.md#btpc.creation.CreateResult),
+  [`create`](reference/creation.md#btpc.creation.create), and
+  [`create_bytes`](reference/creation.md#btpc.creation.create_bytes).
+- **Metainfo:** [`Metainfo`](reference/metainfo.md#btpc.metainfo.Metainfo),
+  [`TorrentFile`](reference/metainfo.md#btpc.metainfo.TorrentFile), and
+  [`ValidationReport`](reference/metainfo.md#btpc.metainfo.ValidationReport).
+- **Verification:** [`MismatchKind`](reference/verification.md#btpc.verification.MismatchKind),
+  [`PayloadMismatch`](reference/verification.md#btpc.verification.PayloadMismatch),
+  [`PayloadVerificationReport`](reference/verification.md#btpc.verification.PayloadVerificationReport),
+  and [`verify`](reference/verification.md#btpc.verification.verify).
+- **Types:** [`UNCHANGED`](reference/types.md#btpc.types.UNCHANGED),
+  [`HashValue`](reference/types.md#btpc.types.HashValue),
+  [`ParseOptions`](reference/types.md#btpc.types.ParseOptions),
+  [`TorrentBytes`](reference/types.md#btpc.types.TorrentBytes),
+  [`TorrentMode`](reference/types.md#btpc.types.TorrentMode), and
+  [`TorrentPath`](reference/types.md#btpc.types.TorrentPath).
+- **Errors:** [`BencodeError`](reference/errors.md#btpc.errors.BencodeError),
+  [`BtpcError`](reference/errors.md#btpc.errors.BtpcError),
+  [`CancelledError`](reference/errors.md#btpc.errors.CancelledError),
+  [`MetainfoError`](reference/errors.md#btpc.errors.MetainfoError),
+  [`PathError`](reference/errors.md#btpc.errors.PathError),
+  [`ResourceLimitError`](reference/errors.md#btpc.errors.ResourceLimitError),
+  [`UnsupportedError`](reference/errors.md#btpc.errors.UnsupportedError), and
+  [`VerificationError`](reference/errors.md#btpc.errors.VerificationError).
+
+<a id="package-version"></a>
+### Package version
+
+`btpc.__version__` is the installed package version string. The module names
+`btpc.creation`, `btpc.metainfo`, `btpc.verification`, `btpc.types`, and
+`btpc.errors` are also available from the package root.
+
 ## Create, Read, Verify
 
 ```python

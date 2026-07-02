@@ -39,6 +39,12 @@ nav:
   - Python:
       - Overview: python/index.md
       - Examples: python/examples.md
+      - API Reference:
+          - Creation: python/reference/creation.md
+          - Metainfo: python/reference/metainfo.md
+          - Verification: python/reference/verification.md
+          - Types: python/reference/types.md
+          - Errors: python/reference/errors.md
   - Rust:
       - Overview: rust/index.md
   - Performance: performance.md
@@ -81,6 +87,11 @@ plugins:
             - python
           options:
             docstring_style: google
+            members_order: source
+            show_signature_annotations: true
+            signature_crossrefs: true
+            annotations_path: brief
+            heading_level: 2
             show_source: false
 
 markdown_extensions:
