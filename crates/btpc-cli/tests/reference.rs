@@ -104,7 +104,7 @@ fn checked_in_help_reference_matches_the_binary() {
         assert!(output.status.success());
         assert_eq!(
             normalized_help(&output.stdout),
-            fs::read_to_string(root.join(name)).unwrap(),
+            normalized_help(&fs::read(root.join(name)).unwrap()),
             "stale help reference {name}"
         );
     }
