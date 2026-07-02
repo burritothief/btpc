@@ -1,0 +1,11 @@
+Validate schema, references, cycles, conflicts, and permissions
+
+Usage: btpc config check [OPTIONS]
+
+Options:
+      --config <PATH>  Use this configuration file when configuration loading is enabled
+      --no-config      Disable implicit and environment-selected configuration
+      --color <COLOR>  Control colored terminal output [possible values: auto, always, never]
+  -v, --verbose...     Increase diagnostic verbosity; may be repeated
+  -q, --quiet          Suppress human summaries, warnings, and progress
+  -h, --help           Print help

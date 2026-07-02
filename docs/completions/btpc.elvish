@@ -1,0 +1,762 @@
+
+use builtin;
+use str;
+
+set edit:completion:arg-completer[btpc] = {|@words|
+    fn spaces {|n|
+        builtin:repeat $n ' ' | str:join ''
+    }
+    fn cand {|text desc|
+        edit:complex-candidate $text &display=$text' '(spaces (- 14 (wcswidth $text)))$desc
+    }
+    var command = 'btpc'
+    for word $words[1..-1] {
+        if (str:has-prefix $word '-') {
+            break
+        }
+        set command = $command';'$word
+    }
+    var completions = [
+        &'btpc'= {
+            cand --config 'Use this configuration file when configuration loading is enabled'
+            cand --color 'Control colored terminal output'
+            cand --no-config 'Disable implicit and environment-selected configuration'
+            cand -v 'Increase diagnostic verbosity; may be repeated'
+            cand --verbose 'Increase diagnostic verbosity; may be repeated'
+            cand -q 'Suppress human summaries, warnings, and progress'
+            cand --quiet 'Suppress human summaries, warnings, and progress'
+            cand -h 'Print help'
+            cand --help 'Print help'
+            cand -V 'Print version'
+            cand --version 'Print version'
+            cand create 'Create canonical v1, v2, or hybrid metainfo from a file or directory'
+            cand inspect 'Inspect validated metainfo without reading payload files'
+            cand validate 'Validate metainfo structure without reading payload files'
+            cand verify 'Verify payload files against metainfo hashes'
+            cand edit 'Edit metainfo metadata without reading payload files'
+            cand magnet 'Print a deterministic magnet URI'
+            cand config 'Locate, inspect, validate, and update configuration'
+            cand completion 'Generate, install, or uninstall shell completions'
+            cand completions 'Generate a shell completion script on stdout (deprecated)'
+            cand manpage 'Generate the btpc(1) manual page on stdout'
+            cand help 'Print this message or the help of the given subcommand(s)'
+        }
+        &'btpc;create'= {
+            cand --batch 'Versioned TOML batch manifest'
+            cand --mode 'Torrent protocol representation'
+            cand -o 'Destination .torrent path (defaults beside the payload)'
+            cand --output 'Destination .torrent path (defaults beside the payload)'
+            cand --output-dir 'output-dir'
+            cand --jobs 'jobs'
+            cand --preset 'Apply a named creation preset; may be repeated'
+            cand --piece-length 'Explicit piece length in bytes'
+            cand --target-pieces 'target-pieces'
+            cand --max-piece-length 'max-piece-length'
+            cand -a 'Add a tracker as its own tier; may be repeated'
+            cand --tracker 'Add a tracker as its own tier; may be repeated'
+            cand --tracker-tier 'Add one comma-separated tracker tier; may be repeated'
+            cand --tracker-alias 'tracker-alias'
+            cand --tracker-group 'tracker-group'
+            cand --web-seed 'Add a web seed URL; may be repeated'
+            cand --node 'Add a DHT node as HOST:PORT; may be repeated'
+            cand --source 'Set the source field'
+            cand --comment 'Set the top-level comment'
+            cand --created-by 'Set the creator string'
+            cand --creation-date 'Include an explicit Unix creation timestamp'
+            cand --entropy 'entropy'
+            cand --name 'Override the torrent root name'
+            cand --symlinks 'Symbolic-link policy'
+            cand --special-files 'Special-file policy'
+            cand --include 'Include only paths matching this glob; may be repeated'
+            cand --exclude 'Exclude paths matching this glob; may be repeated'
+            cand --threads 'v1 hashing threads; 0 selects a conservative automatic count, 1 is sequential'
+            cand --print 'print'
+            cand --config 'Use this configuration file when configuration loading is enabled'
+            cand --color 'Control colored terminal output'
+            cand --fail-fast 'fail-fast'
+            cand -f 'Replace an existing destination'
+            cand --force 'Replace an existing destination'
+            cand --durable 'Sync the destination directory after atomic publication where supported'
+            cand --clear-trackers 'Clear configured and preset trackers before CLI additions'
+            cand --clear-web-seeds 'Clear configured and preset web seeds before CLI additions'
+            cand --private 'Set the private flag'
+            cand --public 'public'
+            cand --clear-source 'clear-source'
+            cand --clear-comment 'clear-comment'
+            cand --no-created-by 'Omit the creator string instead of using the versioned default'
+            cand --exclude-hidden 'Exclude dot-prefixed files and directories'
+            cand --exclude-empty-files 'Exclude zero-length files'
+            cand --reject-empty-directories 'Reject empty directories instead of ignoring them'
+            cand --clear-includes 'Clear configured and preset include patterns before CLI additions'
+            cand --clear-excludes 'Clear configured and preset exclude patterns before CLI additions'
+            cand --dry-run 'dry-run'
+            cand --json 'Emit a versioned JSON result to stdout'
+            cand --pretty 'Use the expanded human completion renderer'
+            cand --no-config 'Disable implicit and environment-selected configuration'
+            cand -v 'Increase diagnostic verbosity; may be repeated'
+            cand --verbose 'Increase diagnostic verbosity; may be repeated'
+            cand -q 'Suppress human summaries, warnings, and progress'
+            cand --quiet 'Suppress human summaries, warnings, and progress'
+            cand -h 'Print help'
+            cand --help 'Print help'
+        }
+        &'btpc;inspect'= {
+            cand --field 'Select a field; may be repeated'
+            cand --path-encoding 'Encode raw torrent paths'
+            cand --offset 'Skip this many file rows'
+            cand --limit 'Limit returned file rows'
+            cand --format 'Select output representation'
+            cand --max-input-bytes 'Maximum metainfo bytes accepted while loading'
+            cand --max-owned-bytes 'Maximum estimated owned allocation while loading'
+            cand --max-integer-digits 'Maximum decimal digits accepted in one bencode integer'
+            cand --config 'Use this configuration file when configuration loading is enabled'
+            cand --color 'Control colored terminal output'
+            cand --json 'Emit versioned JSON to stdout'
+            cand --files 'Include the flat file listing'
+            cand --tree 'Render files as a deterministic tree'
+            cand --pretty 'Use the expanded human renderer'
+            cand --no-config 'Disable implicit and environment-selected configuration'
+            cand -v 'Increase diagnostic verbosity; may be repeated'
+            cand --verbose 'Increase diagnostic verbosity; may be repeated'
+            cand -q 'Suppress human summaries, warnings, and progress'
+            cand --quiet 'Suppress human summaries, warnings, and progress'
+            cand -h 'Print help'
+            cand --help 'Print help'
+        }
+        &'btpc;validate'= {
+            cand --format 'format'
+            cand --max-input-bytes 'Maximum metainfo bytes accepted while loading'
+            cand --max-owned-bytes 'Maximum estimated owned allocation while loading'
+            cand --max-integer-digits 'Maximum decimal digits accepted in one bencode integer'
+            cand --config 'Use this configuration file when configuration loading is enabled'
+            cand --color 'Control colored terminal output'
+            cand --json 'json'
+            cand --canonical 'canonical'
+            cand --warnings-as-errors 'warnings-as-errors'
+            cand --pretty 'pretty'
+            cand --no-config 'Disable implicit and environment-selected configuration'
+            cand -v 'Increase diagnostic verbosity; may be repeated'
+            cand --verbose 'Increase diagnostic verbosity; may be repeated'
+            cand -q 'Suppress human summaries, warnings, and progress'
+            cand --quiet 'Suppress human summaries, warnings, and progress'
+            cand -h 'Print help'
+            cand --help 'Print help'
+        }
+        &'btpc;verify'= {
+            cand --max-input-bytes 'Maximum metainfo bytes accepted while loading'
+            cand --max-owned-bytes 'Maximum estimated owned allocation while loading'
+            cand --max-integer-digits 'Maximum decimal digits accepted in one bencode integer'
+            cand --config 'Use this configuration file when configuration loading is enabled'
+            cand --color 'Control colored terminal output'
+            cand --fail-fast 'Stop after the first deterministic mismatch'
+            cand --extra-files 'Report regular files absent from metainfo'
+            cand --json 'Emit versioned JSON to stdout'
+            cand --pretty 'Use the expanded human renderer'
+            cand --no-config 'Disable implicit and environment-selected configuration'
+            cand -v 'Increase diagnostic verbosity; may be repeated'
+            cand --verbose 'Increase diagnostic verbosity; may be repeated'
+            cand -q 'Suppress human summaries, warnings, and progress'
+            cand --quiet 'Suppress human summaries, warnings, and progress'
+            cand -h 'Print help'
+            cand --help 'Print help'
+        }
+        &'btpc;edit'= {
+            cand -o 'o'
+            cand --output 'output'
+            cand -a 'a'
+            cand --tracker 'tracker'
+            cand --tracker-alias 'tracker-alias'
+            cand --tracker-group 'tracker-group'
+            cand --web-seed 'web-seed'
+            cand --node 'node'
+            cand --comment 'comment'
+            cand --created-by 'created-by'
+            cand --creation-date 'creation-date'
+            cand --source 'source'
+            cand --file-attributes 'file-attributes'
+            cand --config 'Use this configuration file when configuration loading is enabled'
+            cand --color 'Control colored terminal output'
+            cand --in-place 'in-place'
+            cand -f 'f'
+            cand --force 'force'
+            cand --durable 'durable'
+            cand --dry-run 'dry-run'
+            cand --diff 'diff'
+            cand --json 'json'
+            cand --clear-trackers 'clear-trackers'
+            cand --clear-web-seeds 'clear-web-seeds'
+            cand --clear-nodes 'clear-nodes'
+            cand --clear-comment 'clear-comment'
+            cand --clear-created-by 'clear-created-by'
+            cand --clear-creation-date 'clear-creation-date'
+            cand --private 'private'
+            cand --public 'public'
+            cand --clear-private 'clear-private'
+            cand --clear-source 'clear-source'
+            cand --no-config 'Disable implicit and environment-selected configuration'
+            cand -v 'Increase diagnostic verbosity; may be repeated'
+            cand --verbose 'Increase diagnostic verbosity; may be repeated'
+            cand -q 'Suppress human summaries, warnings, and progress'
+            cand --quiet 'Suppress human summaries, warnings, and progress'
+            cand -h 'Print help'
+            cand --help 'Print help'
+        }
+        &'btpc;magnet'= {
+            cand --max-input-bytes 'Maximum metainfo bytes accepted while loading'
+            cand --max-owned-bytes 'Maximum estimated owned allocation while loading'
+            cand --max-integer-digits 'Maximum decimal digits accepted in one bencode integer'
+            cand --config 'Use this configuration file when configuration loading is enabled'
+            cand --color 'Control colored terminal output'
+            cand --no-display-name 'Omit the display name parameter'
+            cand --no-trackers 'Omit tracker parameters'
+            cand --no-web-seeds 'Omit web seed parameters'
+            cand --no-config 'Disable implicit and environment-selected configuration'
+            cand -v 'Increase diagnostic verbosity; may be repeated'
+            cand --verbose 'Increase diagnostic verbosity; may be repeated'
+            cand -q 'Suppress human summaries, warnings, and progress'
+            cand --quiet 'Suppress human summaries, warnings, and progress'
+            cand -h 'Print help'
+            cand --help 'Print help'
+        }
+        &'btpc;config'= {
+            cand --config 'Use this configuration file when configuration loading is enabled'
+            cand --color 'Control colored terminal output'
+            cand --no-config 'Disable implicit and environment-selected configuration'
+            cand -v 'Increase diagnostic verbosity; may be repeated'
+            cand --verbose 'Increase diagnostic verbosity; may be repeated'
+            cand -q 'Suppress human summaries, warnings, and progress'
+            cand --quiet 'Suppress human summaries, warnings, and progress'
+            cand -h 'Print help'
+            cand --help 'Print help'
+            cand path 'Print the selected configuration path'
+            cand init 'Create a minimal configuration file'
+            cand show 'Print configuration with secrets redacted by default'
+            cand check 'Validate schema, references, cycles, conflicts, and permissions'
+            cand explain 'Explain resolved command values without executing the command'
+            cand tracker 'Manage named tracker aliases'
+            cand preset 'Manage named creation presets'
+            cand help 'Print this message or the help of the given subcommand(s)'
+        }
+        &'btpc;config;path'= {
+            cand --config 'Use this configuration file when configuration loading is enabled'
+            cand --color 'Control colored terminal output'
+            cand --no-config 'Disable implicit and environment-selected configuration'
+            cand -v 'Increase diagnostic verbosity; may be repeated'
+            cand --verbose 'Increase diagnostic verbosity; may be repeated'
+            cand -q 'Suppress human summaries, warnings, and progress'
+            cand --quiet 'Suppress human summaries, warnings, and progress'
+            cand -h 'Print help'
+            cand --help 'Print help'
+        }
+        &'btpc;config;init'= {
+            cand --config 'Use this configuration file when configuration loading is enabled'
+            cand --color 'Control colored terminal output'
+            cand --force 'Replace an existing file'
+            cand --no-config 'Disable implicit and environment-selected configuration'
+            cand -v 'Increase diagnostic verbosity; may be repeated'
+            cand --verbose 'Increase diagnostic verbosity; may be repeated'
+            cand -q 'Suppress human summaries, warnings, and progress'
+            cand --quiet 'Suppress human summaries, warnings, and progress'
+            cand -h 'Print help'
+            cand --help 'Print help'
+        }
+        &'btpc;config;show'= {
+            cand --config 'Use this configuration file when configuration loading is enabled'
+            cand --color 'Control colored terminal output'
+            cand --resolved 'Validate and print the parsed deterministic representation'
+            cand --show-secrets 'Reveal configured secrets'
+            cand --json 'Emit JSON instead of TOML'
+            cand --no-config 'Disable implicit and environment-selected configuration'
+            cand -v 'Increase diagnostic verbosity; may be repeated'
+            cand --verbose 'Increase diagnostic verbosity; may be repeated'
+            cand -q 'Suppress human summaries, warnings, and progress'
+            cand --quiet 'Suppress human summaries, warnings, and progress'
+            cand -h 'Print help'
+            cand --help 'Print help'
+        }
+        &'btpc;config;check'= {
+            cand --config 'Use this configuration file when configuration loading is enabled'
+            cand --color 'Control colored terminal output'
+            cand --no-config 'Disable implicit and environment-selected configuration'
+            cand -v 'Increase diagnostic verbosity; may be repeated'
+            cand --verbose 'Increase diagnostic verbosity; may be repeated'
+            cand -q 'Suppress human summaries, warnings, and progress'
+            cand --quiet 'Suppress human summaries, warnings, and progress'
+            cand -h 'Print help'
+            cand --help 'Print help'
+        }
+        &'btpc;config;explain'= {
+            cand --config 'Use this configuration file when configuration loading is enabled'
+            cand --color 'Control colored terminal output'
+            cand --no-config 'Disable implicit and environment-selected configuration'
+            cand -v 'Increase diagnostic verbosity; may be repeated'
+            cand --verbose 'Increase diagnostic verbosity; may be repeated'
+            cand -q 'Suppress human summaries, warnings, and progress'
+            cand --quiet 'Suppress human summaries, warnings, and progress'
+            cand -h 'Print help'
+            cand --help 'Print help'
+            cand create 'Explain effective create values and provenance'
+            cand help 'Print this message or the help of the given subcommand(s)'
+        }
+        &'btpc;config;explain;create'= {
+            cand --batch 'Versioned TOML batch manifest'
+            cand --mode 'Torrent protocol representation'
+            cand -o 'Destination .torrent path (defaults beside the payload)'
+            cand --output 'Destination .torrent path (defaults beside the payload)'
+            cand --output-dir 'output-dir'
+            cand --jobs 'jobs'
+            cand --preset 'Apply a named creation preset; may be repeated'
+            cand --piece-length 'Explicit piece length in bytes'
+            cand --target-pieces 'target-pieces'
+            cand --max-piece-length 'max-piece-length'
+            cand -a 'Add a tracker as its own tier; may be repeated'
+            cand --tracker 'Add a tracker as its own tier; may be repeated'
+            cand --tracker-tier 'Add one comma-separated tracker tier; may be repeated'
+            cand --tracker-alias 'tracker-alias'
+            cand --tracker-group 'tracker-group'
+            cand --web-seed 'Add a web seed URL; may be repeated'
+            cand --node 'Add a DHT node as HOST:PORT; may be repeated'
+            cand --source 'Set the source field'
+            cand --comment 'Set the top-level comment'
+            cand --created-by 'Set the creator string'
+            cand --creation-date 'Include an explicit Unix creation timestamp'
+            cand --entropy 'entropy'
+            cand --name 'Override the torrent root name'
+            cand --symlinks 'Symbolic-link policy'
+            cand --special-files 'Special-file policy'
+            cand --include 'Include only paths matching this glob; may be repeated'
+            cand --exclude 'Exclude paths matching this glob; may be repeated'
+            cand --threads 'v1 hashing threads; 0 selects a conservative automatic count, 1 is sequential'
+            cand --print 'print'
+            cand --config 'Use this configuration file when configuration loading is enabled'
+            cand --color 'Control colored terminal output'
+            cand --fail-fast 'fail-fast'
+            cand -f 'Replace an existing destination'
+            cand --force 'Replace an existing destination'
+            cand --durable 'Sync the destination directory after atomic publication where supported'
+            cand --clear-trackers 'Clear configured and preset trackers before CLI additions'
+            cand --clear-web-seeds 'Clear configured and preset web seeds before CLI additions'
+            cand --private 'Set the private flag'
+            cand --public 'public'
+            cand --clear-source 'clear-source'
+            cand --clear-comment 'clear-comment'
+            cand --no-created-by 'Omit the creator string instead of using the versioned default'
+            cand --exclude-hidden 'Exclude dot-prefixed files and directories'
+            cand --exclude-empty-files 'Exclude zero-length files'
+            cand --reject-empty-directories 'Reject empty directories instead of ignoring them'
+            cand --clear-includes 'Clear configured and preset include patterns before CLI additions'
+            cand --clear-excludes 'Clear configured and preset exclude patterns before CLI additions'
+            cand --dry-run 'dry-run'
+            cand --json 'Emit a versioned JSON result to stdout'
+            cand --pretty 'Use the expanded human completion renderer'
+            cand --no-config 'Disable implicit and environment-selected configuration'
+            cand -v 'Increase diagnostic verbosity; may be repeated'
+            cand --verbose 'Increase diagnostic verbosity; may be repeated'
+            cand -q 'Suppress human summaries, warnings, and progress'
+            cand --quiet 'Suppress human summaries, warnings, and progress'
+            cand -h 'Print help'
+            cand --help 'Print help'
+        }
+        &'btpc;config;explain;help'= {
+            cand create 'Explain effective create values and provenance'
+            cand help 'Print this message or the help of the given subcommand(s)'
+        }
+        &'btpc;config;explain;help;create'= {
+        }
+        &'btpc;config;explain;help;help'= {
+        }
+        &'btpc;config;tracker'= {
+            cand --config 'Use this configuration file when configuration loading is enabled'
+            cand --color 'Control colored terminal output'
+            cand --no-config 'Disable implicit and environment-selected configuration'
+            cand -v 'Increase diagnostic verbosity; may be repeated'
+            cand --verbose 'Increase diagnostic verbosity; may be repeated'
+            cand -q 'Suppress human summaries, warnings, and progress'
+            cand --quiet 'Suppress human summaries, warnings, and progress'
+            cand -h 'Print help'
+            cand --help 'Print help'
+            cand list 'List tracker aliases'
+            cand add 'Add or replace a tracker alias'
+            cand remove 'Remove a tracker alias'
+            cand help 'Print this message or the help of the given subcommand(s)'
+        }
+        &'btpc;config;tracker;list'= {
+            cand --config 'Use this configuration file when configuration loading is enabled'
+            cand --color 'Control colored terminal output'
+            cand --show-secrets 'Reveal tracker URLs'
+            cand --json 'Emit JSON'
+            cand --no-config 'Disable implicit and environment-selected configuration'
+            cand -v 'Increase diagnostic verbosity; may be repeated'
+            cand --verbose 'Increase diagnostic verbosity; may be repeated'
+            cand -q 'Suppress human summaries, warnings, and progress'
+            cand --quiet 'Suppress human summaries, warnings, and progress'
+            cand -h 'Print help'
+            cand --help 'Print help'
+        }
+        &'btpc;config;tracker;add'= {
+            cand --config 'Use this configuration file when configuration loading is enabled'
+            cand --color 'Control colored terminal output'
+            cand --no-config 'Disable implicit and environment-selected configuration'
+            cand -v 'Increase diagnostic verbosity; may be repeated'
+            cand --verbose 'Increase diagnostic verbosity; may be repeated'
+            cand -q 'Suppress human summaries, warnings, and progress'
+            cand --quiet 'Suppress human summaries, warnings, and progress'
+            cand -h 'Print help'
+            cand --help 'Print help'
+        }
+        &'btpc;config;tracker;remove'= {
+            cand --config 'Use this configuration file when configuration loading is enabled'
+            cand --color 'Control colored terminal output'
+            cand --no-config 'Disable implicit and environment-selected configuration'
+            cand -v 'Increase diagnostic verbosity; may be repeated'
+            cand --verbose 'Increase diagnostic verbosity; may be repeated'
+            cand -q 'Suppress human summaries, warnings, and progress'
+            cand --quiet 'Suppress human summaries, warnings, and progress'
+            cand -h 'Print help'
+            cand --help 'Print help'
+        }
+        &'btpc;config;tracker;help'= {
+            cand list 'List tracker aliases'
+            cand add 'Add or replace a tracker alias'
+            cand remove 'Remove a tracker alias'
+            cand help 'Print this message or the help of the given subcommand(s)'
+        }
+        &'btpc;config;tracker;help;list'= {
+        }
+        &'btpc;config;tracker;help;add'= {
+        }
+        &'btpc;config;tracker;help;remove'= {
+        }
+        &'btpc;config;tracker;help;help'= {
+        }
+        &'btpc;config;preset'= {
+            cand --config 'Use this configuration file when configuration loading is enabled'
+            cand --color 'Control colored terminal output'
+            cand --no-config 'Disable implicit and environment-selected configuration'
+            cand -v 'Increase diagnostic verbosity; may be repeated'
+            cand --verbose 'Increase diagnostic verbosity; may be repeated'
+            cand -q 'Suppress human summaries, warnings, and progress'
+            cand --quiet 'Suppress human summaries, warnings, and progress'
+            cand -h 'Print help'
+            cand --help 'Print help'
+            cand list 'List preset names'
+            cand show 'Show one preset'
+            cand save 'Save or replace a preset'
+            cand remove 'Remove a preset'
+            cand help 'Print this message or the help of the given subcommand(s)'
+        }
+        &'btpc;config;preset;list'= {
+            cand --config 'Use this configuration file when configuration loading is enabled'
+            cand --color 'Control colored terminal output'
+            cand --json 'Emit JSON'
+            cand --no-config 'Disable implicit and environment-selected configuration'
+            cand -v 'Increase diagnostic verbosity; may be repeated'
+            cand --verbose 'Increase diagnostic verbosity; may be repeated'
+            cand -q 'Suppress human summaries, warnings, and progress'
+            cand --quiet 'Suppress human summaries, warnings, and progress'
+            cand -h 'Print help'
+            cand --help 'Print help'
+        }
+        &'btpc;config;preset;show'= {
+            cand --config 'Use this configuration file when configuration loading is enabled'
+            cand --color 'Control colored terminal output'
+            cand --show-secrets 'Reveal configured URLs'
+            cand --json 'Emit JSON'
+            cand --no-config 'Disable implicit and environment-selected configuration'
+            cand -v 'Increase diagnostic verbosity; may be repeated'
+            cand --verbose 'Increase diagnostic verbosity; may be repeated'
+            cand -q 'Suppress human summaries, warnings, and progress'
+            cand --quiet 'Suppress human summaries, warnings, and progress'
+            cand -h 'Print help'
+            cand --help 'Print help'
+        }
+        &'btpc;config;preset;save'= {
+            cand --extends 'Parent preset; may be repeated'
+            cand --mode 'mode'
+            cand --piece-length 'piece-length'
+            cand --source 'source'
+            cand --comment 'comment'
+            cand --created-by 'created-by'
+            cand --creation-date 'creation-date'
+            cand --name 'name'
+            cand --symlinks 'symlinks'
+            cand --special-files 'special-files'
+            cand --tracker 'tracker'
+            cand --tracker-alias 'tracker-alias'
+            cand --tracker-group 'tracker-group'
+            cand --web-seed 'web-seed'
+            cand --include 'include'
+            cand --exclude 'exclude'
+            cand --threads 'threads'
+            cand --config 'Use this configuration file when configuration loading is enabled'
+            cand --color 'Control colored terminal output'
+            cand --private 'private'
+            cand --exclude-hidden 'exclude-hidden'
+            cand --exclude-empty-files 'exclude-empty-files'
+            cand --reject-empty-directories 'reject-empty-directories'
+            cand --no-config 'Disable implicit and environment-selected configuration'
+            cand -v 'Increase diagnostic verbosity; may be repeated'
+            cand --verbose 'Increase diagnostic verbosity; may be repeated'
+            cand -q 'Suppress human summaries, warnings, and progress'
+            cand --quiet 'Suppress human summaries, warnings, and progress'
+            cand -h 'Print help'
+            cand --help 'Print help'
+        }
+        &'btpc;config;preset;remove'= {
+            cand --config 'Use this configuration file when configuration loading is enabled'
+            cand --color 'Control colored terminal output'
+            cand --no-config 'Disable implicit and environment-selected configuration'
+            cand -v 'Increase diagnostic verbosity; may be repeated'
+            cand --verbose 'Increase diagnostic verbosity; may be repeated'
+            cand -q 'Suppress human summaries, warnings, and progress'
+            cand --quiet 'Suppress human summaries, warnings, and progress'
+            cand -h 'Print help'
+            cand --help 'Print help'
+        }
+        &'btpc;config;preset;help'= {
+            cand list 'List preset names'
+            cand show 'Show one preset'
+            cand save 'Save or replace a preset'
+            cand remove 'Remove a preset'
+            cand help 'Print this message or the help of the given subcommand(s)'
+        }
+        &'btpc;config;preset;help;list'= {
+        }
+        &'btpc;config;preset;help;show'= {
+        }
+        &'btpc;config;preset;help;save'= {
+        }
+        &'btpc;config;preset;help;remove'= {
+        }
+        &'btpc;config;preset;help;help'= {
+        }
+        &'btpc;config;help'= {
+            cand path 'Print the selected configuration path'
+            cand init 'Create a minimal configuration file'
+            cand show 'Print configuration with secrets redacted by default'
+            cand check 'Validate schema, references, cycles, conflicts, and permissions'
+            cand explain 'Explain resolved command values without executing the command'
+            cand tracker 'Manage named tracker aliases'
+            cand preset 'Manage named creation presets'
+            cand help 'Print this message or the help of the given subcommand(s)'
+        }
+        &'btpc;config;help;path'= {
+        }
+        &'btpc;config;help;init'= {
+        }
+        &'btpc;config;help;show'= {
+        }
+        &'btpc;config;help;check'= {
+        }
+        &'btpc;config;help;explain'= {
+            cand create 'Explain effective create values and provenance'
+        }
+        &'btpc;config;help;explain;create'= {
+        }
+        &'btpc;config;help;tracker'= {
+            cand list 'List tracker aliases'
+            cand add 'Add or replace a tracker alias'
+            cand remove 'Remove a tracker alias'
+        }
+        &'btpc;config;help;tracker;list'= {
+        }
+        &'btpc;config;help;tracker;add'= {
+        }
+        &'btpc;config;help;tracker;remove'= {
+        }
+        &'btpc;config;help;preset'= {
+            cand list 'List preset names'
+            cand show 'Show one preset'
+            cand save 'Save or replace a preset'
+            cand remove 'Remove a preset'
+        }
+        &'btpc;config;help;preset;list'= {
+        }
+        &'btpc;config;help;preset;show'= {
+        }
+        &'btpc;config;help;preset;save'= {
+        }
+        &'btpc;config;help;preset;remove'= {
+        }
+        &'btpc;config;help;help'= {
+        }
+        &'btpc;completion'= {
+            cand --config 'Use this configuration file when configuration loading is enabled'
+            cand --color 'Control colored terminal output'
+            cand --no-config 'Disable implicit and environment-selected configuration'
+            cand -v 'Increase diagnostic verbosity; may be repeated'
+            cand --verbose 'Increase diagnostic verbosity; may be repeated'
+            cand -q 'Suppress human summaries, warnings, and progress'
+            cand --quiet 'Suppress human summaries, warnings, and progress'
+            cand -h 'Print help'
+            cand --help 'Print help'
+            cand generate 'Generate a shell completion script on stdout'
+            cand install 'Install shell completions in the standard per-user directory'
+            cand uninstall 'Remove BTPC-generated shell completions'
+            cand help 'Print this message or the help of the given subcommand(s)'
+        }
+        &'btpc;completion;generate'= {
+            cand --config 'Use this configuration file when configuration loading is enabled'
+            cand --color 'Control colored terminal output'
+            cand --no-config 'Disable implicit and environment-selected configuration'
+            cand -v 'Increase diagnostic verbosity; may be repeated'
+            cand --verbose 'Increase diagnostic verbosity; may be repeated'
+            cand -q 'Suppress human summaries, warnings, and progress'
+            cand --quiet 'Suppress human summaries, warnings, and progress'
+            cand -h 'Print help'
+            cand --help 'Print help'
+        }
+        &'btpc;completion;install'= {
+            cand --config 'Use this configuration file when configuration loading is enabled'
+            cand --color 'Control colored terminal output'
+            cand --dry-run 'Print the target and generated content without changing files'
+            cand --force 'Replace an unrelated existing completion file'
+            cand --no-config 'Disable implicit and environment-selected configuration'
+            cand -v 'Increase diagnostic verbosity; may be repeated'
+            cand --verbose 'Increase diagnostic verbosity; may be repeated'
+            cand -q 'Suppress human summaries, warnings, and progress'
+            cand --quiet 'Suppress human summaries, warnings, and progress'
+            cand -h 'Print help'
+            cand --help 'Print help'
+        }
+        &'btpc;completion;uninstall'= {
+            cand --config 'Use this configuration file when configuration loading is enabled'
+            cand --color 'Control colored terminal output'
+            cand --dry-run 'Print the target and generated content without changing files'
+            cand --force 'Replace an unrelated existing completion file'
+            cand --no-config 'Disable implicit and environment-selected configuration'
+            cand -v 'Increase diagnostic verbosity; may be repeated'
+            cand --verbose 'Increase diagnostic verbosity; may be repeated'
+            cand -q 'Suppress human summaries, warnings, and progress'
+            cand --quiet 'Suppress human summaries, warnings, and progress'
+            cand -h 'Print help'
+            cand --help 'Print help'
+        }
+        &'btpc;completion;help'= {
+            cand generate 'Generate a shell completion script on stdout'
+            cand install 'Install shell completions in the standard per-user directory'
+            cand uninstall 'Remove BTPC-generated shell completions'
+            cand help 'Print this message or the help of the given subcommand(s)'
+        }
+        &'btpc;completion;help;generate'= {
+        }
+        &'btpc;completion;help;install'= {
+        }
+        &'btpc;completion;help;uninstall'= {
+        }
+        &'btpc;completion;help;help'= {
+        }
+        &'btpc;completions'= {
+            cand --config 'Use this configuration file when configuration loading is enabled'
+            cand --color 'Control colored terminal output'
+            cand --no-config 'Disable implicit and environment-selected configuration'
+            cand -v 'Increase diagnostic verbosity; may be repeated'
+            cand --verbose 'Increase diagnostic verbosity; may be repeated'
+            cand -q 'Suppress human summaries, warnings, and progress'
+            cand --quiet 'Suppress human summaries, warnings, and progress'
+            cand -h 'Print help'
+            cand --help 'Print help'
+        }
+        &'btpc;manpage'= {
+            cand --config 'Use this configuration file when configuration loading is enabled'
+            cand --color 'Control colored terminal output'
+            cand --no-config 'Disable implicit and environment-selected configuration'
+            cand -v 'Increase diagnostic verbosity; may be repeated'
+            cand --verbose 'Increase diagnostic verbosity; may be repeated'
+            cand -q 'Suppress human summaries, warnings, and progress'
+            cand --quiet 'Suppress human summaries, warnings, and progress'
+            cand -h 'Print help'
+            cand --help 'Print help'
+        }
+        &'btpc;help'= {
+            cand create 'Create canonical v1, v2, or hybrid metainfo from a file or directory'
+            cand inspect 'Inspect validated metainfo without reading payload files'
+            cand validate 'Validate metainfo structure without reading payload files'
+            cand verify 'Verify payload files against metainfo hashes'
+            cand edit 'Edit metainfo metadata without reading payload files'
+            cand magnet 'Print a deterministic magnet URI'
+            cand config 'Locate, inspect, validate, and update configuration'
+            cand completion 'Generate, install, or uninstall shell completions'
+            cand completions 'Generate a shell completion script on stdout (deprecated)'
+            cand manpage 'Generate the btpc(1) manual page on stdout'
+            cand help 'Print this message or the help of the given subcommand(s)'
+        }
+        &'btpc;help;create'= {
+        }
+        &'btpc;help;inspect'= {
+        }
+        &'btpc;help;validate'= {
+        }
+        &'btpc;help;verify'= {
+        }
+        &'btpc;help;edit'= {
+        }
+        &'btpc;help;magnet'= {
+        }
+        &'btpc;help;config'= {
+            cand path 'Print the selected configuration path'
+            cand init 'Create a minimal configuration file'
+            cand show 'Print configuration with secrets redacted by default'
+            cand check 'Validate schema, references, cycles, conflicts, and permissions'
+            cand explain 'Explain resolved command values without executing the command'
+            cand tracker 'Manage named tracker aliases'
+            cand preset 'Manage named creation presets'
+        }
+        &'btpc;help;config;path'= {
+        }
+        &'btpc;help;config;init'= {
+        }
+        &'btpc;help;config;show'= {
+        }
+        &'btpc;help;config;check'= {
+        }
+        &'btpc;help;config;explain'= {
+            cand create 'Explain effective create values and provenance'
+        }
+        &'btpc;help;config;explain;create'= {
+        }
+        &'btpc;help;config;tracker'= {
+            cand list 'List tracker aliases'
+            cand add 'Add or replace a tracker alias'
+            cand remove 'Remove a tracker alias'
+        }
+        &'btpc;help;config;tracker;list'= {
+        }
+        &'btpc;help;config;tracker;add'= {
+        }
+        &'btpc;help;config;tracker;remove'= {
+        }
+        &'btpc;help;config;preset'= {
+            cand list 'List preset names'
+            cand show 'Show one preset'
+            cand save 'Save or replace a preset'
+            cand remove 'Remove a preset'
+        }
+        &'btpc;help;config;preset;list'= {
+        }
+        &'btpc;help;config;preset;show'= {
+        }
+        &'btpc;help;config;preset;save'= {
+        }
+        &'btpc;help;config;preset;remove'= {
+        }
+        &'btpc;help;completion'= {
+            cand generate 'Generate a shell completion script on stdout'
+            cand install 'Install shell completions in the standard per-user directory'
+            cand uninstall 'Remove BTPC-generated shell completions'
+        }
+        &'btpc;help;completion;generate'= {
+        }
+        &'btpc;help;completion;install'= {
+        }
+        &'btpc;help;completion;uninstall'= {
+        }
+        &'btpc;help;completions'= {
+        }
+        &'btpc;help;manpage'= {
+        }
+        &'btpc;help;help'= {
+        }
+    ]
+    $completions[$command]
+}

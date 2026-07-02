@@ -1,0 +1,58 @@
+name: Dependency and toolchain refresh audit
+
+on:
+  schedule:
+    - cron: "17 9 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dependency-refresh-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  refresh:
+    name: Review upgraded lockfiles
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@fa04a1451ff1842e2626ccb99004d0195b455a88 # master
+        with:
+          toolchain: 1.94.1
+          components: clippy,rustfmt
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+          python-version: "3.14"
+      - uses: taiki-e/install-action@16b05812d776ae1dfaabc8277e421fb6d2506419 # v2
+        with:
+          tool: cargo-deny@0.19.9
+      - run: cargo update
+      - run: uv lock --upgrade
+      - run: cargo deny check
+      - run: cargo clippy --workspace --all-targets --all-features -- -D warnings
+      - run: cargo test --workspace --all-features
+      - run: uv sync --all-groups --locked
+      - run: uv run maturin develop
+      - run: uv run pytest tests/python
+      - name: Record review inputs
+        shell: bash
+        run: |
+          {
+            rustc --version
+            cargo --version
+            uv --version
+            git diff -- Cargo.lock uv.lock
+          } > dependency-refresh.txt
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: dependency-refresh-review-${{ github.run_id }}-${{ github.run_attempt }}
+          path: dependency-refresh.txt
+          if-no-files-found: error
+          retention-days: 3

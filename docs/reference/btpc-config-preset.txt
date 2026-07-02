@@ -1,0 +1,18 @@
+Manage named creation presets
+
+Usage: btpc config preset [OPTIONS] <COMMAND>
+
+Commands:
+  list    List preset names
+  show    Show one preset
+  save    Save or replace a preset
+  remove  Remove a preset
+  help    Print this message or the help of the given subcommand(s)
+
+Options:
+      --config <PATH>  Use this configuration file when configuration loading is enabled
+      --no-config      Disable implicit and environment-selected configuration
+      --color <COLOR>  Control colored terminal output [possible values: auto, always, never]
+  -v, --verbose...     Increase diagnostic verbosity; may be repeated
+  -q, --quiet          Suppress human summaries, warnings, and progress
+  -h, --help           Print help

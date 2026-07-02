@@ -1,0 +1,36 @@
+name: Repository maintenance
+
+on:
+  schedule:
+    - cron: "47 8 * * 4"
+  workflow_dispatch:
+
+concurrency:
+  group: maintenance-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  documentation:
+    name: Maintenance / documentation
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out source
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+      - name: Install uv and Python
+        uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+          python-version: "3.11"
+      - name: Install locked maintenance tools
+        run: uv sync --all-groups --locked
+      - name: Check documentation links
+        run: uv run python scripts/check_docs.py
+      - name: Check spelling
+        run: uv run codespell README.md CONTRIBUTING.md SECURITY.md CHANGELOG.md docs specs python tests scripts crates Cargo.toml pyproject.toml Makefile deny.toml .github --skip='*.bin,*.torrent,*.stderr,docs/completions/*,docs/reference/*'

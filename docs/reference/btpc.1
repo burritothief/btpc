@@ -1,0 +1,76 @@
+.ie \n(.g .ds Aq \(aq
+.el .ds Aq '
+.TH btpc 1  "btpc 0.1.0" 
+.SH NAME
+btpc \- BitTorrent metainfo toolkit
+.SH SYNOPSIS
+\fBbtpc\fR [\fB\-\-config\fR] [\fB\-\-no\-config\fR] [\fB\-\-color\fR] [\fB\-v\fR|\fB\-\-verbose\fR]... [\fB\-q\fR|\fB\-\-quiet\fR] [\fB\-h\fR|\fB\-\-help\fR] [\fB\-V\fR|\fB\-\-version\fR] <\fIsubcommands\fR>
+.SH DESCRIPTION
+BitTorrent metainfo toolkit
+.SH OPTIONS
+.TP
+\fB\-\-config\fR \fI<PATH>\fR
+Use this configuration file when configuration loading is enabled
+.TP
+\fB\-\-no\-config\fR
+Disable implicit and environment\-selected configuration
+.TP
+\fB\-\-color\fR \fI<COLOR>\fR
+Control colored terminal output
+.br
+
+.br
+\fIPossible values:\fR
+.RS 14
+.IP \(bu 2
+auto
+.IP \(bu 2
+always
+.IP \(bu 2
+never
+.RE
+.TP
+\fB\-v\fR, \fB\-\-verbose\fR
+Increase diagnostic verbosity; may be repeated
+.TP
+\fB\-q\fR, \fB\-\-quiet\fR
+Suppress human summaries, warnings, and progress
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+Print help
+.TP
+\fB\-V\fR, \fB\-\-version\fR
+Print version
+.SH SUBCOMMANDS
+.TP
+btpc\-create(1)
+Create canonical v1, v2, or hybrid metainfo from a file or directory
+.TP
+btpc\-inspect(1)
+Inspect validated metainfo without reading payload files
+.TP
+btpc\-validate(1)
+Validate metainfo structure without reading payload files
+.TP
+btpc\-verify(1)
+Verify payload files against metainfo hashes
+.TP
+btpc\-edit(1)
+Edit metainfo metadata without reading payload files
+.TP
+btpc\-magnet(1)
+Print a deterministic magnet URI
+.TP
+btpc\-config(1)
+Locate, inspect, validate, and update configuration
+.TP
+btpc\-completion(1)
+Generate, install, or uninstall shell completions
+.TP
+btpc\-manpage(1)
+Generate the btpc(1) manual page on stdout
+.TP
+btpc\-help(1)
+Print this message or the help of the given subcommand(s)
+.SH VERSION
+v0.1.0

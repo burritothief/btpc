@@ -1,0 +1,20 @@
+{
+  "architecture": "arm64",
+  "filesystem": "apfs",
+  "hostname": "Mac.lan",
+  "kernel": "Darwin Kernel Version 25.5.0: Mon Apr 27 20:39:42 PDT 2026; root:xnu-12377.121.6~2/RELEASE_ARM64_T6031",
+  "locale": "C/C.UTF-8/C/C/C/C",
+  "logical_cores": 14,
+  "memory_bytes": 38654705664,
+  "os": "Darwin",
+  "os_release": "25.5.0",
+  "physical_cores": 14,
+  "processor": "arm",
+  "psutil": "7.2.2",
+  "python": "3.14.3 (main, Feb  4 2026, 01:51:49) [Clang 21.1.4 ]",
+  "python_executable": "/Users/jeff/src/btpc/.venv/bin/python3",
+  "timezone": [
+    "PST",
+    "PDT"
+  ]
+}

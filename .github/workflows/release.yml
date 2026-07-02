@@ -1,0 +1,333 @@
+name: Release artifacts
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing vX.Y.Z tag to validate and release
+        required: false
+        type: string
+      publish:
+        description: Publish a draft GitHub release and PyPI artifacts
+        required: true
+        default: false
+        type: boolean
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  version:
+    name: Validate release version
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6
+        with:
+          python-version: "3.11"
+      - id: version
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
+        shell: bash
+        run: |
+          arguments=()
+          if [[ "${{ inputs.publish }}" == "true" && -z "$RELEASE_TAG" ]]; then
+            echo "publishing requires an existing vX.Y.Z tag" >&2
+            exit 2
+          fi
+          if [[ -n "$RELEASE_TAG" ]]; then arguments+=(--tag "$RELEASE_TAG"); fi
+          version=$(uv run python scripts/check_version.py "${arguments[@]}")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+  rust-api:
+    name: Rust public API compatibility
+    needs: version
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@fa04a1451ff1842e2626ccb99004d0195b455a88 # master
+        with:
+          toolchain: 1.94.1
+      - uses: taiki-e/install-action@16b05812d776ae1dfaabc8277e421fb6d2506419 # v2
+        with:
+          tool: cargo-semver-checks@0.42.0
+      - name: Compare with previous release tag
+        env:
+          RELEASE_VERSION: ${{ needs.version.outputs.version }}
+        shell: bash
+        run: |
+          current="v${RELEASE_VERSION}"
+          baseline=$(git tag --sort=-version:refname --list 'v*' | grep -Fxv "$current" | head -n 1 || true)
+          if [[ -z "$baseline" ]]; then
+            echo "No previous release tag exists; skipping initial-release comparison."
+          else
+            scripts/check_rust_api.sh "$baseline"
+          fi
+
+  wheels:
+    name: Wheel ${{ matrix.platform.name }} CPython ${{ matrix.python }}
+    needs: version
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.12", "3.13", "3.14"]
+        platform:
+          - name: linux-x86_64
+            os: ubuntu-latest
+            target: x86_64
+            manylinux: "2_28"
+          - name: linux-aarch64
+            os: ubuntu-24.04-arm
+            target: aarch64
+            manylinux: "2_28"
+          - name: macos-x86_64
+            os: macos-15-intel
+            target: x86_64-apple-darwin
+            manylinux: "off"
+          - name: macos-aarch64
+            os: macos-14
+            target: aarch64-apple-darwin
+            manylinux: "off"
+          - name: windows-x86_64
+            os: windows-latest
+            target: x86_64-pc-windows-msvc
+            manylinux: "off"
+    runs-on: ${{ matrix.platform.os }}
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: PyO3/maturin-action@e83996d129638aa358a18fbd1dfb82f0b0fb5d3b # v1.51.0
+        if: runner.os == 'Linux'
+        with:
+          maturin-version: v1.11.5
+          target: ${{ matrix.platform.target }}
+          manylinux: ${{ matrix.platform.manylinux }}
+          args: --release --locked --compatibility pypi --out dist -i python${{ matrix.python }}
+      - uses: PyO3/maturin-action@e83996d129638aa358a18fbd1dfb82f0b0fb5d3b # v1.51.0
+        if: runner.os != 'Linux'
+        with:
+          maturin-version: v1.11.5
+          target: ${{ matrix.platform.target }}
+          args: --release --locked --compatibility pypi --out dist -i python
+      - name: Install and smoke-test wheel
+        shell: bash
+        run: |
+          python -m pip install --force-reinstall dist/*.whl
+          python scripts/smoke_wheel.py "$RUNNER_TEMP/btpc-wheel-smoke"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: wheel-${{ matrix.platform.name }}-python-${{ matrix.python }}
+          path: dist/*.whl
+          if-no-files-found: error
+
+  source-distribution:
+    name: Python source distribution
+    needs: version
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@fa04a1451ff1842e2626ccb99004d0195b455a88 # master
+        with:
+          toolchain: 1.94.1
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6
+        with:
+          python-version: "3.11"
+      - run: uv sync --all-groups --locked
+      - run: uv run maturin sdist --out dist
+      - run: uv run python scripts/package_source.py --version "${{ needs.version.outputs.version }}" --output dist
+      - name: Install and smoke-test sdist
+        shell: bash
+        run: |
+          python -m venv "$RUNNER_TEMP/sdist-venv"
+          "$RUNNER_TEMP/sdist-venv/bin/python" -m pip install "dist/btpc-${{ needs.version.outputs.version }}.tar.gz"
+          "$RUNNER_TEMP/sdist-venv/bin/python" scripts/smoke_wheel.py "$RUNNER_TEMP/btpc-sdist-smoke"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: python-sdist
+          path: dist/btpc-${{ needs.version.outputs.version }}.tar.gz
+          if-no-files-found: error
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: project-source
+          path: dist/btpc-${{ needs.version.outputs.version }}-source.tar.gz
+          if-no-files-found: error
+
+  cli:
+    name: CLI ${{ matrix.name }}
+    needs: version
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: linux-x86_64
+            os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            binary: target/release/btpc
+          - name: linux-aarch64
+            os: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+            binary: target/release/btpc
+          - name: macos-x86_64
+            os: macos-15-intel
+            target: x86_64-apple-darwin
+            binary: target/release/btpc
+          - name: macos-aarch64
+            os: macos-14
+            target: aarch64-apple-darwin
+            binary: target/release/btpc
+          - name: windows-x86_64
+            os: windows-latest
+            target: x86_64-pc-windows-msvc
+            binary: target/release/btpc.exe
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@fa04a1451ff1842e2626ccb99004d0195b455a88 # master
+        with:
+          toolchain: 1.94.1
+          targets: ${{ matrix.target }}
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6
+        with:
+          python-version: "3.11"
+      - run: cargo build --release --locked -p btpc-cli --target ${{ matrix.target }}
+      - name: Locate and smoke-test binary
+        env:
+          RELEASE_VERSION: ${{ needs.version.outputs.version }}
+          TARGET_TRIPLE: ${{ matrix.target }}
+        shell: bash
+        run: |
+          binary="target/${TARGET_TRIPLE}/release/btpc"
+          if [[ "${{ runner.os }}" == "Windows" ]]; then binary="$binary.exe"; fi
+          uv run python scripts/smoke_cli.py "$binary"
+          uv run python scripts/package_cli.py --binary "$binary" --target "$TARGET_TRIPLE" --version "$RELEASE_VERSION" --output dist
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: cli-${{ matrix.name }}
+          path: dist/*
+          if-no-files-found: error
+
+  validate:
+    name: Validate assembled artifacts
+    needs: [version, wheels, source-distribution, cli]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6
+        with:
+          python-version: "3.11"
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          pattern: wheel-*
+          path: dist
+          merge-multiple: true
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: python-sdist
+          path: dist
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: project-source
+          path: dist
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          pattern: cli-*
+          path: dist
+          merge-multiple: true
+      - name: Verify assembled artifacts
+        env:
+          RELEASE_VERSION: ${{ needs.version.outputs.version }}
+        run: uv run python scripts/verify_artifacts.py dist --version "$RELEASE_VERSION"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: release-candidate-${{ needs.version.outputs.version }}
+          path: dist/*
+          if-no-files-found: error
+
+  attest:
+    name: Attest release candidate
+    if: inputs.publish == true
+    needs: [version, validate]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: release-candidate-${{ needs.version.outputs.version }}
+          path: dist
+      - uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
+        with:
+          subject-path: dist/*
+
+  github-release:
+    name: Create draft GitHub release
+    if: inputs.publish == true
+    needs: [version, validate, attest]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: release-candidate-${{ needs.version.outputs.version }}
+          path: dist
+      - uses: softprops/action-gh-release@718ea10b132b3b2eba29c1007bb80653f286566b # v3
+        with:
+          tag_name: ${{ inputs.tag }}
+          draft: true
+          generate_release_notes: true
+          files: dist/*
+
+  pypi:
+    name: Publish to PyPI with Trusted Publishing
+    if: inputs.publish == true
+    needs: [version, validate, attest]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: pypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          pattern: wheel-*
+          path: dist
+          merge-multiple: true
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: python-sdist
+          path: dist
+      - uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b # v1.14.0
+        with:
+          packages-dir: dist

@@ -133,7 +133,7 @@ fn unfiltered_and_match_all_scans_are_identical() {
 #[cfg(any(target_os = "linux", target_os = "android"))]
 #[test]
 fn non_utf8_names_preserve_raw_bytes() {
-    use std::os::unix::ffi::{OsStrExt as _, OsStringExt as _};
+    use std::os::unix::ffi::OsStringExt as _;
 
     let temp = TempDir::new().unwrap();
     let root = temp.path().join("payload");

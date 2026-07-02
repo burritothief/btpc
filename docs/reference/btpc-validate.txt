@@ -1,0 +1,36 @@
+Validate metainfo structure without reading payload files
+
+Usage: btpc validate [OPTIONS] <INPUT>
+
+Arguments:
+  <INPUT>  
+
+Options:
+      --config <PATH>
+          Use this configuration file when configuration loading is enabled
+      --json
+          
+      --format <FORMAT>
+          [possible values: human, json, json-pretty]
+      --no-config
+          Disable implicit and environment-selected configuration
+      --canonical
+          
+      --color <COLOR>
+          Control colored terminal output [possible values: auto, always, never]
+  -v, --verbose...
+          Increase diagnostic verbosity; may be repeated
+      --warnings-as-errors
+          
+      --pretty
+          
+  -q, --quiet
+          Suppress human summaries, warnings, and progress
+      --max-input-bytes <MAX_INPUT_BYTES>
+          Maximum metainfo bytes accepted while loading
+      --max-owned-bytes <MAX_OWNED_BYTES>
+          Maximum estimated owned allocation while loading
+      --max-integer-digits <MAX_INTEGER_DIGITS>
+          Maximum decimal digits accepted in one bencode integer
+  -h, --help
+          Print help
