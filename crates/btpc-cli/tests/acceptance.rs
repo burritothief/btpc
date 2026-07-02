@@ -10,7 +10,7 @@ fn btpc(home: &TempDir) -> Command {
         .env("HOME", home.path())
         .env("XDG_CONFIG_HOME", home.path().join("config"))
         .env("XDG_DATA_HOME", home.path().join("data"))
-        .env_remove("BTPC_CONFIG");
+        .env("BTPC_CONFIG", home.path().join("config/btpc/config.toml"));
     command
 }
 
