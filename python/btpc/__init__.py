@@ -1,4 +1,4 @@
-"""Typed Python interface for BTPC."""
+"""Create, parse, inspect, edit, and verify BitTorrent metainfo."""
 
 from typing import Final
 

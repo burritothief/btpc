@@ -1,4 +1,4 @@
-"""Payload verification values and functions."""
+"""Verify payload files against v1 pieces and v2 Merkle roots."""
 
 from __future__ import annotations
 
@@ -32,7 +32,13 @@ class MismatchKind(Enum):
 
 @dataclass(frozen=True, slots=True)
 class PayloadMismatch:
-    """One deterministic payload mismatch."""
+    """Describe one deterministic payload mismatch.
+
+    Attributes:
+        kind: Stable mismatch category.
+        path: Payload-relative filesystem path.
+        piece: Zero-based v1 piece index when the mismatch is piece-specific.
+    """
 
     kind: MismatchKind
     path: Path
@@ -41,7 +47,11 @@ class PayloadMismatch:
 
 @dataclass(frozen=True, slots=True)
 class PayloadVerificationReport:
-    """Completed payload verification report."""
+    """Collect deterministic mismatches from a completed verification.
+
+    Attributes:
+        mismatches: Mismatches in deterministic path and piece order.
+    """
 
     mismatches: tuple[PayloadMismatch, ...]
 
@@ -60,7 +70,47 @@ def verify(  # noqa: PLR0913
     progress: Callable[[int, int, int], None] | None = None,
     cancellation: CancellationToken | None = None,
 ) -> PayloadVerificationReport:
-    """Verify a payload using the native core verifier."""
+    r"""Verify payload content against all hashes represented by metainfo.
+
+    ``payload`` points directly to a single-file payload or to the root directory of
+    a multi-file torrent. v1 verification hashes the logical concatenated file
+    stream; v2 verification checks each file's Merkle root; hybrid torrents check
+    both. Content mismatches are returned, while unsafe paths and operational I/O
+    failures raise exceptions.
+
+    Args:
+        metainfo: Parsed torrent describing the expected payload.
+        payload: Payload file or root directory.
+        fail_fast: Stop after the first mismatch when true.
+        extra_files: Include files absent from the torrent as mismatches.
+        progress: Optional callback receiving ``(completed_bytes, total_bytes,
+            completed_pieces)``. Callback exceptions propagate unchanged.
+        cancellation: Cooperative cancellation token.
+
+    Returns:
+        A report containing zero or more deterministic mismatches.
+
+    Raises:
+        PathError: If a required payload path cannot be read safely.
+        VerificationError: If verification cannot be completed under the selected
+            policy.
+        CancelledError: If ``cancellation`` is requested.
+        Exception: Any exception raised by ``progress``.
+
+    Examples:
+        >>> from pathlib import Path
+        >>> from tempfile import TemporaryDirectory
+        >>> from btpc import CreateOptions, Metainfo, create_bytes, verify
+        >>> with TemporaryDirectory() as directory:
+        ...     payload = Path(directory) / "hello.txt"
+        ...     _ = payload.write_bytes(b"hello torrent\\n")
+        ...     created = create_bytes(
+        ...         payload,
+        ...         options=CreateOptions(creation_date=0, threads=1),
+        ...     )
+        ...     torrent = Metainfo.from_bytes(created.bytes)
+        ...     assert verify(torrent, payload).is_valid
+    """
     try:
         value = metainfo._native.verify(  # noqa: SLF001
             Path(payload),

@@ -1,4 +1,4 @@
-"""Public BTPC exception hierarchy."""
+"""Catch structured errors from parsing, creation, editing, and verification."""
 
 from __future__ import annotations
 
@@ -9,7 +9,19 @@ if TYPE_CHECKING:
 
 
 class BtpcError(Exception):
-    """Base error with structured core context."""
+    """Base class for stable BTPC error categories.
+
+    Inspect the optional attributes instead of parsing the human-readable message.
+    Only attributes relevant to a particular failure are populated.
+
+    Attributes:
+        offset: Encoded byte offset for syntax or canonicalization failures.
+        field: Protocol field associated with a validation failure.
+        path: Filesystem path associated with an I/O or safety failure.
+        limit: Resource-limit name.
+        actual: Observed resource value.
+        maximum: Configured maximum resource value.
+    """
 
     def __init__(  # noqa: PLR0913
         self,
@@ -33,23 +45,23 @@ class BtpcError(Exception):
 
 
 class BencodeError(BtpcError):
-    """Invalid bencode syntax or canonical form."""
+    """Report malformed bencode syntax or an invalid canonical encoding."""
 
 
 class MetainfoError(BtpcError):
-    """Invalid metainfo protocol fields."""
+    """Report torrent fields that violate v1, v2, or hybrid protocol rules."""
 
 
 class PathError(BtpcError):
-    """Filesystem or path failure."""
+    """Report filesystem I/O, unsafe path, traversal, or destination failures."""
 
 
 class VerificationError(BtpcError):
-    """Payload verification mismatch."""
+    """Report an operational failure that prevents payload verification."""
 
 
 class UnsupportedError(BtpcError):
-    """Unsupported feature or policy."""
+    """Report a requested feature or policy that BTPC does not support."""
 
 
 class ResourceLimitError(BtpcError):
@@ -68,7 +80,7 @@ class ResourceLimitError(BtpcError):
 
 
 class CancelledError(BtpcError):
-    """Operation cancelled by the caller."""
+    """Report cooperative cancellation requested through a cancellation token."""
 
 
 __all__ = [

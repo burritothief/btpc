@@ -87,6 +87,40 @@ The documented Python create, parse, magnet, and verify workflow **MUST** execut
 for v1, v2, and hybrid. The same workflow **MUST** be reusable against an
 installed wheel in a clean environment without importing repository internals.
 
+### PYAPI-DOCSTRING-001 — Provide concise editor-ready public API documentation
+
+- **Status:** Implemented
+- **Sources:** `python/btpc`
+- **Verification:** `tests/python`
+- **Depends on:** `PYAPI-MODULES-001`, `PYAPI-TYPE-COMPLETE-001`, `PYAPI-DOC-001`
+
+Every public Python module, class, function, method, property, enum, exception, and
+dataclass field **MUST** have human-readable documentation suitable for editor hover
+help and generated API reference pages. Docstrings **MUST** use the repository's
+Google-style convention, open with a direct one-line summary, and describe behavior
+rather than restating the signature or implementation. Public names **MUST NOT** be
+documented in terms of private native classes, adapter internals, requirement IDs,
+or implementation history.
+
+High-use workflow APIs **MUST** document parameters, returns, important exceptions,
+byte/text behavior, side effects, defaults that materially affect output, and one
+short representative example. This tier includes `CreateOptions`, `create`,
+`create_bytes`, `Metainfo`, `Metainfo.from_bytes`, `Metainfo.read`,
+`Metainfo.edit`, `Metainfo.verify`, `Metainfo.magnet`, `Metainfo.to_bytes`, the
+top-level `verify`, `ParseOptions`, and cancellation/progress behavior. Examples
+**SHOULD** prefer ordinary root imports, small deterministic inputs, and the shortest
+code that demonstrates a real task. They **MUST NOT** use placeholder prose,
+unexplained ellipses, or examples that contradict supported signatures.
+
+Simple value properties **SHOULD** remain concise when their type and containing
+class provide sufficient context. `Args`, `Returns`, `Raises`, `Attributes`,
+`Examples`, and `Notes` sections **SHOULD** appear only when they add useful
+information. Notes **MUST** call out easy-to-miss semantics such as exact source-byte
+identity, canonical serialization, non-UTF-8 handling, atomic writes, overwrite and
+durability behavior, callback argument meaning, creator defaults, and edit
+`UNCHANGED`/remove/set states. Inline comments **MUST** be reserved for non-obvious
+invariants or boundary decisions and **MUST NOT** narrate straightforward code.
+
 ### PYAPI-TEXT-001 — Accept natural Python strings for textual metadata
 
 - **Status:** Implemented

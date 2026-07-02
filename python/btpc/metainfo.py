@@ -1,4 +1,4 @@
-"""Metainfo parsing, inspection, validation, and editing."""
+"""Parse, inspect, validate, edit, serialize, and verify torrent metainfo."""
 
 from __future__ import annotations
 
@@ -40,7 +40,16 @@ class _Buffer(Protocol):
 
 @dataclass(frozen=True, slots=True)
 class TorrentFile:
-    """Immutable payload file metadata."""
+    """Describe one file in the torrent's logical payload.
+
+    Attributes:
+        length: File length in bytes.
+        path: Raw torrent path components. Components remain bytes because torrent
+            paths are not required to be UTF-8.
+        attributes: Raw BEP 47/BEP 52 file attribute bytes.
+        pieces_root: v2 Merkle root when present.
+        is_padding: Whether the entry is a padding file.
+    """
 
     length: int
     path: tuple[bytes, ...]
@@ -64,7 +73,14 @@ class TorrentFile:
 
 @dataclass(frozen=True, slots=True)
 class ValidationReport:
-    """Successful metainfo validation report."""
+    """Summarize validation and canonical-encoding status.
+
+    Attributes:
+        warnings: Non-fatal protocol or interoperability warnings.
+        canonical: Whether the original source used canonical bencoding.
+        canonical_offset: Source offset of the first canonicalization issue.
+        canonical_message: Human-readable canonicalization issue.
+    """
 
     warnings: tuple[str, ...]
     canonical: bool
@@ -78,7 +94,27 @@ class ValidationReport:
 
 
 class Metainfo:
-    """Immutable lazy facade over an owned native metainfo object."""
+    """Represent validated metainfo while preserving its exact source identity.
+
+    Parsing retains the original metainfo bytes and computes info hashes from the
+    exact raw ``info`` dictionary slice, not from re-serialization. Equality also
+    compares exact original bytes. Use :meth:`to_bytes` for canonical output and
+    :attr:`original_bytes` when byte-for-byte source identity is required. Raw
+    protocol strings and paths remain bytes; optional ``*_text`` views decode only
+    valid UTF-8.
+
+    Examples:
+        >>> from btpc import Metainfo, TorrentMode
+        >>> data = (
+        ...     b"d4:infod6:lengthi1e4:name1:x12:piece lengthi16384e"
+        ...     b"6:pieces20:00000000000000000000ee"
+        ... )
+        >>> torrent = Metainfo.from_bytes(data)
+        >>> torrent.mode is TorrentMode.V1
+        True
+        >>> torrent.original_bytes == data
+        True
+    """
 
     __slots__ = (
         "_canonical_bytes_cache",
@@ -129,7 +165,31 @@ class Metainfo:
     def from_bytes(
         cls, data: object, *, options: ParseOptions | None = None
     ) -> Metainfo:
-        """Parse bytes, bytearray, or any contiguous buffer."""
+        """Parse metainfo from a contiguous Python buffer.
+
+        Args:
+            data: ``bytes``, ``bytearray``, or another readable contiguous buffer.
+                Non-contiguous memoryviews are rejected.
+            options: Parser input, allocation, and integer-digit limits.
+
+        Returns:
+            A validated immutable metainfo object retaining exact source bytes.
+
+        Raises:
+            TypeError: If ``data`` does not provide a contiguous buffer.
+            BencodeError: If bencode syntax is invalid.
+            MetainfoError: If decoded fields violate torrent protocol rules.
+            ResourceLimitError: If a configured parse limit is exceeded.
+
+        Examples:
+            >>> from btpc import Metainfo
+            >>> data = (
+            ...     b"d4:infod6:lengthi1e4:name1:x12:piece lengthi16384e"
+            ...     b"6:pieces20:00000000000000000000ee"
+            ... )
+            >>> Metainfo.from_bytes(memoryview(data)).name
+            b'x'
+        """
         try:
             view = memoryview(cast("_Buffer", data))
         except TypeError as error:
@@ -159,7 +219,34 @@ class Metainfo:
     def read(
         cls, path: str | PathLike[str], *, options: ParseOptions | None = None
     ) -> Metainfo:
-        """Read and parse a metainfo path."""
+        """Read and parse metainfo directly from a filesystem path.
+
+        Args:
+            path: Torrent file path.
+            options: Parser input, allocation, and integer-digit limits.
+
+        Returns:
+            A validated immutable metainfo object.
+
+        Raises:
+            PathError: If the file cannot be opened or read.
+            BencodeError: If bencode syntax is invalid.
+            MetainfoError: If decoded fields violate torrent protocol rules.
+            ResourceLimitError: If a configured parse limit is exceeded.
+
+        Examples:
+            >>> from pathlib import Path
+            >>> from tempfile import TemporaryDirectory
+            >>> from btpc import Metainfo
+            >>> data = (
+            ...     b"d4:infod6:lengthi1e4:name1:x12:piece lengthi16384e"
+            ...     b"6:pieces20:00000000000000000000ee"
+            ... )
+            >>> with TemporaryDirectory() as directory:
+            ...     path = Path(directory) / "sample.torrent"
+            ...     _ = path.write_bytes(data)
+            ...     assert Metainfo.read(path).original_bytes == data
+        """
         try:
             options = options or ParseOptions()
             return cls(
@@ -182,7 +269,44 @@ class Metainfo:
         progress: Callable[[int, int, int], None] | None = None,
         cancellation: CancellationToken | None = None,
     ) -> PayloadVerificationReport:
-        """Verify payload files using all hash domains applicable to this torrent."""
+        r"""Verify payload files using every hash domain present in this torrent.
+
+        ``payload`` is resolved as the torrent's payload root: a single-file torrent
+        may point directly to its file, while a multi-file torrent points to the
+        containing directory. v1 verifies the concatenated piece stream, v2 verifies
+        per-file Merkle roots, and hybrid verifies both. Mismatches are returned in
+        deterministic order; filesystem and policy failures raise exceptions.
+
+        Args:
+            payload: Payload file or root directory.
+            fail_fast: Stop after the first mismatch when true.
+            extra_files: Report files not represented by the torrent.
+            progress: Optional callback receiving ``(completed_bytes, total_bytes,
+                completed_pieces)``. Callback exceptions propagate unchanged.
+            cancellation: Cooperative cancellation token.
+
+        Returns:
+            A report containing zero or more deterministic mismatches.
+
+        Raises:
+            PathError: If required payload paths cannot be read safely.
+            VerificationError: If verification cannot be performed as requested.
+            CancelledError: If ``cancellation`` is requested.
+            Exception: Any exception raised by ``progress``.
+
+        Examples:
+            >>> from pathlib import Path
+            >>> from tempfile import TemporaryDirectory
+            >>> from btpc import CreateOptions, Metainfo, create_bytes
+            >>> with TemporaryDirectory() as directory:
+            ...     payload = Path(directory) / "hello.txt"
+            ...     _ = payload.write_bytes(b"hello torrent\\n")
+            ...     created = create_bytes(
+            ...         payload,
+            ...         options=CreateOptions(creation_date=0, threads=1),
+            ...     )
+            ...     assert Metainfo.from_bytes(created.bytes).verify(payload).is_valid
+        """
         return verify(
             self,
             payload,
@@ -199,7 +323,26 @@ class Metainfo:
         trackers: bool = True,
         web_seeds: bool = True,
     ) -> str:
-        """Generate a deterministic magnet URI."""
+        """Generate a deterministic magnet URI.
+
+        Args:
+            display_name: Include the decoded display name when valid UTF-8.
+            trackers: Include tracker URLs.
+            web_seeds: Include web seed URLs.
+
+        Returns:
+            A magnet URI containing every applicable v1 and v2 exact-topic hash.
+
+        Examples:
+            >>> from btpc import Metainfo
+            >>> data = (
+            ...     b"d4:infod6:lengthi1e4:name1:x12:piece lengthi16384e"
+            ...     b"6:pieces20:00000000000000000000ee"
+            ... )
+            >>> magnet = Metainfo.from_bytes(data).magnet(trackers=False)
+            >>> magnet.startswith("magnet:?xt=")
+            True
+        """
         return self._native.magnet(
             display_name,
             trackers,
@@ -220,7 +363,48 @@ class Metainfo:
         raw_top_level: dict[bytes, int | bytes] | None = None,
         file_attributes: dict[tuple[bytes, ...], bytes] | None = None,
     ) -> Metainfo:
-        """Return a validated canonical copy with selected metadata edits."""
+        """Return a canonical copy with explicit preserve, remove, or set edits.
+
+        Optional fields use three states: :data:`btpc.UNCHANGED` preserves the
+        current value, ``None`` removes it, and a typed value replaces it. Trackers,
+        web seeds, nodes, comments, creator, and creation date are top-level fields
+        and do not affect info hashes. ``private``, ``source``, and file attributes
+        edit the ``info`` dictionary and therefore change applicable info hashes.
+
+        Args:
+            trackers: Tracker tiers, ``None`` to remove, or ``UNCHANGED``.
+            web_seeds: Web seeds, ``None`` to remove, or ``UNCHANGED``.
+            nodes: DHT nodes, ``None`` to remove, or ``UNCHANGED``.
+            private: Private flag, ``None`` to remove, or ``UNCHANGED``.
+            source: Source string, ``None`` to remove, or ``UNCHANGED``.
+            comment: Comment, ``None`` to remove, or ``UNCHANGED``.
+            created_by: Creator text, ``None`` to remove, or ``UNCHANGED``.
+            creation_date: Unix timestamp, ``None`` to remove, or ``UNCHANGED``.
+            raw_top_level: Raw top-level integer or byte-string replacements.
+            file_attributes: Raw attributes keyed by raw torrent path components.
+
+        Returns:
+            A newly validated immutable object serialized canonically.
+
+        Raises:
+            TypeError: If a textual field receives a non-string value.
+            MetainfoError: If an edit would produce invalid metainfo.
+
+        Examples:
+            >>> from btpc import UNCHANGED, Metainfo
+            >>> data = (
+            ...     b"d4:infod6:lengthi1e4:name1:x12:piece lengthi16384e"
+            ...     b"6:pieces20:00000000000000000000ee"
+            ... )
+            >>> torrent = Metainfo.from_bytes(data)
+            >>> with_comment = torrent.edit(comment="reviewed")
+            >>> preserved = with_comment.edit(comment=UNCHANGED)
+            >>> removed = with_comment.edit(comment=None)
+            >>> preserved.info_hash_v1 == removed.info_hash_v1 == torrent.info_hash_v1
+            True
+            >>> torrent.edit(source="release").info_hash_v1 != torrent.info_hash_v1
+            True
+        """
         try:
             value = self._native.edit(
                 None if trackers is UNCHANGED else _tracker_bytes(trackers or ()),
@@ -371,7 +555,28 @@ class Metainfo:
             return None
 
     def to_bytes(self, *, canonical: bool = True) -> bytes:
-        """Return canonical bytes by default or exact original bytes."""
+        """Serialize canonical metainfo or return the exact original bytes.
+
+        Args:
+            canonical: Sort dictionary keys by unsigned raw-byte order and normalize
+                bencode when true. False returns :attr:`original_bytes` unchanged.
+
+        Returns:
+            Serialized metainfo bytes.
+
+        Examples:
+            >>> from btpc import Metainfo
+            >>> data = (
+            ...     b"d4:infod6:lengthi1e4:name1:x12:piece lengthi16384e"
+            ...     b"6:pieces20:00000000000000000000ee"
+            ... )
+            >>> torrent = Metainfo.from_bytes(data)
+            >>> torrent.to_bytes(canonical=False) == data
+            True
+            >>> reparsed = Metainfo.from_bytes(torrent.to_bytes())
+            >>> reparsed.info_hash_v1 == torrent.info_hash_v1
+            True
+        """
         if not canonical:
             return self.original_bytes
         cached = self._canonical_bytes_cache

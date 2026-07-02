@@ -4292,3 +4292,109 @@ remain adapters over `btpc-core` throughout.
    Notes:
    - Pyrefly project mode currently follows the repository ignore entry for the
      source `python/` directory, so the gate supplies the explicit checked file list.
+
+95. [x] Upgrade public Python docstrings for editor help and generated API reference
+   Claimed by: Codex implementer (2026-07-02 13:45 PDT)
+   Requirements:
+   `PYAPI-DOCSTRING-001`, `PYAPI-DOC-001`, `PYAPI-MODULES-001`,
+   `PYAPI-TYPE-COMPLETE-001`, `TEST-TDD-001`.
+   Context:
+   The public Python surface has docstrings, but most are one-line labels such as
+   “Typed creation options matching core defaults” or “Verify a payload using the
+   native core verifier.” These satisfy presence checks without giving editor users
+   enough help to choose options, understand byte/text and canonicalization rules,
+   interpret callbacks, or use common workflows. The same docstrings will later feed
+   the MkDocs/mkdocstrings API reference, so the source text must read like polished
+   library documentation rather than implementation notes or generated filler.
+   Implementation plan:
+   Begin with a failing `tests/python/test_docstrings.py` quality inventory. Enumerate
+   the supported names from each public module's `__all__` plus documented public
+   methods/properties, and require a non-empty summary for all of them. Define a
+   high-use tier that requires the relevant structured sections and at least one
+   concise example: `CreateOptions`, `create`, `create_bytes`, `Metainfo`,
+   `Metainfo.from_bytes`, `Metainfo.read`, `Metainfo.edit`, `Metainfo.verify`,
+   `Metainfo.magnet`, `Metainfo.to_bytes`, top-level `verify`, `ParseOptions`, and
+   cancellation/progress APIs. Keep the test semantic and maintainable: assert
+   coverage and executable examples, not exact prose, word counts, or brittle style
+   snapshots.
+
+   Rewrite public module and object docstrings using the configured Google style and
+   a restrained NumPy/Polars-like tone. Start with a direct summary, then add only the
+   sections that help a caller. Document all `CreateOptions` and `ParseOptions`
+   attributes, including mode defaults, automatic versus explicit piece length,
+   thread selection, tracker tier shape, text encoding, private/source/comment,
+   default `btpc/<version>` creator behavior, explicit creator omission, creation
+   date reproducibility, and which options alter the info hash. Document progress
+   callbacks as `(completed_bytes, total_bytes, completed_pieces)`, callback failure
+   propagation, and cooperative cancellation.
+
+   For creation, explain the difference between `create_bytes` and atomic `create`,
+   destination overwrite behavior, durability, returned metrics/hashes, filesystem
+   errors, cancellation, and protocol-validation errors. For `Metainfo`, explain that
+   parsing retains exact original bytes, hashes the original raw `info` dictionary,
+   and serializes canonically through `to_bytes(canonical=True)`. Document accepted
+   contiguous buffers and parse limits for `from_bytes`; path I/O for `read`; raw
+   bytes and optional decoded views; magnet inclusion switches; validation reports;
+   and exact-byte equality semantics.
+
+   Give `Metainfo.edit` special treatment: clearly demonstrate `UNCHANGED` preserving
+   a field, `None` removing it, and a typed value replacing it; distinguish top-level
+   edits that preserve info hashes from info-dictionary edits that change them. For
+   verification, document payload-root resolution, v1/v2/hybrid hash domains,
+   fail-fast and extra-file behavior, deterministic mismatch reports, operational
+   exceptions, progress, and cancellation. Improve exception class docs with when
+   users should expect each category and describe structured `BtpcError` attributes
+   once on the base class rather than repeating them.
+
+   Use short examples that demonstrate real calls and ordinary root imports. Prefer
+   a small valid in-memory torrent for parse/magnet/serialization examples and a tiny
+   temporary payload for create/verify examples. Keep examples self-contained where
+   practical; do not use fake signatures, unexplained `...`, huge fixtures, private
+   `_native` names, requirement IDs, or performance claims. Simple properties such
+   as `piece_count`, `hex`, and `cancelled` should remain one concise sentence unless
+   a caveat is genuinely needed. Add inline comments only for non-obvious invariants
+   or boundary choices; do not comment routine assignments or conversions.
+
+   Review module-level docstrings and `__all__` after the object pass so generated
+   navigation has useful introductions and no public object is documented twice with
+   conflicting wording. Ensure canonical defining modules remain `btpc.creation`,
+   `btpc.metainfo`, `btpc.verification`, `btpc.types`, and `btpc.errors`, while root
+   re-exports retain the same docstrings and object identity. Do not change runtime
+   signatures or behavior solely to make documentation easier.
+   Tests and verification:
+   Add focused doctest or equivalent execution for self-contained examples and
+   ordinary pytest coverage for filesystem examples, using temporary directories and
+   tiny payloads. Assert examples work through both canonical module imports and the
+   common `btpc` root imports where shown. Run Ruff docstring lint/format, Pyrefly,
+   the Pyright compatibility fixture, native-stub parity, all Python tests, clean
+   installed-wheel smoke tests, and spec validation. If mkdocstrings is available by
+   implementation time, build the Python API reference in strict mode and inspect
+   the rendered signatures, attribute tables, examples, and cross-references; do not
+   block this todo on creating the full documentation site.
+   Evidence:
+   - Added `tests/python/test_docstrings.py` with a semantic inventory of every
+     public module export, documented public method/property, and dataclass field.
+     It requires structured examples for the high-use workflow tier, checks root
+     re-export identity/docstring parity, and executes examples with `doctest`.
+     The test failed first on one-line `CreateOptions`/`CreateMetrics` docs and now
+     passes `6/6` both from the source tree and from a clean installed wheel.
+   - Rewrote public creation, parsing, editing, magnet, serialization, verification,
+     value-type, report, and exception docstrings in Google style. The docs cover all
+     create/parse options, strict byte/text boundaries, exact source-byte identity,
+     canonical output, info-hash-changing edits, atomic overwrite/durability,
+     callback values and failure propagation, cooperative cancellation, payload-root
+     resolution, v1/v2/hybrid hash domains, and structured error attributes.
+   - `uv run ruff check .` and `uv run ruff format --check .` passed across 51 files.
+     `scripts/check_python_types.sh` passed Pyrefly positive sources and the expected
+     three-error negative fixture; the Pyright consumer reported 0 errors, and
+     `scripts/check_native_stub.py` confirmed native stub/runtime export parity.
+   - The complete Python suite passed `71/71`. Specification validation passed 15
+     specs and 109 requirements, and documentation link validation passed across 33
+     Markdown files.
+   - Built the locked CPython 3.14 release wheel with Maturin, installed it with
+     pytest into `/tmp/btpc-docstring-wheel-venv`, ran v1/v2/hybrid create/read/
+     magnet/verify smoke checks outside the checkout, and reran the docstring suite
+     `6/6`. The wheel contains all five public modules, `py.typed`, and `_native.pyi`.
+   Notes:
+   - MkDocs/mkdocstrings is not installed in the locked development environment, so
+     the optional strict generated-site build was not applicable to this todo.

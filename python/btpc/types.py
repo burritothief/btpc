@@ -1,4 +1,4 @@
-"""Shared immutable BTPC value types."""
+"""Shared immutable values for protocol modes, hashes, bytes, and paths."""
 
 from __future__ import annotations
 
@@ -9,7 +9,13 @@ from typing import cast
 
 
 class UnchangedType(Enum):
-    """Singleton edit marker preserving the current field value."""
+    """Type of the :data:`UNCHANGED` edit sentinel.
+
+    Examples:
+        >>> from btpc import UNCHANGED
+        >>> repr(UNCHANGED)
+        'UNCHANGED'
+    """
 
     VALUE = "UNCHANGED"
 
@@ -31,7 +37,24 @@ class TorrentMode(Enum):
 
 @dataclass(frozen=True, slots=True)
 class ParseOptions:
-    """Advanced metainfo loading limits; omitted values use safe core defaults."""
+    """Limit parser resource use before accepting owned metainfo.
+
+    ``None`` uses the core's safe default for each limit. Limits apply equally to
+    :meth:`btpc.Metainfo.from_bytes` and :meth:`btpc.Metainfo.read`.
+
+    Attributes:
+        max_total_input: Maximum encoded metainfo bytes accepted before parsing.
+        max_owned_allocation: Maximum cumulative allocation for the owned parse.
+        max_integer_digits: Maximum decimal digits in one bencoded integer.
+
+    Examples:
+        >>> from btpc import Metainfo, ParseOptions, ResourceLimitError
+        >>> options = ParseOptions(max_total_input=4)
+        >>> try:
+        ...     Metainfo.from_bytes(b"d4:infoe", options=options)
+        ... except ResourceLimitError as error:
+        ...     assert error.limit == "total input"
+    """
 
     max_total_input: int | None = None
     max_owned_allocation: int | None = None
@@ -40,7 +63,11 @@ class ParseOptions:
 
 @dataclass(frozen=True, slots=True)
 class HashValue:
-    """Immutable raw hash value."""
+    """Store a protocol hash as immutable raw bytes.
+
+    Attributes:
+        bytes: Raw digest bytes.
+    """
 
     bytes: bytes
 
@@ -56,7 +83,11 @@ class HashValue:
 
 @dataclass(frozen=True, order=True, slots=True)
 class TorrentBytes:
-    """Immutable torrent byte string with raw-byte identity."""
+    """Preserve a torrent byte string without assuming text encoding.
+
+    Attributes:
+        raw: Exact protocol bytes.
+    """
 
     raw: bytes
 
@@ -78,7 +109,11 @@ class TorrentBytes:
 
 @dataclass(frozen=True, order=True, slots=True)
 class TorrentPath:
-    """Immutable torrent path ordered and compared by raw components."""
+    """Preserve and validate a torrent path as raw byte components.
+
+    Attributes:
+        components: Non-empty safe path components in torrent order.
+    """
 
     components: tuple[TorrentBytes, ...]
 

@@ -75,6 +75,20 @@ user-facing guidance in the same change.
 - Do not mark typing complete from source-tree checks alone; test a built wheel from
   outside the checkout and verify native stub/runtime parity.
 
+## Python Documentation Rules
+
+- Write public docstrings for editor hover help first; the same text must render
+  cleanly through mkdocstrings without a separate rewritten API description.
+- Use concise Google-style docstrings with a direct summary. Add `Args`, `Returns`,
+  `Raises`, `Attributes`, `Examples`, or `Notes` only when they clarify behavior.
+- Give the main creation, parsing, editing, magnet, serialization, and verification
+  workflows short realistic examples using public `btpc` imports.
+- Explain byte-versus-text boundaries, canonicalization, mutation/overwrite effects,
+  progress callback values, cancellation, and other non-obvious semantics where
+  users encounter them. Do not mention private PyO3 types or requirement IDs.
+- Avoid filler such as “This method is used to.” Do not repeat annotations in prose,
+  document obvious getters at length, or add comments that merely narrate the code.
+
 ## Tooling Baseline
 
 - Rust 2024 edition with an explicit `rust-version` MSRV.
@@ -106,6 +120,50 @@ uv run pytest tests/python
 Benchmarks are not a substitute for correctness tests. Record the machine,
 dataset, command, tool versions, elapsed time, throughput, and peak RSS for any
 performance claim.
+
+## Commit Style
+
+Do not create commits unless the user explicitly asks. When committing, follow
+the [Scoped Commits](https://scopedcommits.com/) convention for every normal
+commit:
+
+```text
+<scope>: <description>
+
+[optional body]
+
+[optional trailers]
+```
+
+- Choose the smallest meaningful subsystem as the scope. Preferred scopes include
+  `core`, `bencode`, `create`, `metainfo`, `verify`, `cli`, `python`,
+  `python-native`, `bench`, `tests`, `ci`, `build`, `deps`, `docs`, `release`,
+  and `security`.
+- Use the functional scope for tests and documentation that accompany a change.
+  Reserve `tests` and `docs` for changes to test infrastructure or documentation
+  that stand on their own.
+- Write a concise, imperative description without a trailing period. Do not use
+  Conventional Commits syntax such as `feat(cli):`; write `cli: add shell
+  completions` instead.
+- Split unrelated changes into separate commits. If a change genuinely spans
+  inseparable areas, use comma-separated scopes such as `core,python`. Use
+  `treewide` only when no narrower project-wide scope is accurate.
+- Add a body when the reason, constraints, or non-obvious tradeoffs matter. Use
+  trailers for issue references, breaking-change notes, and attribution.
+- Git-generated merge and revert subjects are acceptable for those special
+  commits.
+- Before committing, inspect the staged diff and confirm that the chosen scope
+  accurately describes the primary change.
+
+Examples:
+
+```text
+create: add versioned creator metadata
+python: document metainfo editing semantics
+cli: improve human-readable inspect output
+ci: type-check installed Python wheels
+core,python: reuse owned metainfo across bindings
+```
 
 ## Change Discipline
 
