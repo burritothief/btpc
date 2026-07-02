@@ -38,10 +38,7 @@ jobs:
         uses: github/codeql-action/init@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4
         with:
           languages: ${{ matrix.language }}
-          build-mode: ${{ matrix.language == 'rust' && 'manual' || 'none' }}
-      - name: Build Rust workspace
-        if: matrix.language == 'rust'
-        run: cargo build --workspace --all-features --locked
+          build-mode: none
       - name: Analyze
         uses: github/codeql-action/analyze@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4
         with:
