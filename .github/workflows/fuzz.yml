@@ -27,8 +27,8 @@ jobs:
       - uses: taiki-e/install-action@16b05812d776ae1dfaabc8277e421fb6d2506419 # v2
         with:
           tool: cargo-fuzz@0.13.2
-      - run: cargo +nightly fuzz run parse fuzz/corpus/parse -- -max_total_time=300
-      - run: cargo +nightly fuzz run canonical_roundtrip fuzz/corpus/canonical_roundtrip -- -max_total_time=300
-      - run: cargo +nightly fuzz run metainfo fuzz/corpus/metainfo -- -max_total_time=300
-      - run: cargo +nightly fuzz run metainfo_roundtrip fuzz/corpus/metainfo_roundtrip -- -max_total_time=300
-      - run: cargo +nightly fuzz run magnet fuzz/corpus/magnet -- -max_total_time=300
+      - run: cargo +nightly fuzz run --target x86_64-unknown-linux-gnu parse fuzz/corpus/parse -- -max_total_time=300
+      - run: cargo +nightly fuzz run --target x86_64-unknown-linux-gnu canonical_roundtrip fuzz/corpus/canonical_roundtrip -- -max_total_time=300
+      - run: cargo +nightly fuzz run --target x86_64-unknown-linux-gnu metainfo fuzz/corpus/metainfo -- -max_total_time=300
+      - run: cargo +nightly fuzz run --target x86_64-unknown-linux-gnu metainfo_roundtrip fuzz/corpus/metainfo_roundtrip -- -max_total_time=300
+      - run: cargo +nightly fuzz run --target x86_64-unknown-linux-gnu magnet fuzz/corpus/magnet -- -max_total_time=300
