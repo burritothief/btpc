@@ -41,7 +41,7 @@ complete -c btpc -n "__fish_btpc_needs_command" -f -a "edit" -d 'Edit metainfo m
 complete -c btpc -n "__fish_btpc_needs_command" -f -a "magnet" -d 'Print a deterministic magnet URI'
 complete -c btpc -n "__fish_btpc_needs_command" -f -a "config" -d 'Locate, inspect, validate, and update configuration'
 complete -c btpc -n "__fish_btpc_needs_command" -f -a "completion" -d 'Generate, install, or uninstall shell completions'
-complete -c btpc -n "__fish_btpc_needs_command" -f -a "completions" -d 'Generate a shell completion script on stdout (deprecated)'
+complete -c btpc -n "__fish_btpc_needs_command" -f -a "completions" -d 'Deprecated alias for `btpc completion generate`'
 complete -c btpc -n "__fish_btpc_needs_command" -f -a "manpage" -d 'Generate the btpc(1) manual page on stdout'
 complete -c btpc -n "__fish_btpc_needs_command" -f -a "help" -d 'Print this message or the help of the given subcommand(s)'
 complete -c btpc -n "__fish_btpc_using_subcommand create" -l batch -d 'Versioned TOML batch manifest' -r -F
@@ -49,23 +49,23 @@ complete -c btpc -n "__fish_btpc_using_subcommand create" -l mode -d 'Torrent pr
 v2\t''
 hybrid\t''"
 complete -c btpc -n "__fish_btpc_using_subcommand create" -s o -l output -d 'Destination .torrent path (defaults beside the payload)' -r -F
-complete -c btpc -n "__fish_btpc_using_subcommand create" -l output-dir -r -F
-complete -c btpc -n "__fish_btpc_using_subcommand create" -l jobs -r
+complete -c btpc -n "__fish_btpc_using_subcommand create" -l output-dir -d 'Write batch outputs beneath this directory' -r -F
+complete -c btpc -n "__fish_btpc_using_subcommand create" -l jobs -d 'Maximum concurrent batch creation jobs' -r
 complete -c btpc -n "__fish_btpc_using_subcommand create" -l preset -d 'Apply a named creation preset; may be repeated' -r
 complete -c btpc -n "__fish_btpc_using_subcommand create" -l piece-length -d 'Explicit piece length in bytes' -r
-complete -c btpc -n "__fish_btpc_using_subcommand create" -l target-pieces -r
-complete -c btpc -n "__fish_btpc_using_subcommand create" -l max-piece-length -r
+complete -c btpc -n "__fish_btpc_using_subcommand create" -l target-pieces -d 'Target approximate number of pieces for automatic selection' -r
+complete -c btpc -n "__fish_btpc_using_subcommand create" -l max-piece-length -d 'Cap target-based automatic piece length' -r
 complete -c btpc -n "__fish_btpc_using_subcommand create" -s a -l tracker -d 'Add a tracker as its own tier; may be repeated' -r
 complete -c btpc -n "__fish_btpc_using_subcommand create" -l tracker-tier -d 'Add one comma-separated tracker tier; may be repeated' -r
-complete -c btpc -n "__fish_btpc_using_subcommand create" -l tracker-alias -r
-complete -c btpc -n "__fish_btpc_using_subcommand create" -l tracker-group -r
+complete -c btpc -n "__fish_btpc_using_subcommand create" -l tracker-alias -d 'Add a configured tracker alias; may be repeated' -r
+complete -c btpc -n "__fish_btpc_using_subcommand create" -l tracker-group -d 'Add a configured tracker group; may be repeated' -r
 complete -c btpc -n "__fish_btpc_using_subcommand create" -l web-seed -d 'Add a web seed URL; may be repeated' -r
 complete -c btpc -n "__fish_btpc_using_subcommand create" -l node -d 'Add a DHT node as HOST:PORT; may be repeated' -r
 complete -c btpc -n "__fish_btpc_using_subcommand create" -l source -d 'Set the source field' -r
 complete -c btpc -n "__fish_btpc_using_subcommand create" -l comment -d 'Set the top-level comment' -r
 complete -c btpc -n "__fish_btpc_using_subcommand create" -l created-by -d 'Set the creator string' -r
 complete -c btpc -n "__fish_btpc_using_subcommand create" -l creation-date -d 'Include an explicit Unix creation timestamp' -r
-complete -c btpc -n "__fish_btpc_using_subcommand create" -l entropy -r
+complete -c btpc -n "__fish_btpc_using_subcommand create" -l entropy -d 'Set deterministic, random, or omitted entropy policy' -r
 complete -c btpc -n "__fish_btpc_using_subcommand create" -l name -d 'Override the torrent root name' -r
 complete -c btpc -n "__fish_btpc_using_subcommand create" -l symlinks -d 'Symbolic-link policy' -r -f -a "reject\t''
 skip\t''
@@ -75,7 +75,7 @@ skip\t''"
 complete -c btpc -n "__fish_btpc_using_subcommand create" -l include -d 'Include only paths matching this glob; may be repeated' -r
 complete -c btpc -n "__fish_btpc_using_subcommand create" -l exclude -d 'Exclude paths matching this glob; may be repeated' -r
 complete -c btpc -n "__fish_btpc_using_subcommand create" -l threads -d 'v1 hashing threads; 0 selects a conservative automatic count, 1 is sequential' -r
-complete -c btpc -n "__fish_btpc_using_subcommand create" -l print -r -f -a "path\t''
+complete -c btpc -n "__fish_btpc_using_subcommand create" -l print -d 'Print selected result fields; may be repeated' -r -f -a "path\t''
 info-hash-v1\t''
 info-hash-v2\t''
 magnet\t''"
@@ -83,22 +83,22 @@ complete -c btpc -n "__fish_btpc_using_subcommand create" -l config -d 'Use this
 complete -c btpc -n "__fish_btpc_using_subcommand create" -l color -d 'Control colored terminal output' -r -f -a "auto\t''
 always\t''
 never\t''"
-complete -c btpc -n "__fish_btpc_using_subcommand create" -l fail-fast
+complete -c btpc -n "__fish_btpc_using_subcommand create" -l fail-fast -d 'Stop scheduling batch jobs after the first failure'
 complete -c btpc -n "__fish_btpc_using_subcommand create" -s f -l force -d 'Replace an existing destination'
 complete -c btpc -n "__fish_btpc_using_subcommand create" -l durable -d 'Sync the destination directory after atomic publication where supported'
 complete -c btpc -n "__fish_btpc_using_subcommand create" -l clear-trackers -d 'Clear configured and preset trackers before CLI additions'
 complete -c btpc -n "__fish_btpc_using_subcommand create" -l clear-web-seeds -d 'Clear configured and preset web seeds before CLI additions'
 complete -c btpc -n "__fish_btpc_using_subcommand create" -l private -d 'Set the private flag'
-complete -c btpc -n "__fish_btpc_using_subcommand create" -l public
-complete -c btpc -n "__fish_btpc_using_subcommand create" -l clear-source
-complete -c btpc -n "__fish_btpc_using_subcommand create" -l clear-comment
+complete -c btpc -n "__fish_btpc_using_subcommand create" -l public -d 'Set the private flag to false'
+complete -c btpc -n "__fish_btpc_using_subcommand create" -l clear-source -d 'Remove configured or preset source metadata'
+complete -c btpc -n "__fish_btpc_using_subcommand create" -l clear-comment -d 'Remove configured or preset comment metadata'
 complete -c btpc -n "__fish_btpc_using_subcommand create" -l no-created-by -d 'Omit the creator string instead of using the versioned default'
 complete -c btpc -n "__fish_btpc_using_subcommand create" -l exclude-hidden -d 'Exclude dot-prefixed files and directories'
 complete -c btpc -n "__fish_btpc_using_subcommand create" -l exclude-empty-files -d 'Exclude zero-length files'
 complete -c btpc -n "__fish_btpc_using_subcommand create" -l reject-empty-directories -d 'Reject empty directories instead of ignoring them'
 complete -c btpc -n "__fish_btpc_using_subcommand create" -l clear-includes -d 'Clear configured and preset include patterns before CLI additions'
 complete -c btpc -n "__fish_btpc_using_subcommand create" -l clear-excludes -d 'Clear configured and preset exclude patterns before CLI additions'
-complete -c btpc -n "__fish_btpc_using_subcommand create" -l dry-run
+complete -c btpc -n "__fish_btpc_using_subcommand create" -l dry-run -d 'Plan creation without hashing or writing metainfo'
 complete -c btpc -n "__fish_btpc_using_subcommand create" -l json -d 'Emit a versioned JSON result to stdout'
 complete -c btpc -n "__fish_btpc_using_subcommand create" -l pretty -d 'Use the expanded human completion renderer'
 complete -c btpc -n "__fish_btpc_using_subcommand create" -l no-config -d 'Disable implicit and environment-selected configuration'
@@ -150,7 +150,7 @@ complete -c btpc -n "__fish_btpc_using_subcommand inspect" -l no-config -d 'Disa
 complete -c btpc -n "__fish_btpc_using_subcommand inspect" -s v -l verbose -d 'Increase diagnostic verbosity; may be repeated'
 complete -c btpc -n "__fish_btpc_using_subcommand inspect" -s q -l quiet -d 'Suppress human summaries, warnings, and progress'
 complete -c btpc -n "__fish_btpc_using_subcommand inspect" -s h -l help -d 'Print help'
-complete -c btpc -n "__fish_btpc_using_subcommand validate" -l format -r -f -a "human\t''
+complete -c btpc -n "__fish_btpc_using_subcommand validate" -l format -d 'Select output representation' -r -f -a "human\t''
 json\t''
 json-pretty\t''"
 complete -c btpc -n "__fish_btpc_using_subcommand validate" -l max-input-bytes -d 'Maximum metainfo bytes accepted while loading' -r
@@ -160,10 +160,10 @@ complete -c btpc -n "__fish_btpc_using_subcommand validate" -l config -d 'Use th
 complete -c btpc -n "__fish_btpc_using_subcommand validate" -l color -d 'Control colored terminal output' -r -f -a "auto\t''
 always\t''
 never\t''"
-complete -c btpc -n "__fish_btpc_using_subcommand validate" -l json
-complete -c btpc -n "__fish_btpc_using_subcommand validate" -l canonical
-complete -c btpc -n "__fish_btpc_using_subcommand validate" -l warnings-as-errors
-complete -c btpc -n "__fish_btpc_using_subcommand validate" -l pretty
+complete -c btpc -n "__fish_btpc_using_subcommand validate" -l json -d 'Emit versioned JSON to stdout'
+complete -c btpc -n "__fish_btpc_using_subcommand validate" -l canonical -d 'Require canonical bencode'
+complete -c btpc -n "__fish_btpc_using_subcommand validate" -l warnings-as-errors -d 'Return the warning exit code when validation warnings exist'
+complete -c btpc -n "__fish_btpc_using_subcommand validate" -l pretty -d 'Use the expanded human renderer'
 complete -c btpc -n "__fish_btpc_using_subcommand validate" -l no-config -d 'Disable implicit and environment-selected configuration'
 complete -c btpc -n "__fish_btpc_using_subcommand validate" -s v -l verbose -d 'Increase diagnostic verbosity; may be repeated'
 complete -c btpc -n "__fish_btpc_using_subcommand validate" -s q -l quiet -d 'Suppress human summaries, warnings, and progress'
@@ -183,37 +183,37 @@ complete -c btpc -n "__fish_btpc_using_subcommand verify" -l no-config -d 'Disab
 complete -c btpc -n "__fish_btpc_using_subcommand verify" -s v -l verbose -d 'Increase diagnostic verbosity; may be repeated'
 complete -c btpc -n "__fish_btpc_using_subcommand verify" -s q -l quiet -d 'Suppress human summaries, warnings, and progress'
 complete -c btpc -n "__fish_btpc_using_subcommand verify" -s h -l help -d 'Print help'
-complete -c btpc -n "__fish_btpc_using_subcommand edit" -s o -l output -r -F
-complete -c btpc -n "__fish_btpc_using_subcommand edit" -s a -l tracker -r
-complete -c btpc -n "__fish_btpc_using_subcommand edit" -l tracker-alias -r
-complete -c btpc -n "__fish_btpc_using_subcommand edit" -l tracker-group -r
-complete -c btpc -n "__fish_btpc_using_subcommand edit" -l web-seed -r
-complete -c btpc -n "__fish_btpc_using_subcommand edit" -l node -r
-complete -c btpc -n "__fish_btpc_using_subcommand edit" -l comment -r
-complete -c btpc -n "__fish_btpc_using_subcommand edit" -l created-by -r
-complete -c btpc -n "__fish_btpc_using_subcommand edit" -l creation-date -r
-complete -c btpc -n "__fish_btpc_using_subcommand edit" -l source -r
-complete -c btpc -n "__fish_btpc_using_subcommand edit" -l file-attributes -r
+complete -c btpc -n "__fish_btpc_using_subcommand edit" -s o -l output -d 'Write the edited metainfo to this path' -r -F
+complete -c btpc -n "__fish_btpc_using_subcommand edit" -s a -l tracker -d 'Replace trackers with this tracker tier; may be repeated' -r
+complete -c btpc -n "__fish_btpc_using_subcommand edit" -l tracker-alias -d 'Add a configured tracker alias; may be repeated' -r
+complete -c btpc -n "__fish_btpc_using_subcommand edit" -l tracker-group -d 'Add a configured tracker group; may be repeated' -r
+complete -c btpc -n "__fish_btpc_using_subcommand edit" -l web-seed -d 'Replace web seeds with this URL; may be repeated' -r
+complete -c btpc -n "__fish_btpc_using_subcommand edit" -l node -d 'Replace DHT nodes with HOST:PORT; may be repeated' -r
+complete -c btpc -n "__fish_btpc_using_subcommand edit" -l comment -d 'Set the top-level comment' -r
+complete -c btpc -n "__fish_btpc_using_subcommand edit" -l created-by -d 'Set the creator string' -r
+complete -c btpc -n "__fish_btpc_using_subcommand edit" -l creation-date -d 'Set the Unix creation timestamp' -r
+complete -c btpc -n "__fish_btpc_using_subcommand edit" -l source -d 'Set the source field' -r
+complete -c btpc -n "__fish_btpc_using_subcommand edit" -l file-attributes -d 'Set file attributes as PATH=ATTRS; may be repeated' -r
 complete -c btpc -n "__fish_btpc_using_subcommand edit" -l config -d 'Use this configuration file when configuration loading is enabled' -r -F
 complete -c btpc -n "__fish_btpc_using_subcommand edit" -l color -d 'Control colored terminal output' -r -f -a "auto\t''
 always\t''
 never\t''"
-complete -c btpc -n "__fish_btpc_using_subcommand edit" -l in-place
-complete -c btpc -n "__fish_btpc_using_subcommand edit" -s f -l force
-complete -c btpc -n "__fish_btpc_using_subcommand edit" -l durable
-complete -c btpc -n "__fish_btpc_using_subcommand edit" -l dry-run
-complete -c btpc -n "__fish_btpc_using_subcommand edit" -l diff
-complete -c btpc -n "__fish_btpc_using_subcommand edit" -l json
-complete -c btpc -n "__fish_btpc_using_subcommand edit" -l clear-trackers
-complete -c btpc -n "__fish_btpc_using_subcommand edit" -l clear-web-seeds
-complete -c btpc -n "__fish_btpc_using_subcommand edit" -l clear-nodes
-complete -c btpc -n "__fish_btpc_using_subcommand edit" -l clear-comment
-complete -c btpc -n "__fish_btpc_using_subcommand edit" -l clear-created-by
-complete -c btpc -n "__fish_btpc_using_subcommand edit" -l clear-creation-date
-complete -c btpc -n "__fish_btpc_using_subcommand edit" -l private
-complete -c btpc -n "__fish_btpc_using_subcommand edit" -l public
-complete -c btpc -n "__fish_btpc_using_subcommand edit" -l clear-private
-complete -c btpc -n "__fish_btpc_using_subcommand edit" -l clear-source
+complete -c btpc -n "__fish_btpc_using_subcommand edit" -l in-place -d 'Replace the input file atomically'
+complete -c btpc -n "__fish_btpc_using_subcommand edit" -s f -l force -d 'Replace an existing output file'
+complete -c btpc -n "__fish_btpc_using_subcommand edit" -l durable -d 'Sync the destination directory after publication where supported'
+complete -c btpc -n "__fish_btpc_using_subcommand edit" -l dry-run -d 'Validate and report changes without writing output'
+complete -c btpc -n "__fish_btpc_using_subcommand edit" -l diff -d 'Print a deterministic field-level change summary'
+complete -c btpc -n "__fish_btpc_using_subcommand edit" -l json -d 'Emit a versioned JSON result to stdout'
+complete -c btpc -n "__fish_btpc_using_subcommand edit" -l clear-trackers -d 'Remove all trackers'
+complete -c btpc -n "__fish_btpc_using_subcommand edit" -l clear-web-seeds -d 'Remove all web seeds'
+complete -c btpc -n "__fish_btpc_using_subcommand edit" -l clear-nodes -d 'Remove all DHT nodes'
+complete -c btpc -n "__fish_btpc_using_subcommand edit" -l clear-comment -d 'Remove the top-level comment'
+complete -c btpc -n "__fish_btpc_using_subcommand edit" -l clear-created-by -d 'Remove the creator string'
+complete -c btpc -n "__fish_btpc_using_subcommand edit" -l clear-creation-date -d 'Remove the creation timestamp'
+complete -c btpc -n "__fish_btpc_using_subcommand edit" -l private -d 'Set the private flag'
+complete -c btpc -n "__fish_btpc_using_subcommand edit" -l public -d 'Set the private flag to false'
+complete -c btpc -n "__fish_btpc_using_subcommand edit" -l clear-private -d 'Remove the private field'
+complete -c btpc -n "__fish_btpc_using_subcommand edit" -l clear-source -d 'Remove the source field'
 complete -c btpc -n "__fish_btpc_using_subcommand edit" -l no-config -d 'Disable implicit and environment-selected configuration'
 complete -c btpc -n "__fish_btpc_using_subcommand edit" -s v -l verbose -d 'Increase diagnostic verbosity; may be repeated'
 complete -c btpc -n "__fish_btpc_using_subcommand edit" -s q -l quiet -d 'Suppress human summaries, warnings, and progress'
@@ -395,7 +395,7 @@ complete -c btpc -n "__fish_btpc_using_subcommand help; and not __fish_seen_subc
 complete -c btpc -n "__fish_btpc_using_subcommand help; and not __fish_seen_subcommand_from create inspect validate verify edit magnet config completion completions manpage help" -f -a "magnet" -d 'Print a deterministic magnet URI'
 complete -c btpc -n "__fish_btpc_using_subcommand help; and not __fish_seen_subcommand_from create inspect validate verify edit magnet config completion completions manpage help" -f -a "config" -d 'Locate, inspect, validate, and update configuration'
 complete -c btpc -n "__fish_btpc_using_subcommand help; and not __fish_seen_subcommand_from create inspect validate verify edit magnet config completion completions manpage help" -f -a "completion" -d 'Generate, install, or uninstall shell completions'
-complete -c btpc -n "__fish_btpc_using_subcommand help; and not __fish_seen_subcommand_from create inspect validate verify edit magnet config completion completions manpage help" -f -a "completions" -d 'Generate a shell completion script on stdout (deprecated)'
+complete -c btpc -n "__fish_btpc_using_subcommand help; and not __fish_seen_subcommand_from create inspect validate verify edit magnet config completion completions manpage help" -f -a "completions" -d 'Deprecated alias for `btpc completion generate`'
 complete -c btpc -n "__fish_btpc_using_subcommand help; and not __fish_seen_subcommand_from create inspect validate verify edit magnet config completion completions manpage help" -f -a "manpage" -d 'Generate the btpc(1) manual page on stdout'
 complete -c btpc -n "__fish_btpc_using_subcommand help; and not __fish_seen_subcommand_from create inspect validate verify edit magnet config completion completions manpage help" -f -a "help" -d 'Print this message or the help of the given subcommand(s)'
 complete -c btpc -n "__fish_btpc_using_subcommand help; and __fish_seen_subcommand_from config" -f -a "path" -d 'Print the selected configuration path'

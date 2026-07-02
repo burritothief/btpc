@@ -1,5 +1,8 @@
 # CLI Guide
 
+The [generated command reference](reference/index.md) documents every visible
+command and option directly from the Clap command model.
+
 `btpc` is a thin adapter over `btpc-core`. Run `btpc --help` or use the checked-in
 [reference](../reference/btpc.txt). Generated completion files and the manual page
 are outputs of the same Clap command definition used by the executable.

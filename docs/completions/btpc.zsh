@@ -41,50 +41,50 @@ _arguments "${_arguments_options[@]}" : \
 '--mode=[Torrent protocol representation]:MODE:(v1 v2 hybrid)' \
 '-o+[Destination .torrent path (defaults beside the payload)]:OUTPUT:_files' \
 '--output=[Destination .torrent path (defaults beside the payload)]:OUTPUT:_files' \
-'(-o --output)--output-dir=[]:OUTPUT_DIR:_files' \
-'--jobs=[]:JOBS:_default' \
+'(-o --output)--output-dir=[Write batch outputs beneath this directory]:OUTPUT_DIR:_files' \
+'--jobs=[Maximum concurrent batch creation jobs]:JOBS:_default' \
 '*--preset=[Apply a named creation preset; may be repeated]:PRESETS:_default' \
 '--piece-length=[Explicit piece length in bytes]:PIECE_LENGTH:_default' \
-'--target-pieces=[]:TARGET_PIECES:_default' \
-'--max-piece-length=[]:MAX_PIECE_LENGTH:_default' \
+'--target-pieces=[Target approximate number of pieces for automatic selection]:TARGET_PIECES:_default' \
+'--max-piece-length=[Cap target-based automatic piece length]:MAX_PIECE_LENGTH:_default' \
 '*-a+[Add a tracker as its own tier; may be repeated]:TRACKERS:_default' \
 '*--tracker=[Add a tracker as its own tier; may be repeated]:TRACKERS:_default' \
 '*--tracker-tier=[Add one comma-separated tracker tier; may be repeated]:TRACKER_TIER:_default' \
-'*--tracker-alias=[]:TRACKER_ALIASES:_default' \
-'*--tracker-group=[]:TRACKER_GROUPS:_default' \
+'*--tracker-alias=[Add a configured tracker alias; may be repeated]:TRACKER_ALIASES:_default' \
+'*--tracker-group=[Add a configured tracker group; may be repeated]:TRACKER_GROUPS:_default' \
 '*--web-seed=[Add a web seed URL; may be repeated]:WEB_SEEDS:_default' \
 '*--node=[Add a DHT node as HOST\:PORT; may be repeated]:NODES:_default' \
 '--source=[Set the source field]:SOURCE:_default' \
 '--comment=[Set the top-level comment]:COMMENT:_default' \
 '(--no-created-by)--created-by=[Set the creator string]:CREATED_BY:_default' \
 '--creation-date=[Include an explicit Unix creation timestamp]:CREATION_DATE:_default' \
-'--entropy=[]:ENTROPY:_default' \
+'--entropy=[Set deterministic, random, or omitted entropy policy]:ENTROPY:_default' \
 '--name=[Override the torrent root name]:NAME:_default' \
 '--symlinks=[Symbolic-link policy]:SYMLINKS:(reject skip follow)' \
 '--special-files=[Special-file policy]:SPECIAL_FILES:(reject skip)' \
 '*--include=[Include only paths matching this glob; may be repeated]:INCLUDES:_default' \
 '*--exclude=[Exclude paths matching this glob; may be repeated]:EXCLUDES:_default' \
 '--threads=[v1 hashing threads; 0 selects a conservative automatic count, 1 is sequential]:THREADS:_default' \
-'(--json)*--print=[]:PRINT:(path info-hash-v1 info-hash-v2 magnet)' \
+'(--json)*--print=[Print selected result fields; may be repeated]:PRINT:(path info-hash-v1 info-hash-v2 magnet)' \
 '(--no-config)--config=[Use this configuration file when configuration loading is enabled]:PATH:_files' \
 '--color=[Control colored terminal output]:COLOR:(auto always never)' \
-'--fail-fast[]' \
+'--fail-fast[Stop scheduling batch jobs after the first failure]' \
 '-f[Replace an existing destination]' \
 '--force[Replace an existing destination]' \
 '--durable[Sync the destination directory after atomic publication where supported]' \
 '--clear-trackers[Clear configured and preset trackers before CLI additions]' \
 '--clear-web-seeds[Clear configured and preset web seeds before CLI additions]' \
 '(--public)--private[Set the private flag]' \
-'--public[]' \
-'(--source)--clear-source[]' \
-'(--comment)--clear-comment[]' \
+'--public[Set the private flag to false]' \
+'(--source)--clear-source[Remove configured or preset source metadata]' \
+'(--comment)--clear-comment[Remove configured or preset comment metadata]' \
 '(--created-by)--no-created-by[Omit the creator string instead of using the versioned default]' \
 '--exclude-hidden[Exclude dot-prefixed files and directories]' \
 '--exclude-empty-files[Exclude zero-length files]' \
 '--reject-empty-directories[Reject empty directories instead of ignoring them]' \
 '--clear-includes[Clear configured and preset include patterns before CLI additions]' \
 '--clear-excludes[Clear configured and preset exclude patterns before CLI additions]' \
-'--dry-run[]' \
+'--dry-run[Plan creation without hashing or writing metainfo]' \
 '--json[Emit a versioned JSON result to stdout]' \
 '(--json -q --quiet)--pretty[Use the expanded human completion renderer]' \
 '--no-config[Disable implicit and environment-selected configuration]' \
@@ -125,16 +125,16 @@ _arguments "${_arguments_options[@]}" : \
 ;;
 (validate)
 _arguments "${_arguments_options[@]}" : \
-'(--json)--format=[]:FORMAT:(human json json-pretty)' \
+'(--json)--format=[Select output representation]:FORMAT:(human json json-pretty)' \
 '--max-input-bytes=[Maximum metainfo bytes accepted while loading]:MAX_INPUT_BYTES:_default' \
 '--max-owned-bytes=[Maximum estimated owned allocation while loading]:MAX_OWNED_BYTES:_default' \
 '--max-integer-digits=[Maximum decimal digits accepted in one bencode integer]:MAX_INTEGER_DIGITS:_default' \
 '(--no-config)--config=[Use this configuration file when configuration loading is enabled]:PATH:_files' \
 '--color=[Control colored terminal output]:COLOR:(auto always never)' \
-'--json[]' \
-'--canonical[]' \
-'--warnings-as-errors[]' \
-'(--json -q --quiet)--pretty[]' \
+'--json[Emit versioned JSON to stdout]' \
+'--canonical[Require canonical bencode]' \
+'--warnings-as-errors[Return the warning exit code when validation warnings exist]' \
+'(--json -q --quiet)--pretty[Use the expanded human renderer]' \
 '--no-config[Disable implicit and environment-selected configuration]' \
 '(-q --quiet)*-v[Increase diagnostic verbosity; may be repeated]' \
 '(-q --quiet)*--verbose[Increase diagnostic verbosity; may be repeated]' \
@@ -142,7 +142,7 @@ _arguments "${_arguments_options[@]}" : \
 '--quiet[Suppress human summaries, warnings, and progress]' \
 '-h[Print help]' \
 '--help[Print help]' \
-':input:_files' \
+':input -- Metainfo file to validate:_files' \
 && ret=0
 ;;
 (verify)
@@ -169,38 +169,38 @@ _arguments "${_arguments_options[@]}" : \
 ;;
 (edit)
 _arguments "${_arguments_options[@]}" : \
-'(--in-place)-o+[]:OUTPUT:_files' \
-'(--in-place)--output=[]:OUTPUT:_files' \
-'*-a+[]:TRACKERS:_default' \
-'*--tracker=[]:TRACKERS:_default' \
-'*--tracker-alias=[]:TRACKER_ALIASES:_default' \
-'*--tracker-group=[]:TRACKER_GROUPS:_default' \
-'*--web-seed=[]:WEB_SEEDS:_default' \
-'*--node=[]:NODES:_default' \
-'(--clear-comment)--comment=[]:COMMENT:_default' \
-'(--clear-created-by)--created-by=[]:CREATED_BY:_default' \
-'(--clear-creation-date)--creation-date=[]:CREATION_DATE:_default' \
-'(--clear-source)--source=[]:SOURCE:_default' \
-'*--file-attributes=[]:FILE_ATTRIBUTES:_default' \
+'(--in-place)-o+[Write the edited metainfo to this path]:OUTPUT:_files' \
+'(--in-place)--output=[Write the edited metainfo to this path]:OUTPUT:_files' \
+'*-a+[Replace trackers with this tracker tier; may be repeated]:TRACKERS:_default' \
+'*--tracker=[Replace trackers with this tracker tier; may be repeated]:TRACKERS:_default' \
+'*--tracker-alias=[Add a configured tracker alias; may be repeated]:TRACKER_ALIASES:_default' \
+'*--tracker-group=[Add a configured tracker group; may be repeated]:TRACKER_GROUPS:_default' \
+'*--web-seed=[Replace web seeds with this URL; may be repeated]:WEB_SEEDS:_default' \
+'*--node=[Replace DHT nodes with HOST\:PORT; may be repeated]:NODES:_default' \
+'(--clear-comment)--comment=[Set the top-level comment]:COMMENT:_default' \
+'(--clear-created-by)--created-by=[Set the creator string]:CREATED_BY:_default' \
+'(--clear-creation-date)--creation-date=[Set the Unix creation timestamp]:CREATION_DATE:_default' \
+'(--clear-source)--source=[Set the source field]:SOURCE:_default' \
+'*--file-attributes=[Set file attributes as PATH=ATTRS; may be repeated]:FILE_ATTRIBUTES:_default' \
 '(--no-config)--config=[Use this configuration file when configuration loading is enabled]:PATH:_files' \
 '--color=[Control colored terminal output]:COLOR:(auto always never)' \
-'--in-place[]' \
-'-f[]' \
-'--force[]' \
-'--durable[]' \
-'--dry-run[]' \
-'--diff[]' \
-'--json[]' \
-'--clear-trackers[]' \
-'--clear-web-seeds[]' \
-'--clear-nodes[]' \
-'--clear-comment[]' \
-'--clear-created-by[]' \
-'--clear-creation-date[]' \
-'(--public --clear-private)--private[]' \
-'(--clear-private)--public[]' \
-'--clear-private[]' \
-'--clear-source[]' \
+'--in-place[Replace the input file atomically]' \
+'-f[Replace an existing output file]' \
+'--force[Replace an existing output file]' \
+'--durable[Sync the destination directory after publication where supported]' \
+'--dry-run[Validate and report changes without writing output]' \
+'--diff[Print a deterministic field-level change summary]' \
+'--json[Emit a versioned JSON result to stdout]' \
+'--clear-trackers[Remove all trackers]' \
+'--clear-web-seeds[Remove all web seeds]' \
+'--clear-nodes[Remove all DHT nodes]' \
+'--clear-comment[Remove the top-level comment]' \
+'--clear-created-by[Remove the creator string]' \
+'--clear-creation-date[Remove the creation timestamp]' \
+'(--public --clear-private)--private[Set the private flag]' \
+'(--clear-private)--public[Set the private flag to false]' \
+'--clear-private[Remove the private field]' \
+'--clear-source[Remove the source field]' \
 '--no-config[Disable implicit and environment-selected configuration]' \
 '(-q --quiet)*-v[Increase diagnostic verbosity; may be repeated]' \
 '(-q --quiet)*--verbose[Increase diagnostic verbosity; may be repeated]' \
@@ -208,7 +208,7 @@ _arguments "${_arguments_options[@]}" : \
 '--quiet[Suppress human summaries, warnings, and progress]' \
 '-h[Print help]' \
 '--help[Print help]' \
-':input:_files' \
+':input -- Metainfo file to edit:_files' \
 && ret=0
 ;;
 (magnet)
@@ -335,50 +335,50 @@ _arguments "${_arguments_options[@]}" : \
 '--mode=[Torrent protocol representation]:MODE:(v1 v2 hybrid)' \
 '-o+[Destination .torrent path (defaults beside the payload)]:OUTPUT:_files' \
 '--output=[Destination .torrent path (defaults beside the payload)]:OUTPUT:_files' \
-'(-o --output)--output-dir=[]:OUTPUT_DIR:_files' \
-'--jobs=[]:JOBS:_default' \
+'(-o --output)--output-dir=[Write batch outputs beneath this directory]:OUTPUT_DIR:_files' \
+'--jobs=[Maximum concurrent batch creation jobs]:JOBS:_default' \
 '*--preset=[Apply a named creation preset; may be repeated]:PRESETS:_default' \
 '--piece-length=[Explicit piece length in bytes]:PIECE_LENGTH:_default' \
-'--target-pieces=[]:TARGET_PIECES:_default' \
-'--max-piece-length=[]:MAX_PIECE_LENGTH:_default' \
+'--target-pieces=[Target approximate number of pieces for automatic selection]:TARGET_PIECES:_default' \
+'--max-piece-length=[Cap target-based automatic piece length]:MAX_PIECE_LENGTH:_default' \
 '*-a+[Add a tracker as its own tier; may be repeated]:TRACKERS:_default' \
 '*--tracker=[Add a tracker as its own tier; may be repeated]:TRACKERS:_default' \
 '*--tracker-tier=[Add one comma-separated tracker tier; may be repeated]:TRACKER_TIER:_default' \
-'*--tracker-alias=[]:TRACKER_ALIASES:_default' \
-'*--tracker-group=[]:TRACKER_GROUPS:_default' \
+'*--tracker-alias=[Add a configured tracker alias; may be repeated]:TRACKER_ALIASES:_default' \
+'*--tracker-group=[Add a configured tracker group; may be repeated]:TRACKER_GROUPS:_default' \
 '*--web-seed=[Add a web seed URL; may be repeated]:WEB_SEEDS:_default' \
 '*--node=[Add a DHT node as HOST\:PORT; may be repeated]:NODES:_default' \
 '--source=[Set the source field]:SOURCE:_default' \
 '--comment=[Set the top-level comment]:COMMENT:_default' \
 '(--no-created-by)--created-by=[Set the creator string]:CREATED_BY:_default' \
 '--creation-date=[Include an explicit Unix creation timestamp]:CREATION_DATE:_default' \
-'--entropy=[]:ENTROPY:_default' \
+'--entropy=[Set deterministic, random, or omitted entropy policy]:ENTROPY:_default' \
 '--name=[Override the torrent root name]:NAME:_default' \
 '--symlinks=[Symbolic-link policy]:SYMLINKS:(reject skip follow)' \
 '--special-files=[Special-file policy]:SPECIAL_FILES:(reject skip)' \
 '*--include=[Include only paths matching this glob; may be repeated]:INCLUDES:_default' \
 '*--exclude=[Exclude paths matching this glob; may be repeated]:EXCLUDES:_default' \
 '--threads=[v1 hashing threads; 0 selects a conservative automatic count, 1 is sequential]:THREADS:_default' \
-'(--json)*--print=[]:PRINT:(path info-hash-v1 info-hash-v2 magnet)' \
+'(--json)*--print=[Print selected result fields; may be repeated]:PRINT:(path info-hash-v1 info-hash-v2 magnet)' \
 '(--no-config)--config=[Use this configuration file when configuration loading is enabled]:PATH:_files' \
 '--color=[Control colored terminal output]:COLOR:(auto always never)' \
-'--fail-fast[]' \
+'--fail-fast[Stop scheduling batch jobs after the first failure]' \
 '-f[Replace an existing destination]' \
 '--force[Replace an existing destination]' \
 '--durable[Sync the destination directory after atomic publication where supported]' \
 '--clear-trackers[Clear configured and preset trackers before CLI additions]' \
 '--clear-web-seeds[Clear configured and preset web seeds before CLI additions]' \
 '(--public)--private[Set the private flag]' \
-'--public[]' \
-'(--source)--clear-source[]' \
-'(--comment)--clear-comment[]' \
+'--public[Set the private flag to false]' \
+'(--source)--clear-source[Remove configured or preset source metadata]' \
+'(--comment)--clear-comment[Remove configured or preset comment metadata]' \
 '(--created-by)--no-created-by[Omit the creator string instead of using the versioned default]' \
 '--exclude-hidden[Exclude dot-prefixed files and directories]' \
 '--exclude-empty-files[Exclude zero-length files]' \
 '--reject-empty-directories[Reject empty directories instead of ignoring them]' \
 '--clear-includes[Clear configured and preset include patterns before CLI additions]' \
 '--clear-excludes[Clear configured and preset exclude patterns before CLI additions]' \
-'--dry-run[]' \
+'--dry-run[Plan creation without hashing or writing metainfo]' \
 '--json[Emit a versioned JSON result to stdout]' \
 '(--json -q --quiet)--pretty[Use the expanded human completion renderer]' \
 '--no-config[Disable implicit and environment-selected configuration]' \
@@ -466,8 +466,8 @@ _arguments "${_arguments_options[@]}" : \
 '--quiet[Suppress human summaries, warnings, and progress]' \
 '-h[Print help]' \
 '--help[Print help]' \
-':name:_default' \
-':url:_default' \
+':name -- Alias name:_default' \
+':url -- Tracker announce URL:_default' \
 && ret=0
 ;;
 (remove)
@@ -481,7 +481,7 @@ _arguments "${_arguments_options[@]}" : \
 '--quiet[Suppress human summaries, warnings, and progress]' \
 '-h[Print help]' \
 '--help[Print help]' \
-':name:_default' \
+':name -- Alias name:_default' \
 && ret=0
 ;;
 (help)
@@ -568,34 +568,34 @@ _arguments "${_arguments_options[@]}" : \
 '--quiet[Suppress human summaries, warnings, and progress]' \
 '-h[Print help]' \
 '--help[Print help]' \
-':name:_default' \
+':name -- Preset name:_default' \
 && ret=0
 ;;
 (save)
 _arguments "${_arguments_options[@]}" : \
 '*--extends=[Parent preset; may be repeated]:EXTENDS:_default' \
-'--mode=[]:MODE:(v1 v2 hybrid)' \
-'--piece-length=[]:PIECE_LENGTH:_default' \
-'--source=[]:SOURCE:_default' \
-'--comment=[]:COMMENT:_default' \
-'--created-by=[]:CREATED_BY:_default' \
-'--creation-date=[]:CREATION_DATE:_default' \
-'--name=[]:NAME_OVERRIDE:_default' \
-'--symlinks=[]:SYMLINKS:(reject skip follow)' \
-'--special-files=[]:SPECIAL_FILES:(reject skip)' \
-'*--tracker=[]:TRACKERS:_default' \
-'*--tracker-alias=[]:TRACKER_ALIASES:_default' \
-'*--tracker-group=[]:TRACKER_GROUPS:_default' \
-'*--web-seed=[]:WEB_SEEDS:_default' \
-'*--include=[]:INCLUDES:_default' \
-'*--exclude=[]:EXCLUDES:_default' \
-'--threads=[]:THREADS:_default' \
+'--mode=[Torrent protocol representation]:MODE:(v1 v2 hybrid)' \
+'--piece-length=[Explicit piece length in bytes]:PIECE_LENGTH:_default' \
+'--source=[Set the source field]:SOURCE:_default' \
+'--comment=[Set the top-level comment]:COMMENT:_default' \
+'--created-by=[Set the creator string]:CREATED_BY:_default' \
+'--creation-date=[Set the Unix creation timestamp]:CREATION_DATE:_default' \
+'--name=[Override the torrent root name]:NAME_OVERRIDE:_default' \
+'--symlinks=[Symbolic-link policy]:SYMLINKS:(reject skip follow)' \
+'--special-files=[Special-file policy]:SPECIAL_FILES:(reject skip)' \
+'*--tracker=[Add a tracker as its own tier; may be repeated]:TRACKERS:_default' \
+'*--tracker-alias=[Add a configured tracker alias; may be repeated]:TRACKER_ALIASES:_default' \
+'*--tracker-group=[Add a configured tracker group; may be repeated]:TRACKER_GROUPS:_default' \
+'*--web-seed=[Add a web seed URL; may be repeated]:WEB_SEEDS:_default' \
+'*--include=[Include only paths matching this glob; may be repeated]:INCLUDES:_default' \
+'*--exclude=[Exclude paths matching this glob; may be repeated]:EXCLUDES:_default' \
+'--threads=[v1 hashing threads; 0 selects automatic, 1 is sequential]:THREADS:_default' \
 '(--no-config)--config=[Use this configuration file when configuration loading is enabled]:PATH:_files' \
 '--color=[Control colored terminal output]:COLOR:(auto always never)' \
-'--private[]' \
-'--exclude-hidden[]' \
-'--exclude-empty-files[]' \
-'--reject-empty-directories[]' \
+'--private[Set the private flag]' \
+'--exclude-hidden[Exclude dot-prefixed files and directories]' \
+'--exclude-empty-files[Exclude zero-length files]' \
+'--reject-empty-directories[Reject empty directories instead of ignoring them]' \
 '--no-config[Disable implicit and environment-selected configuration]' \
 '(-q --quiet)*-v[Increase diagnostic verbosity; may be repeated]' \
 '(-q --quiet)*--verbose[Increase diagnostic verbosity; may be repeated]' \
@@ -603,7 +603,7 @@ _arguments "${_arguments_options[@]}" : \
 '--quiet[Suppress human summaries, warnings, and progress]' \
 '-h[Print help]' \
 '--help[Print help]' \
-':name:_default' \
+':name -- Preset name:_default' \
 && ret=0
 ;;
 (remove)
@@ -617,7 +617,7 @@ _arguments "${_arguments_options[@]}" : \
 '--quiet[Suppress human summaries, warnings, and progress]' \
 '-h[Print help]' \
 '--help[Print help]' \
-':name:_default' \
+':name -- Preset name:_default' \
 && ret=0
 ;;
 (help)
@@ -1118,7 +1118,7 @@ _btpc_commands() {
 'magnet:Print a deterministic magnet URI' \
 'config:Locate, inspect, validate, and update configuration' \
 'completion:Generate, install, or uninstall shell completions' \
-'completions:Generate a shell completion script on stdout (deprecated)' \
+'completions:Deprecated alias for \`btpc completion generate\`' \
 'manpage:Generate the btpc(1) manual page on stdout' \
 'help:Print this message or the help of the given subcommand(s)' \
     )
@@ -1497,7 +1497,7 @@ _btpc__subcmd__help_commands() {
 'magnet:Print a deterministic magnet URI' \
 'config:Locate, inspect, validate, and update configuration' \
 'completion:Generate, install, or uninstall shell completions' \
-'completions:Generate a shell completion script on stdout (deprecated)' \
+'completions:Deprecated alias for \`btpc completion generate\`' \
 'manpage:Generate the btpc(1) manual page on stdout' \
 'help:Print this message or the help of the given subcommand(s)' \
     )

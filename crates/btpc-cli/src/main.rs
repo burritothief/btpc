@@ -9,6 +9,7 @@ mod reference;
 mod render;
 
 use std::process::ExitCode;
+use std::{env, ffi::OsStr, path::PathBuf};
 
 use btpc_core::Error;
 use clap::Parser as _;
@@ -17,6 +18,15 @@ use crate::command::{Cli, Command, CompletionCommand};
 use crate::context::ExecutionContext;
 
 fn main() -> ExitCode {
+    if let Some(destination) = markdown_destination() {
+        return match reference::markdown(&destination) {
+            Ok(()) => ExitCode::SUCCESS,
+            Err(error) => {
+                eprintln!("error: {error}");
+                ExitCode::FAILURE
+            }
+        };
+    }
     let cli = Cli::parse();
     if let Err(error) = cli.validate() {
         error.exit();
@@ -56,4 +66,21 @@ fn run(cli: &Cli) -> Result<(), Error> {
         }
         Command::Manpage => reference::manpage(),
     }
+}
+
+fn markdown_destination() -> Option<PathBuf> {
+    let mut arguments = env::args_os();
+    arguments.next();
+    if arguments.next().as_deref() != Some(OsStr::new("__generate-markdown")) {
+        return None;
+    }
+    let destination = arguments.next().unwrap_or_else(|| {
+        eprintln!("error: __generate-markdown requires a destination");
+        std::process::exit(2);
+    });
+    if arguments.next().is_some() {
+        eprintln!("error: __generate-markdown accepts one destination");
+        std::process::exit(2);
+    }
+    Some(destination.into())
 }

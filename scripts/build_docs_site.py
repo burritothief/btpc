@@ -11,6 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_SITE_DIR = ROOT / "site"
 STAGING_DIR = ROOT / ".tmp/docs-site"
 RUSTDOC_TARGET_DIR = ROOT / ".tmp/docs-rustdoc-target"
+CLI_REFERENCE_DIR = ROOT / "docs/cli/reference"
 STAGES = ("cli", "mkdocs", "rustdoc", "validate")
 RUSTDOC_ENTRIES = (
     "btpc_core",
@@ -42,6 +43,24 @@ def _stage_cli() -> None:
     if not required.is_file():
         message = f"missing generated CLI reference: {required}"
         raise RuntimeError(message)
+    _run(("cargo", "build", "-p", "btpc-cli"))
+    generated = STAGING_DIR / "cli-reference"
+    _run(
+        (
+            str(ROOT / "target/debug/btpc"),
+            "__generate-markdown",
+            str(generated),
+        )
+    )
+    expected_files = sorted(path.name for path in CLI_REFERENCE_DIR.glob("*.md"))
+    generated_files = sorted(path.name for path in generated.glob("*.md"))
+    if generated_files != expected_files:
+        message = "generated CLI website reference file set is stale"
+        raise RuntimeError(message)
+    for name in expected_files:
+        if (CLI_REFERENCE_DIR / name).read_bytes() != (generated / name).read_bytes():
+            message = f"generated CLI website reference is stale: {name}"
+            raise RuntimeError(message)
 
 
 def _stage_mkdocs(output: Path) -> None:

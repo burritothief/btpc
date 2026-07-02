@@ -3,8 +3,8 @@ Add or replace a tracker alias
 Usage: btpc config tracker add [OPTIONS] <NAME> <URL>
 
 Arguments:
-  <NAME>  
-  <URL>   
+  <NAME>  Alias name
+  <URL>   Tracker announce URL
 
 Options:
       --config <PATH>  Use this configuration file when configuration loading is enabled

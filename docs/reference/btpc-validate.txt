@@ -3,27 +3,27 @@ Validate metainfo structure without reading payload files
 Usage: btpc validate [OPTIONS] <INPUT>
 
 Arguments:
-  <INPUT>  
+  <INPUT>  Metainfo file to validate
 
 Options:
       --config <PATH>
           Use this configuration file when configuration loading is enabled
       --json
-          
+          Emit versioned JSON to stdout
       --format <FORMAT>
-          [possible values: human, json, json-pretty]
+          Select output representation [possible values: human, json, json-pretty]
       --no-config
           Disable implicit and environment-selected configuration
       --canonical
-          
+          Require canonical bencode
       --color <COLOR>
           Control colored terminal output [possible values: auto, always, never]
   -v, --verbose...
           Increase diagnostic verbosity; may be repeated
       --warnings-as-errors
-          
+          Return the warning exit code when validation warnings exist
       --pretty
-          
+          Use the expanded human renderer
   -q, --quiet
           Suppress human summaries, warnings, and progress
       --max-input-bytes <MAX_INPUT_BYTES>

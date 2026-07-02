@@ -19,15 +19,15 @@ Options:
   -o, --output <OUTPUT>
           Destination .torrent path (defaults beside the payload)
       --output-dir <OUTPUT_DIR>
-          
+          Write batch outputs beneath this directory
   -v, --verbose...
           Increase diagnostic verbosity; may be repeated
       --jobs <JOBS>
-          [default: 1]
+          Maximum concurrent batch creation jobs [default: 1]
   -q, --quiet
           Suppress human summaries, warnings, and progress
       --fail-fast
-          
+          Stop scheduling batch jobs after the first failure
   -f, --force
           Replace an existing destination
       --durable
@@ -37,9 +37,9 @@ Options:
       --piece-length <PIECE_LENGTH>
           Explicit piece length in bytes
       --target-pieces <TARGET_PIECES>
-          
+          Target approximate number of pieces for automatic selection
       --max-piece-length <MAX_PIECE_LENGTH>
-          
+          Cap target-based automatic piece length
   -a, --tracker <TRACKERS>
           Add a tracker as its own tier; may be repeated
       --clear-trackers
@@ -47,9 +47,9 @@ Options:
       --tracker-tier <TRACKER_TIER>
           Add one comma-separated tracker tier; may be repeated
       --tracker-alias <TRACKER_ALIASES>
-          
+          Add a configured tracker alias; may be repeated
       --tracker-group <TRACKER_GROUPS>
-          
+          Add a configured tracker group; may be repeated
       --web-seed <WEB_SEEDS>
           Add a web seed URL; may be repeated
       --clear-web-seeds
@@ -59,15 +59,15 @@ Options:
       --private
           Set the private flag
       --public
-          
+          Set the private flag to false
       --source <SOURCE>
           Set the source field
       --clear-source
-          
+          Remove configured or preset source metadata
       --comment <COMMENT>
           Set the top-level comment
       --clear-comment
-          
+          Remove configured or preset comment metadata
       --created-by <CREATED_BY>
           Set the creator string
       --no-created-by
@@ -75,7 +75,7 @@ Options:
       --creation-date <CREATION_DATE>
           Include an explicit Unix creation timestamp
       --entropy <ENTROPY>
-          
+          Set deterministic, random, or omitted entropy policy
       --name <NAME>
           Override the torrent root name
       --exclude-hidden
@@ -99,9 +99,9 @@ Options:
       --threads <THREADS>
           v1 hashing threads; 0 selects a conservative automatic count, 1 is sequential
       --dry-run
-          
+          Plan creation without hashing or writing metainfo
       --print <PRINT>
-          [possible values: path, info-hash-v1, info-hash-v2, magnet]
+          Print selected result fields; may be repeated [possible values: path, info-hash-v1, info-hash-v2, magnet]
       --json
           Emit a versioned JSON result to stdout
       --pretty

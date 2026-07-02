@@ -4667,8 +4667,8 @@ remain adapters over `btpc-core` throughout.
      but its complete `doc` directory is removed before every rustdoc invocation,
      preventing stale generated documentation from surviving.
 
-100. [ ] Publish readable generated CLI command reference pages without drift
-   Claimed by:
+100. [x] Publish readable generated CLI command reference pages without drift
+   Claimed by: Codex implementer (2026-07-02 14:38 PDT)
    Requirements:
    `DOCSITE-CLI-001`, `DOCSITE-BUILD-001`, `DOCSITE-QUALITY-001`,
    `CLI-DOC-001`, `RELEASE-CLI-DOC-001`, `TEST-TDD-001`.
@@ -4704,7 +4704,43 @@ remain adapters over `btpc-core` throughout.
    have a reference page and no undocumented extra page exists. Run Rust formatting,
    strict clippy for `btpc-cli`, relevant CLI tests, and spec validation.
    Evidence:
+   - Added the web-reference golden test first; it failed because the maintenance
+     generator entrypoint and checked-in pages did not exist. The retained
+     `btpc-cli` reference suite now reports 3 passed for raw help/manpage/
+     completions, deterministic web generation, and byte-for-byte checked-in
+     parity.
+   - Added a maintenance-only pre-Clap `__generate-markdown` entrypoint whose
+     renderer recursively walks the built Clap command tree. It emits 28 Markdown
+     pages with synopsis, descriptions, positional arguments, options, inherited
+     globals, subcommand/parent links, deprecated aliases, exit/config links, and
+     examples. The maintenance entrypoint is absent from help, completions, raw
+     references, and website pages.
+   - Completed missing Clap-native help text for create, edit, validate, preset,
+     and tracker arguments. The golden test rejects any generated blank
+     description, documents the `completions` and `clear-created-by` aliases, and
+     proves identical output under a different cwd, locale, home, and fake secret
+     configuration environment.
+   - `scripts/generate-cli-reference.sh` now rebuilds the workspace binary unless
+     an explicit executable `BTPC_BIN` is supplied, generates raw help, manpage,
+     all five completions, and the website tree in one invocation, and reproduces
+     62 files byte-for-byte across two temporary runs. Existing release artifacts
+     remain generated and current.
+   - The shared site builder regenerates the web reference into staging and fails
+     on any file-set or byte drift before MkDocs runs. MkDocs navigation includes
+     every generated page; `tests/docs/test_cli_reference.py` proves the nav and
+     source page sets are identical.
+   - The complete `btpc-cli` suite reports 89 passed. Rust formatting and strict
+     all-target/all-feature Clippy pass; the complete docs suite reports 16 passed;
+     the strict site build succeeds; links validate across 91 Markdown files; and
+     spec validation reports 16 specs and 118 requirements.
+   - A local `/btpc/` HTTP smoke test verified the command root, deprecated alias,
+     nested preset page, global options, option alias, exit-code anchor, and search
+     index. Source/handwritten codespell checks pass; generated CLI output is
+     excluded because it is byte-checked against the Clap model.
    Notes:
+   - The generated command filenames are flat and deterministic (for example,
+     `config-preset-save.md`); parent/child links and hierarchical Material
+     navigation present the logical command tree without filesystem ambiguity.
 
 101. [ ] Add production generated-site QA, size budgets, and contributor gates
    Claimed by:

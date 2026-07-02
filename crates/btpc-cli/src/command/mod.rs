@@ -81,7 +81,7 @@ pub(crate) enum Command {
     Config(ConfigArgs),
     /// Generate, install, or uninstall shell completions.
     Completion(CompletionCommandArgs),
-    /// Generate a shell completion script on stdout (deprecated).
+    /// Deprecated alias for `btpc completion generate`.
     #[command(hide = true)]
     Completions(CompletionArgs),
     /// Generate the btpc(1) manual page on stdout.
@@ -156,9 +156,17 @@ pub(crate) enum ConfigTrackerCommand {
         json: bool,
     },
     /// Add or replace a tracker alias.
-    Add { name: String, url: String },
+    Add {
+        /// Alias name.
+        name: String,
+        /// Tracker announce URL.
+        url: String,
+    },
     /// Remove a tracker alias.
-    Remove { name: String },
+    Remove {
+        /// Alias name.
+        name: String,
+    },
 }
 
 #[derive(Debug, Args)]
@@ -177,6 +185,7 @@ pub(crate) enum ConfigPresetCommand {
     },
     /// Show one preset.
     Show {
+        /// Preset name.
         name: String,
         /// Reveal configured URLs.
         #[arg(long)]
@@ -188,54 +197,78 @@ pub(crate) enum ConfigPresetCommand {
     /// Save or replace a preset.
     Save(Box<PresetSaveArgs>),
     /// Remove a preset.
-    Remove { name: String },
+    Remove {
+        /// Preset name.
+        name: String,
+    },
 }
 
 #[derive(Debug, Args)]
 #[allow(clippy::struct_excessive_bools)]
 pub(crate) struct PresetSaveArgs {
+    /// Preset name.
     pub(crate) name: String,
     /// Parent preset; may be repeated.
     #[arg(long = "extends")]
     pub(crate) extends: Vec<String>,
+    /// Torrent protocol representation.
     #[arg(long, value_enum)]
     pub(crate) mode: Option<CliCreateMode>,
+    /// Explicit piece length in bytes.
     #[arg(long)]
     pub(crate) piece_length: Option<u64>,
+    /// Set the private flag.
     #[arg(long)]
     pub(crate) private: bool,
+    /// Set the source field.
     #[arg(long)]
     pub(crate) source: Option<String>,
+    /// Set the top-level comment.
     #[arg(long)]
     pub(crate) comment: Option<String>,
+    /// Set the creator string.
     #[arg(long)]
     pub(crate) created_by: Option<String>,
+    /// Set the Unix creation timestamp.
     #[arg(long)]
     pub(crate) creation_date: Option<i64>,
+    /// Override the torrent root name.
     #[arg(long = "name")]
     pub(crate) name_override: Option<String>,
+    /// Exclude dot-prefixed files and directories.
     #[arg(long)]
     pub(crate) exclude_hidden: bool,
+    /// Symbolic-link policy.
     #[arg(long, value_enum)]
     pub(crate) symlinks: Option<CliSymlinkPolicy>,
+    /// Special-file policy.
     #[arg(long, value_enum)]
     pub(crate) special_files: Option<CliSpecialFilePolicy>,
+    /// Exclude zero-length files.
     #[arg(long)]
     pub(crate) exclude_empty_files: bool,
+    /// Reject empty directories instead of ignoring them.
     #[arg(long)]
     pub(crate) reject_empty_directories: bool,
+    /// Add a tracker as its own tier; may be repeated.
     #[arg(long = "tracker")]
     pub(crate) trackers: Vec<String>,
+    /// Add a configured tracker alias; may be repeated.
     #[arg(long = "tracker-alias")]
     pub(crate) tracker_aliases: Vec<String>,
+    /// Add a configured tracker group; may be repeated.
     #[arg(long = "tracker-group")]
     pub(crate) tracker_groups: Vec<String>,
+    /// Add a web seed URL; may be repeated.
     #[arg(long = "web-seed")]
     pub(crate) web_seeds: Vec<String>,
+    /// Include only paths matching this glob; may be repeated.
     #[arg(long = "include")]
     pub(crate) includes: Vec<String>,
+    /// Exclude paths matching this glob; may be repeated.
     #[arg(long = "exclude")]
     pub(crate) excludes: Vec<String>,
+    /// v1 hashing threads; 0 selects automatic, 1 is sequential.
     #[arg(long)]
     pub(crate) threads: Option<usize>,
 }
@@ -315,15 +348,21 @@ pub(crate) struct InspectArgs {
 #[derive(Debug, Args)]
 #[allow(clippy::struct_excessive_bools)]
 pub(crate) struct ValidateArgs {
+    /// Metainfo file to validate.
     pub(crate) input: PathBuf,
+    /// Emit versioned JSON to stdout.
     #[arg(long)]
     pub(crate) json: bool,
+    /// Select output representation.
     #[arg(long, value_enum, conflicts_with = "json")]
     pub(crate) format: Option<ValidateFormat>,
+    /// Require canonical bencode.
     #[arg(long)]
     pub(crate) canonical: bool,
+    /// Return the warning exit code when validation warnings exist.
     #[arg(long)]
     pub(crate) warnings_as_errors: bool,
+    /// Use the expanded human renderer.
     #[arg(long, conflicts_with_all = ["json", "quiet"])]
     pub(crate) pretty: bool,
     #[command(flatten)]
@@ -435,59 +474,87 @@ pub(crate) struct MagnetArgs {
 #[derive(Debug, Args)]
 #[allow(clippy::struct_excessive_bools)]
 pub(crate) struct EditArgs {
+    /// Metainfo file to edit.
     pub(crate) input: PathBuf,
+    /// Write the edited metainfo to this path.
     #[arg(short, long, conflicts_with = "in_place")]
     pub(crate) output: Option<PathBuf>,
+    /// Replace the input file atomically.
     #[arg(long)]
     pub(crate) in_place: bool,
+    /// Replace an existing output file.
     #[arg(short, long)]
     pub(crate) force: bool,
+    /// Sync the destination directory after publication where supported.
     #[arg(long)]
     pub(crate) durable: bool,
+    /// Validate and report changes without writing output.
     #[arg(long)]
     pub(crate) dry_run: bool,
+    /// Print a deterministic field-level change summary.
     #[arg(long)]
     pub(crate) diff: bool,
+    /// Emit a versioned JSON result to stdout.
     #[arg(long)]
     pub(crate) json: bool,
+    /// Replace trackers with this tracker tier; may be repeated.
     #[arg(short = 'a', long = "tracker")]
     pub(crate) trackers: Vec<String>,
+    /// Add a configured tracker alias; may be repeated.
     #[arg(long = "tracker-alias")]
     pub(crate) tracker_aliases: Vec<String>,
+    /// Add a configured tracker group; may be repeated.
     #[arg(long = "tracker-group")]
     pub(crate) tracker_groups: Vec<String>,
+    /// Remove all trackers.
     #[arg(long)]
     pub(crate) clear_trackers: bool,
+    /// Replace web seeds with this URL; may be repeated.
     #[arg(long = "web-seed")]
     pub(crate) web_seeds: Vec<String>,
+    /// Remove all web seeds.
     #[arg(long)]
     pub(crate) clear_web_seeds: bool,
+    /// Replace DHT nodes with HOST:PORT; may be repeated.
     #[arg(long = "node", value_parser = parse_node)]
     pub(crate) nodes: Vec<(Vec<u8>, u16)>,
+    /// Remove all DHT nodes.
     #[arg(long)]
     pub(crate) clear_nodes: bool,
+    /// Set the top-level comment.
     #[arg(long, conflicts_with = "clear_comment")]
     pub(crate) comment: Option<String>,
+    /// Remove the top-level comment.
     #[arg(long)]
     pub(crate) clear_comment: bool,
+    /// Set the creator string.
     #[arg(long, conflicts_with = "clear_created_by")]
     pub(crate) created_by: Option<String>,
+    /// Remove the creator string.
     #[arg(long)]
     pub(crate) clear_created_by: bool,
+    /// Set the Unix creation timestamp.
     #[arg(long, conflicts_with = "clear_creation_date")]
     pub(crate) creation_date: Option<i64>,
+    /// Remove the creation timestamp.
     #[arg(long)]
     pub(crate) clear_creation_date: bool,
+    /// Set the private flag.
     #[arg(long, conflicts_with_all = ["public", "clear_private"])]
     pub(crate) private: bool,
+    /// Set the private flag to false.
     #[arg(long, conflicts_with = "clear_private")]
     pub(crate) public: bool,
+    /// Remove the private field.
     #[arg(long)]
     pub(crate) clear_private: bool,
+    /// Set the source field.
     #[arg(long, conflicts_with = "clear_source")]
     pub(crate) source: Option<String>,
+    /// Remove the source field.
     #[arg(long)]
     pub(crate) clear_source: bool,
+    /// Set file attributes as PATH=ATTRS; may be repeated.
     #[arg(long = "file-attributes", value_parser = parse_file_attributes)]
     pub(crate) file_attributes: Vec<(Vec<Vec<u8>>, Vec<u8>)>,
 }
@@ -507,10 +574,13 @@ pub(crate) struct CreateArgs {
     /// Destination .torrent path (defaults beside the payload).
     #[arg(short, long)]
     pub(crate) output: Option<PathBuf>,
+    /// Write batch outputs beneath this directory.
     #[arg(long, conflicts_with = "output")]
     pub(crate) output_dir: Option<PathBuf>,
+    /// Maximum concurrent batch creation jobs.
     #[arg(long, default_value_t = 1)]
     pub(crate) jobs: usize,
+    /// Stop scheduling batch jobs after the first failure.
     #[arg(long)]
     pub(crate) fail_fast: bool,
     /// Replace an existing destination.
@@ -525,8 +595,10 @@ pub(crate) struct CreateArgs {
     /// Explicit piece length in bytes.
     #[arg(long, value_parser = parse_piece_length)]
     pub(crate) piece_length: Option<u64>,
+    /// Target approximate number of pieces for automatic selection.
     #[arg(long)]
     pub(crate) target_pieces: Option<u64>,
+    /// Cap target-based automatic piece length.
     #[arg(long, value_parser = parse_piece_length, requires = "target_pieces")]
     pub(crate) max_piece_length: Option<u64>,
     /// Add a tracker as its own tier; may be repeated.
@@ -538,8 +610,10 @@ pub(crate) struct CreateArgs {
     /// Add one comma-separated tracker tier; may be repeated.
     #[arg(long = "tracker-tier", value_delimiter = ',')]
     pub(crate) tracker_tier: Vec<String>,
+    /// Add a configured tracker alias; may be repeated.
     #[arg(long = "tracker-alias")]
     pub(crate) tracker_aliases: Vec<String>,
+    /// Add a configured tracker group; may be repeated.
     #[arg(long = "tracker-group")]
     pub(crate) tracker_groups: Vec<String>,
     /// Add a web seed URL; may be repeated.
@@ -554,16 +628,19 @@ pub(crate) struct CreateArgs {
     /// Set the private flag.
     #[arg(long, conflicts_with = "public")]
     pub(crate) private: bool,
+    /// Set the private flag to false.
     #[arg(long)]
     pub(crate) public: bool,
     /// Set the source field.
     #[arg(long)]
     pub(crate) source: Option<String>,
+    /// Remove configured or preset source metadata.
     #[arg(long, conflicts_with = "source")]
     pub(crate) clear_source: bool,
     /// Set the top-level comment.
     #[arg(long)]
     pub(crate) comment: Option<String>,
+    /// Remove configured or preset comment metadata.
     #[arg(long, conflicts_with = "comment")]
     pub(crate) clear_comment: bool,
     /// Set the creator string.
@@ -579,6 +656,7 @@ pub(crate) struct CreateArgs {
     /// Include an explicit Unix creation timestamp.
     #[arg(long, value_parser = parse_creation_date)]
     pub(crate) creation_date: Option<CreationDateValue>,
+    /// Set deterministic, random, or omitted entropy policy.
     #[arg(long, value_parser = parse_entropy)]
     pub(crate) entropy: Option<EntropyValue>,
     /// Override the torrent root name.
@@ -614,8 +692,10 @@ pub(crate) struct CreateArgs {
     /// v1 hashing threads; 0 selects a conservative automatic count, 1 is sequential.
     #[arg(long)]
     pub(crate) threads: Option<usize>,
+    /// Plan creation without hashing or writing metainfo.
     #[arg(long)]
     pub(crate) dry_run: bool,
+    /// Print selected result fields; may be repeated.
     #[arg(long = "print", value_enum, conflicts_with = "json")]
     pub(crate) print: Vec<CreatePrint>,
     /// Emit a versioned JSON result to stdout.

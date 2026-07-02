@@ -2,6 +2,7 @@ use std::fs;
 use std::path::Path;
 
 use assert_cmd::Command;
+use tempfile::tempdir;
 
 fn btpc() -> Command {
     Command::cargo_bin("btpc").unwrap()
@@ -52,6 +53,7 @@ fn checked_in_help_reference_matches_the_binary() {
             "btpc-completion-uninstall.txt",
             vec!["completion", "uninstall", "--help"],
         ),
+        ("btpc-completions.txt", vec!["completions", "--help"]),
         ("btpc-manpage.txt", vec!["manpage", "--help"]),
         ("btpc-config.txt", vec!["config", "--help"]),
         ("btpc-config-path.txt", vec!["config", "path", "--help"]),
@@ -128,4 +130,53 @@ fn checked_in_help_reference_matches_the_binary() {
             "stale {shell} completion"
         );
     }
+}
+
+#[test]
+fn checked_in_web_reference_matches_the_command_model() {
+    let first = tempdir().unwrap();
+    let second = tempdir().unwrap();
+    btpc()
+        .args(["__generate-markdown", first.path().to_str().unwrap()])
+        .assert()
+        .success();
+    btpc()
+        .current_dir(second.path())
+        .env("HOME", second.path())
+        .env("LC_ALL", "C")
+        .env("BTPC_CONFIG", "https://secret.example/announce")
+        .args(["__generate-markdown", second.path().to_str().unwrap()])
+        .assert()
+        .success();
+
+    let checked_in = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../docs/cli/reference");
+    let generated_names = markdown_names(first.path());
+    assert_eq!(generated_names, markdown_names(second.path()));
+    assert_eq!(generated_names, markdown_names(&checked_in));
+    assert_eq!(generated_names.len(), 28);
+    for name in generated_names {
+        let first_bytes = fs::read(first.path().join(&name)).unwrap();
+        assert_eq!(first_bytes, fs::read(second.path().join(&name)).unwrap());
+        assert_eq!(first_bytes, fs::read(checked_in.join(&name)).unwrap());
+        assert!(!String::from_utf8_lossy(&first_bytes).contains("| —"));
+        assert!(!String::from_utf8_lossy(&first_bytes).contains("secret.example"));
+    }
+
+    let root = fs::read_to_string(checked_in.join("index.md")).unwrap();
+    assert!(root.contains("Deprecated aliases"));
+    assert!(root.contains("`btpc completions`") && root.contains("`btpc completion generate`"));
+    let create = fs::read_to_string(checked_in.join("create.md")).unwrap();
+    assert!(create.contains("## Synopsis"));
+    assert!(create.contains("## Options"));
+    assert!(create.contains("## Global options"));
+    assert!(create.contains("Exit codes and streams"));
+}
+
+fn markdown_names(directory: &Path) -> Vec<String> {
+    let mut names = fs::read_dir(directory)
+        .unwrap()
+        .map(|entry| entry.unwrap().file_name().into_string().unwrap())
+        .collect::<Vec<_>>();
+    names.sort();
+    names
 }

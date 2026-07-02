@@ -3,7 +3,7 @@ Remove a preset
 Usage: btpc config preset remove [OPTIONS] <NAME>
 
 Arguments:
-  <NAME>  
+  <NAME>  Preset name
 
 Options:
       --config <PATH>  Use this configuration file when configuration loading is enabled

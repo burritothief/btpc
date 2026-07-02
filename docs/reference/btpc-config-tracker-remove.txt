@@ -3,7 +3,7 @@ Remove a tracker alias
 Usage: btpc config tracker remove [OPTIONS] <NAME>
 
 Arguments:
-  <NAME>  
+  <NAME>  Alias name
 
 Options:
       --config <PATH>  Use this configuration file when configuration loading is enabled

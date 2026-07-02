@@ -1,4 +1,4 @@
-Generate a shell completion script on stdout
+Deprecated alias for `btpc completion generate`
 
 Usage: btpc completions [OPTIONS] <SHELL>
 

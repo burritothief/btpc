@@ -3,72 +3,72 @@ Edit metainfo metadata without reading payload files
 Usage: btpc edit [OPTIONS] <INPUT>
 
 Arguments:
-  <INPUT>  
+  <INPUT>  Metainfo file to edit
 
 Options:
       --config <PATH>
           Use this configuration file when configuration loading is enabled
   -o, --output <OUTPUT>
-          
+          Write the edited metainfo to this path
       --in-place
-          
+          Replace the input file atomically
       --no-config
           Disable implicit and environment-selected configuration
       --color <COLOR>
           Control colored terminal output [possible values: auto, always, never]
   -f, --force
-          
+          Replace an existing output file
       --durable
-          
+          Sync the destination directory after publication where supported
   -v, --verbose...
           Increase diagnostic verbosity; may be repeated
       --dry-run
-          
+          Validate and report changes without writing output
   -q, --quiet
           Suppress human summaries, warnings, and progress
       --diff
-          
+          Print a deterministic field-level change summary
       --json
-          
+          Emit a versioned JSON result to stdout
   -a, --tracker <TRACKERS>
-          
+          Replace trackers with this tracker tier; may be repeated
       --tracker-alias <TRACKER_ALIASES>
-          
+          Add a configured tracker alias; may be repeated
       --tracker-group <TRACKER_GROUPS>
-          
+          Add a configured tracker group; may be repeated
       --clear-trackers
-          
+          Remove all trackers
       --web-seed <WEB_SEEDS>
-          
+          Replace web seeds with this URL; may be repeated
       --clear-web-seeds
-          
+          Remove all web seeds
       --node <NODES>
-          
+          Replace DHT nodes with HOST:PORT; may be repeated
       --clear-nodes
-          
+          Remove all DHT nodes
       --comment <COMMENT>
-          
+          Set the top-level comment
       --clear-comment
-          
+          Remove the top-level comment
       --created-by <CREATED_BY>
-          
+          Set the creator string
       --clear-created-by
-          
+          Remove the creator string
       --creation-date <CREATION_DATE>
-          
+          Set the Unix creation timestamp
       --clear-creation-date
-          
+          Remove the creation timestamp
       --private
-          
+          Set the private flag
       --public
-          
+          Set the private flag to false
       --clear-private
-          
+          Remove the private field
       --source <SOURCE>
-          
+          Set the source field
       --clear-source
-          
+          Remove the source field
       --file-attributes <FILE_ATTRIBUTES>
-          
+          Set file attributes as PATH=ATTRS; may be repeated
   -h, --help
           Print help
