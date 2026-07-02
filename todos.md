@@ -4968,3 +4968,178 @@ remain adapters over `btpc-core` throughout.
    validation.
    Evidence:
    Notes:
+
+106. [ ] [Review] Finish descriptor-relative safe payload verification
+   Claimed by:
+   Context:
+   Todo 77 was marked complete with a documented portable fallback, but the current
+   verifier still performs `symlink_metadata` checks and then snapshots/opens the
+   same pathname. If a checked component is replaced by a symlink between those
+   operations, `file_id::get_file_id`, `File::open`, and the later path-identity
+   checks all follow and consistently validate the new outside-root target. The
+   same check-then-`read_dir` race exists in extra-file traversal. This can hash or
+   enumerate outside the selected payload root rather than merely reporting a
+   concurrent mutation.
+   Implementation:
+   Use descriptor-relative, no-follow traversal rooted at an opened payload
+   directory on supported platforms. Open each component beneath that descriptor,
+   reject symlinks/reparse points at the kernel boundary, and hash the final opened
+   file handle without resolving the original pathname again. Use maintained
+   platform abstractions where they provide the required semantics; otherwise add
+   narrow OS modules for Unix `openat`/`openat2`-style traversal and Windows handle/
+   reparse-point checks while keeping unsafe code out of `btpc-core` itself. Extra-
+   file enumeration must walk opened directory handles under the same root. If a
+   platform cannot provide the guarantee, expose and document an explicit weaker
+   verification policy instead of calling it safe by default.
+   Tests and verification:
+   Add deterministic synchronization hooks that replace an intermediate directory
+   or final file with an outside-root symlink after the initial check but before
+   open/enumeration. Prove v1, v2, hybrid, and extra-file modes never read or report
+   outside-root contents and never return a valid report. Run repeated stress tests
+   on Linux, macOS, and Windows, including junction/reparse-point cases, plus all
+   existing verification, CLI, and Python tests.
+   Evidence:
+   Notes:
+
+107. [ ] [Review] Preserve raw info identity for top-level edits and update hybrid attributes atomically
+   Claimed by:
+   Context:
+   `MetainfoEditor::from_metainfo` converts the complete original tree to canonical
+   `OwnedValue`, so a top-level-only edit canonicalizes a noncanonical `info`
+   dictionary and changes its info hash. This violates the documented contract that
+   tracker/comment/creator/date edits retain info hashes. Reproduction: editing only
+   `comment` changed v1 hash `8e258a24...` to `1cd7ccb6...` for a valid torrent with
+   unsorted source `info` keys. Separately, `file_attributes` returns immediately
+   after updating the v1 `files` entry in a hybrid torrent and never updates the v2
+   `file tree`; a reproduced hybrid edit emitted exactly one `attr=x` occurrence.
+   Implementation:
+   Represent editor state as a raw preserved `info` slice plus owned top-level
+   fields until an info-level mutation occurs. Top-level-only serialization must
+   embed the exact original `info` bytes while canonically writing the surrounding
+   dictionary, or provide distinct explicit preserve-info and canonicalize-all
+   operations whose default honors the hash-stability contract. Once `info` changes,
+   canonicalize and recompute every applicable hash. For hybrid real files,
+   `file_attributes` must update both v1 and v2 representations transactionally;
+   padding-only attributes remain v1-only. Reject the operation without mutation if
+   either representation is absent or inconsistent.
+   Tests and verification:
+   Add noncanonical v1/v2/hybrid fixtures proving every top-level set/remove edit
+   preserves exact info bytes and hashes. Add hybrid single/multi-file tests proving
+   real-file attributes update both representations, padding edits affect only the
+   permitted entry, and injected failure cannot leave one side changed. Cover Rust,
+   CLI `edit`, Python `Metainfo.edit`, original/canonical output choices, and unknown
+   top-level-field preservation.
+   Evidence:
+   Notes:
+
+108. [ ] [Review] Validate and expose all recognized optional metainfo fields consistently
+   Claimed by:
+   Context:
+   The validated owned `Metainfo` parses trackers and web seeds but does not retain
+   or expose DHT `nodes`; Python also omits `source`, `comment`, `created_by`,
+   `creation_date`, and nodes inspection properties. Several recognized fields are
+   silently ignored when their type is wrong: malformed comment/creator/source/date
+   values can pass validation and then appear absent. An empty `announce-list`
+   overrides a valid `announce` and produces no trackers, and parsed empty tracker
+   URLs currently validate. Creation rejects empty tracker/web-seed values but
+   accepts DHT port 0, so parse, create, edit, CLI, and Python policies disagree.
+   Implementation:
+   Define one typed optional-metadata model in `btpc-core` for tracker tiers, web
+   seeds, DHT nodes, comment, creator, creation date, and source. Validate recognized
+   field shapes and domains centrally and reuse the same rules in parsing, creation,
+   and editing. Decide and document strict-error versus compatibility-warning policy
+   for empty tiers/URLs, `announce` fallback when `announce-list` is empty, malformed
+   optional text, negative/out-of-range dates, empty node hosts, and port 0. Expose
+   lossless owned accessors in Rust and immutable Python properties, and make CLI
+   inspect consume the same typed model rather than reparsing raw fields separately.
+   Tests and verification:
+   Add a cross-surface table of valid, warning, and rejected forms for every field,
+   including non-UTF-8 bytes, empty lists/tiers/strings, duplicate values, malformed
+   node pairs, ports 0/1/65535/out of range, arbitrary-precision dates, and conflicts
+   between `announce` and `announce-list`. Assert Rust, CLI JSON/human, and Python
+   return identical values/warnings/errors and creation never emits a form the
+   parser would reject or warn about unexpectedly.
+   Evidence:
+   Notes:
+
+109. [ ] [Review] Expose unknown bencode values, not only their keys, in Python
+   Claimed by:
+   Context:
+   Rust `UnknownField` retains both key and owned bencode value, but Python
+   `Metainfo.unknown_fields` returns only `tuple[bytes, ...]`. Python callers cannot
+   inspect an extension value, distinguish two torrents with the same extension
+   keys, or perform a lossless read-modify-write operation. The Python raw editor is
+   additionally restricted to integer or byte-string values, despite the stated
+   goal of preserving arbitrary unknown dictionaries and lists.
+   Implementation:
+   Add a public immutable Python bencode value model or a precise recursive type
+   using `int`, `bytes`, tuples, and a deterministic immutable mapping/pair sequence.
+   Preserve arbitrary-precision integers and raw byte keys without UTF-8 coercion.
+   Expose unknown fields as ordered key/value objects or a mapping with duplicate
+   behavior explicitly impossible after validation, plus an accessor for exact raw
+   encoded bytes/span when source identity matters. Accept the same recursive value
+   model in raw extension editing while continuing to reject reserved keys. Keep
+   conversions lazy and cache them on the native object.
+   Tests and verification:
+   Add nested list/dictionary, arbitrary integer, non-UTF-8 key/value, empty
+   container, equality/repr/typing, lazy-cache, and parse-edit-serialize tests.
+   Verify a Python caller can read an unknown value and write it unchanged without
+   semantic loss, and that Rust/Python canonical bytes agree. Run Pyrefly, Pyright,
+   stub checks, pytest, and installed-wheel API tests.
+   Evidence:
+   Notes:
+
+110. [ ] [Review] Complete lossless filesystem-path schemas on every supported platform
+   Claimed by:
+   Context:
+   Todo 78 added exact Unix path objects but explicitly left Windows using a lossy
+   UTF-8 fallback. Several CLI structures also continue to carry a legacy lossy
+   `output`/`path` string beside the exact object, and not every batch, config, or
+   diagnostic machine surface uses `FilesystemPathJson`. A public cross-platform
+   library should not call a representation exact when Windows path identity can be
+   lost or when new schemas encourage consumers to keep using the lossy field.
+   Implementation:
+   Encode Windows paths losslessly as UTF-16 code units (or an equally precise
+   documented representation) and Unix paths as bytes, both behind one versioned
+   schema containing a safe display string. Inventory every JSON/TSV/plain structured
+   path field across create, edit, verify, batch, config, completion installation,
+   diagnostics, and benchmark outputs. Make the exact object canonical in the next
+   schema version; retain lossy strings only as explicitly deprecated display fields
+   with a removal plan. Python native errors should construct platform-native
+   `Path` objects without routing Windows paths through UTF-8 bytes.
+   Tests and verification:
+   Add Windows-hosted round trips for non-ASCII UTF-16 and edge-case path units, Unix
+   colliding lossy-decoding names, every command schema, backward-compatible parsing,
+   and human escaping of control characters. Search production adapter code for
+   unreviewed `to_string_lossy` uses and require each remaining use to be display-
+   only with a targeted test.
+   Evidence:
+   Notes:
+
+111. [ ] [Review] Prepare btpc-core for actual crates.io publication
+   Claimed by:
+   Context:
+   BTPC is intended to be a publicly embedded Rust library, but workspace metadata
+   sets `publish = false` for every crate and the release workflow publishes only
+   Python artifacts and native archives. The release-candidate gate is complete even
+   though Rust users can only use a path/git dependency, and `btpc-core` still has a
+   hidden public ownership-transfer constructor used solely to cross the workspace
+   PyO3 crate boundary.
+   Implementation:
+   Decide the publication boundary explicitly: make `btpc-core` publishable with
+   complete crates.io metadata, packaged README/license/docs/examples, and an
+   intentional dependency/MSRV set; keep adapter crates private unless there is a
+   reason to publish them. Replace `#[doc(hidden)] pub
+   from_owned_bytes_with_options` with a properly named supported `from_vec` API or
+   a sealed workspace-internal mechanism that does not enter the public semver
+   surface. Add a protected manual crates.io publish job using trusted publishing or
+   a narrowly scoped token, ordered after artifact/API validation and gated on the
+   existing release tag/version. Never publish automatically from ordinary pushes.
+   Tests and verification:
+   Run `cargo package -p btpc-core --allow-dirty`, inspect the crate contents, build
+   and test the packaged crate offline as an external consumer on MSRV and stable,
+   run cargo-semver-checks against the previous published/tagged baseline, and dry-
+   run `cargo publish`. Verify docs.rs metadata/features and README links without
+   claiming a live registry page until the owner performs the first publish.
+   Evidence:
+   Notes:
