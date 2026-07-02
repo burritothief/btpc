@@ -1,0 +1,15 @@
+# file	origin	version	mode	disposition	info_hash_v1	info_hash_v2	payload_sha256	note
+competitors/mktorrent-1.1-v1.torrent	mktorrent	1.1	v1	accept	3e38a3a0a1c90b357eeb4ef6dba2831425446ed4		0bddf77ab01dcf8f6ddf0482bc84091fe3921504385e632421a742520b9b1391	generated_from_shared_payload
+competitors/mkbrr-1.23.0-v1.torrent	mkbrr	1.23.0	v1	accept	f06d0aee32ebf9e699c17254da6aab3c682589c4		0bddf77ab01dcf8f6ddf0482bc84091fe3921504385e632421a742520b9b1391	generated_from_shared_payload
+competitors/torf-cli-5.2.1-v1.torrent	torf-cli	5.2.1	v1	accept	cf8653b7d2ec085d2d1bcc35c2da809dfb63d98f		0bddf77ab01dcf8f6ddf0482bc84091fe3921504385e632421a742520b9b1391	generated_from_shared_payload
+competitors/torrenttools-0.6.2-v1.torrent	torrenttools	0.6.2	v1	accept	cf8653b7d2ec085d2d1bcc35c2da809dfb63d98f		0bddf77ab01dcf8f6ddf0482bc84091fe3921504385e632421a742520b9b1391	generated_from_shared_payload
+competitors/torrenttools-0.6.2-v2.torrent	torrenttools	0.6.2	v2	accept-warning		110966a2f4bd067472043c08d461e2f55eaed419d0642e9a0e79586a9dd3a536	0bddf77ab01dcf8f6ddf0482bc84091fe3921504385e632421a742520b9b1391	empty_piece_layers_accepted_with_warning
+competitors/torrenttools-0.6.2-hybrid.torrent	torrenttools	0.6.2	hybrid	accept-warning	7267af4d94d06d0832bacc5f15cfe2a0a5c97edf	85ed270036aabc52dfbc3d16f3bf54fd8d5d5d36a3955d31db27deff2f5005c1	0bddf77ab01dcf8f6ddf0482bc84091fe3921504385e632421a742520b9b1391	empty_piece_layers_accepted_with_warning
+irregular/valid-empty-v1.torrent	btpc-hand-authored	1	v1	preserve	7bcc27dd268265002e365799df14c819a68043a9		-	canonical_empty_reference
+irregular/preserved-unknown-field.torrent	btpc-hand-authored	1	v1	preserve	7bcc27dd268265002e365799df14c819a68043a9		-	unknown_top_level_comment_preserved
+irregular/invalid-piece-length.torrent	btpc-hand-authored	1	v1	preserve	c01105c6b1d34bd00a0f96cae1677caabd20f307		-	permissive_parse_preserves_piece_length_15
+irregular/truncated-dictionary.torrent	btpc-regression	1	invalid	reject			-	truncated_top_level_dictionary
+irregular/prior-fuzz-noncanonical-integer.torrent	libfuzzer-corpus	2026-07-01	invalid	reject			-	prior_noncanonical_integer_seed
+irregular/prior-fuzz-non-utf8-dictionary.torrent	libfuzzer-corpus	2026-07-01	invalid	reject			-	prior_arbitrary_byte_dictionary_seed
+irregular/fuzz-regression-noncanonical-info.torrent	libfuzzer-metainfo-roundtrip	2026-07-01	v1	preserve	dc6e40fc8fe5decd0aa3b913724d7937e7514765		-	noncanonical_info_integer_canonicalizes_without_mutating_original
+irregular/fuzz-regression-unsorted-file-tree.torrent	libfuzzer-metainfo-roundtrip	2026-07-01	v2	preserve		1710d39953c6fd312b84d36378108defd38470254652b5837bf8070062c86f52	-	unsorted_file_tree_and_empty_piece_layers_accepted_with_warning

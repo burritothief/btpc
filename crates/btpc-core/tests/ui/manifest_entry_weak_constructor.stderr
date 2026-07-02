@@ -1,0 +1,11 @@
+error[E0599]: no function or associated item named `from_snapshot` found for struct `ManifestEntry` in the current scope
+ --> tests/ui/manifest_entry_weak_constructor.rs:4:28
+  |
+4 |     let _ = ManifestEntry::from_snapshot("payload", vec![b"payload".to_vec()], 0, None);
+  |                            ^^^^^^^^^^^^^ function or associated item not found in `ManifestEntry`
+
+error[E0599]: no function or associated item named `for_test` found for struct `ManifestEntry` in the current scope
+ --> tests/ui/manifest_entry_weak_constructor.rs:5:28
+  |
+5 |     let _ = ManifestEntry::for_test("payload", vec![b"payload".to_vec()], 0);
+  |                            ^^^^^^^^ function or associated item not found in `ManifestEntry`

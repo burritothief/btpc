@@ -1,0 +1,85 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Rust and Python quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out source
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@fa04a1451ff1842e2626ccb99004d0195b455a88 # master
+        with:
+          toolchain: 1.94.1
+          components: clippy,rustfmt
+      - name: Install uv and Python
+        uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+          python-version: "3.11"
+      - name: Install locked Python tools
+        run: uv sync --all-groups --locked
+      - name: Build development extension
+        run: uv run maturin develop
+      - name: Check Rust formatting
+        run: cargo fmt --all --check
+      - name: Run strict Clippy
+        run: cargo clippy --workspace --all-targets --all-features -- -D warnings
+      - name: Run Rust tests
+        run: cargo test --workspace --all-targets
+      - name: Check Python formatting and lint
+        run: |
+          uv run ruff check python tests/python scripts
+          uv run ruff format --check python tests/python scripts
+      - name: Run Python type checks
+        run: scripts/check_python_types.sh
+      - name: Check native stub parity
+        run: uv run python scripts/check_native_stub.py
+      - name: Run Python tests
+        run: uv run pytest tests/python
+
+  wheel:
+    name: Wheel smoke test
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out source
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@fa04a1451ff1842e2626ccb99004d0195b455a88 # master
+        with:
+          toolchain: 1.94.1
+      - name: Install uv and Python
+        uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+          python-version: "3.11"
+      - name: Install locked build tools
+        run: uv sync --all-groups --locked
+      - name: Build wheel
+        run: uv run maturin build --locked
+      - name: Install and smoke-test wheel outside the source tree
+        run: |
+          uv venv --python 3.11 "$RUNNER_TEMP/btpc-wheel-venv"
+          uv pip install --python "$RUNNER_TEMP/btpc-wheel-venv/bin/python" target/wheels/*.whl
+          cd "$RUNNER_TEMP"
+          "$RUNNER_TEMP/btpc-wheel-venv/bin/python" "$GITHUB_WORKSPACE/scripts/smoke_wheel.py" "$RUNNER_TEMP/btpc-wheel-smoke"

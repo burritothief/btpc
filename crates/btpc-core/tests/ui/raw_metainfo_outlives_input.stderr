@@ -1,0 +1,8 @@
+error[E0515]: cannot return value referencing local variable `bytes`
+ --> tests/ui/raw_metainfo_outlives_input.rs:5:5
+  |
+5 |     RawMetainfo::from_bytes(&bytes).unwrap()
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^------^^^^^^^^^^
+  |     |                       |
+  |     |                       `bytes` is borrowed here
+  |     returns a value referencing data owned by the current function

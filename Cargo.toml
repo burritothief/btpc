@@ -1,0 +1,27 @@
+[workspace]
+members = [
+    "crates/btpc-cli",
+    "crates/btpc-core",
+    "crates/btpc-python",
+]
+resolver = "3"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+authors = ["BTPC contributors"]
+description = "High-performance BitTorrent metainfo tooling"
+readme = "README.md"
+repository = "https://github.com/btpc-dev/btpc"
+license = "MIT"
+keywords = ["bittorrent", "torrent", "metainfo"]
+categories = ["command-line-utilities", "encoding"]
+publish = false
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+all = "warn"
+pedantic = "warn"

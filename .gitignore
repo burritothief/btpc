@@ -1,0 +1,35 @@
+target/
+/fuzz/artifacts/
+/fuzz/target/
+/.tmp/
+/.venv/
+/.pytest_cache/
+/.mypy_cache/
+/.ruff_cache/
+/.hypothesis/
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+__pycache__/
+*.py[cod]
+*.so
+*.dylib
+*.dll
+*.egg-info/
+dist/
+build/
+.coverage
+htmlcov/
+*.profraw
+*.profdata
+*.torrent
+benchmark-data/
+benchmark-results/
+
+# Local benchmark payloads are downloaded/provided by the developer and are not
+# distributable source fixtures. Keep small committed fixtures under tests/ or fuzz/.
+/*.iso
+/*.img

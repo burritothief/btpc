@@ -1,0 +1,16 @@
+error[E0603]: module `error` is private
+ --> tests/ui/private_error_module.rs:1:16
+  |
+1 | use btpc_core::error::Error;
+  |                ^^^^^ private module
+  |
+note: the module `error` is defined here
+ --> src/lib.rs
+  |
+  | mod error;
+  | ^^^^^^^^^
+help: consider importing this enum instead
+  |
+1 - use btpc_core::error::Error;
+1 + use btpc_core::Error;
+  |
