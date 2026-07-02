@@ -4816,8 +4816,8 @@ remain adapters over `btpc-core` throughout.
    - External HTTP link validation intentionally remains outside the merge gate;
      Todo 105 adds scheduled network health checks.
 
-102. [ ] Add the least-privilege GitHub Pages build and deployment workflow
-   Claimed by:
+102. [x] Add the least-privilege GitHub Pages build and deployment workflow
+   Claimed by: Codex implementer (2026-07-02 15:04 PDT)
    Requirements:
    `DOCSITE-DEPLOY-001`, `DOCSITE-BUILD-001`, `DOCSITE-QUALITY-001`,
    `SEC-DEPS-001`.
@@ -4856,7 +4856,37 @@ remain adapters over `btpc-core` throughout.
    GitHub response and leave only Todo 104's owner-setting step outstanding. Run
    spec validation and the full docs gate.
    Evidence:
+   - Added `tests/docs/test_pages_workflow.py` first; all 3 structural tests failed
+     because `.github/workflows/docs.yml` was absent. The retained suite now passes
+     and asserts trigger coverage, absence of path filters, workflow/job
+     permissions, dependencies, trust condition, environments, concurrency,
+     timeouts, locked installation, canonical build command, artifact path and
+     retention, and immutable official-action pins.
+   - Added the `Documentation` workflow for every pull request, push to `main`, and
+     manual dispatch. The build job has only inherited `contents: read`, checks out
+     without credentials, installs Rust 1.94.1 and the locked uv environment,
+     executes `make docs-check`, configures Pages, and uploads exactly `site/` for
+     one day.
+   - The dependent deploy job runs only after a successful build on the `main`
+     branch for trusted push or manual-dispatch events. Only that job receives
+     `pages: write` and `id-token: write`, uses the `github-pages` environment and
+     deployment URL output, and contains only the official deploy action.
+   - Pull-request/obsolete build concurrency is cancellable, while `main` runs and
+     the `pages-production` deployment group use non-interrupting active-deployment
+     behavior. Fork pull requests receive no write or OIDC permissions.
+   - Pinned upstream releases are `actions/configure-pages` v6.0.0
+     (`45bfe019...`), `actions/upload-pages-artifact` v5.0.0 (`fc324d35...`), and
+     `actions/deploy-pages` v5.0.0 (`cd2ce8fc...`); their upstream action manifests
+     confirm the used inputs and Node 24 runtimes.
+   - `actionlint` passes all workflows; repository-wide offline `zizmor` reports no
+     findings (only existing suppressed/ignored advisories); the YAML pre-commit
+     hook passes. The full documentation gate reports 34 docs tests, 397 generated
+     files, 185 HTML pages, and passing offline QA; spec validation reports 16
+     specs and 118 requirements.
    Notes:
+   - Live build/deployment results are checked immediately after this commit is
+     pushed. If Pages repository settings reject deployment, Todo 104 retains the
+     owner-setting and first-production verification work.
 
 103. [ ] Add documentation discoverability, package metadata, and maintainer runbooks
    Claimed by:
