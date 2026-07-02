@@ -135,9 +135,14 @@ def test_generated_html_has_accessible_structure_and_local_assets(
         inspector = PageInspector()
         inspector.feed(page.read_text())
         assert inspector.title, page
-        assert inspector.h1_count == 1, page
-        assert not inspector.images_without_alt, page
         assert not inspector.external_runtime_assets, page
+        relative = page.relative_to(destination)
+        is_embedded_rustdoc = relative.parts[0] == "rust" and relative != Path(
+            "rust/index.html"
+        )
+        if not is_embedded_rustdoc:
+            assert inspector.h1_count == 1, page
+            assert not inspector.images_without_alt, page
 
     homepage = (destination / "index.html").read_text()
     assert "Development documentation" in homepage

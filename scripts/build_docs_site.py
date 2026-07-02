@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 import shutil
 import subprocess
 import sys
@@ -9,11 +10,23 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_SITE_DIR = ROOT / "site"
 STAGING_DIR = ROOT / ".tmp/docs-site"
+RUSTDOC_TARGET_DIR = ROOT / ".tmp/docs-rustdoc-target"
 STAGES = ("cli", "mkdocs", "rustdoc", "validate")
+RUSTDOC_ENTRIES = (
+    "btpc_core",
+    "crates.js",
+    "help.html",
+    "search.index",
+    "settings.html",
+    "src-files.js",
+    "static.files",
+    "trait.impl",
+    "type.impl",
+)
 
 
-def _run(command: tuple[str, ...]) -> None:
-    subprocess.run(command, cwd=ROOT, check=True)
+def _run(command: tuple[str, ...], *, env: dict[str, str] | None = None) -> None:
+    subprocess.run(command, cwd=ROOT, env=env, check=True)
 
 
 def _prepare_output(site_dir: Path) -> Path:
@@ -47,11 +60,46 @@ def _stage_mkdocs(output: Path) -> None:
     )
 
 
-def _stage_rustdoc() -> None:
+def _stage_rustdoc(output: Path) -> None:
     required = ROOT / "docs/rust/index.md"
     if not required.is_file():
         message = f"missing Rust documentation landing page: {required}"
         raise RuntimeError(message)
+
+    rustdoc_root = RUSTDOC_TARGET_DIR / "doc"
+    shutil.rmtree(rustdoc_root, ignore_errors=True)
+    environment = dict(os.environ)
+    environment["CARGO_TARGET_DIR"] = str(RUSTDOC_TARGET_DIR)
+    environment["RUSTDOCFLAGS"] = "-D warnings"
+    _run(
+        (
+            "cargo",
+            "doc",
+            "-p",
+            "btpc-core",
+            "--all-features",
+            "--no-deps",
+        ),
+        env=environment,
+    )
+
+    rust_output = output / "rust"
+    for entry in RUSTDOC_ENTRIES:
+        source = rustdoc_root / entry
+        if not source.exists():
+            message = f"generated rustdoc is missing {source}"
+            raise RuntimeError(message)
+        destination = rust_output / entry
+        if source.is_dir():
+            shutil.copytree(source, destination)
+        else:
+            shutil.copy2(source, destination)
+
+    source_tree = rustdoc_root / "src/btpc_core"
+    if not source_tree.is_dir():
+        message = f"generated rustdoc is missing {source_tree}"
+        raise RuntimeError(message)
+    shutil.copytree(source_tree, rust_output / "src/btpc_core")
 
 
 def _stage_validate(output: Path) -> None:
@@ -68,7 +116,7 @@ def build_site(site_dir: Path) -> None:
     output = _prepare_output(site_dir)
     _stage_cli()
     _stage_mkdocs(output)
-    _stage_rustdoc()
+    _stage_rustdoc(output)
     _stage_validate(output)
     shutil.copytree(output, site_dir)
     shutil.rmtree(STAGING_DIR)

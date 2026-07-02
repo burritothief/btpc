@@ -4,6 +4,20 @@
 bytes, exposes structured errors, and uses per-operation configurable concurrency
 rather than an ambient global thread pool. The workspace MSRV is Rust 1.85.
 
+!!! note "Development documentation"
+
+    The <a href="btpc_core/index.html">embedded <code>btpc-core</code>
+    rustdoc</a> is generated from the current `main` branch and may change before
+    a stable release. The crate is not published yet, so no docs.rs release page
+    exists.
+
+Use the [crate source](https://github.com/burritothief/btpc/tree/main/crates/btpc-core)
+for implementation context and the
+[executable consumer examples](https://github.com/burritothief/btpc/blob/main/crates/btpc-core/tests/documentation.rs)
+for independently compiled facade usage.
+
+## Quick Start
+
 ## Parse and Inspect
 
 ```rust

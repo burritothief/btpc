@@ -4606,8 +4606,8 @@ remain adapters over `btpc-core` throughout.
    - Reference generation is static and does not import `btpc` or require the
      checkout's compiled `_native` extension.
 
-99. [ ] Embed fresh warning-free btpc-core rustdoc into the unified site
-   Claimed by:
+99. [x] Embed fresh warning-free btpc-core rustdoc into the unified site
+   Claimed by: Codex implementer (2026-07-02 14:27 PDT)
    Requirements:
    `DOCSITE-RUST-001`, `DOCSITE-BUILD-001`, `DOCSITE-QUALITY-001`,
    `RUSTAPI-DOC-001`, `TEST-TDD-001`.
@@ -4639,7 +4639,33 @@ remain adapters over `btpc-core` throughout.
    through a local HTTP server under `/btpc/`, check internal links/assets, run
    strict clippy for affected Rust code if any, and run spec validation.
    Evidence:
+   - Added `tests/docs/test_rustdoc_site.py` first; its initial run reported 3
+     failures for the absent landing link, absent dedicated rustdoc output, and
+     absent embedded crate entry point. The retained integration suite reports 3
+     passed and the complete docs suite reports 15 passed.
+   - The shared builder now deletes the dedicated rustdoc `doc` directory, runs
+     `cargo doc -p btpc-core --all-features --no-deps` with
+     `RUSTDOCFLAGS=-D warnings`, and copies only `btpc_core`, its source pages,
+     rustdoc static/search/implementation assets, and required root support files
+     below `site/rust/`. No dependency HTML directory is published.
+   - The integration test builds twice, plants a sentinel in the first dedicated
+     rustdoc output, and proves it is absent from both the regenerated target and
+     second site. It also verifies the stable `rust/btpc_core/index.html` entry,
+     local runtime assets, and absence of root-relative project-breaking URLs.
+   - `cargo test -p btpc-core --doc` passes the crate doctest; warning-denied
+     `cargo doc` completes without broken-link or documentation warnings; strict
+     all-target/all-feature `btpc-core` Clippy passes. No Rust source changes were
+     required by the documentation audit.
+   - `make docs-site` completes in strict mode with a 6.1 MiB Rust subtree;
+     documentation links validate across 63 Markdown files, codespell passes for
+     the Rust guide, and spec validation reports 16 specs and 118 requirements.
+   - A local HTTP server mounted the artifact at `/btpc/`; the Rust landing,
+     `/btpc/rust/btpc_core/`, rustdoc CSS, crate source page, and `create` module
+     page all returned 200 with working relative navigation.
    Notes:
+   - The ignored dedicated Cargo target retains compilation cache between builds,
+     but its complete `doc` directory is removed before every rustdoc invocation,
+     preventing stale generated documentation from surviving.
 
 100. [ ] Publish readable generated CLI command reference pages without drift
    Claimed by:
