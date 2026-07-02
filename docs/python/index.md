@@ -1,3 +1,7 @@
+---
+title: Python API guide
+---
+
 # Python API Guide
 
 ## Public Modules

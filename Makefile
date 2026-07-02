@@ -1,4 +1,4 @@
-.PHONY: check gate-summary specs spec-sync docs docs-generate docs-site docs-serve version test-rust test-python lint build-wheel benchmark-iso hooks-manual hooks-push install-hooks uninstall-hooks
+.PHONY: check gate-summary specs spec-sync docs docs-fast docs-check docs-generate docs-site docs-serve version test-rust test-python lint build-wheel benchmark-iso hooks-manual hooks-push install-hooks uninstall-hooks
 
 check: specs docs lint test-rust test-python
 
@@ -15,6 +15,18 @@ spec-sync:
 docs:
 	uv run python scripts/check_docs.py
 	cargo test -p btpc-cli --test reference
+
+docs-fast:
+	uv run python scripts/check_docs.py
+	uv run pytest tests/docs/test_site_quality.py tests/docs/test_cli_reference.py -q
+
+docs-check:
+	cargo test -p btpc-core --doc
+	uv run pytest tests/docs -q
+	$(MAKE) docs-site
+	uv run python scripts/check_docs_site.py site
+	uv run python scripts/check_docs.py
+	uv run codespell README.md CONTRIBUTING.md SECURITY.md CHANGELOG.md DOCUMENTATION_PLAN.md AGENTS.md docs specs --skip='docs/completions/*,docs/reference/*,docs/cli/reference/*'
 
 docs-generate:
 	./scripts/generate-cli-reference.sh

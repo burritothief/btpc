@@ -1,3 +1,7 @@
+---
+title: Task guides
+---
+
 # Guides
 
 Task-oriented guides explain how to complete workflows; generated command and API

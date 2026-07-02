@@ -1,3 +1,7 @@
+---
+title: Rust API guide
+---
+
 # Rust API Guide
 
 `btpc-core` is the protocol source of truth. It forbids unsafe Rust, preserves raw

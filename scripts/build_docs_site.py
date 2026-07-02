@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -124,7 +125,15 @@ def _stage_rustdoc(output: Path) -> None:
 def _stage_validate(output: Path) -> None:
     custom_not_found = output / "404/index.html"
     if custom_not_found.is_file():
-        shutil.copyfile(custom_not_found, output / "404.html")
+        content = custom_not_found.read_text()
+        content = re.sub(
+            r'(?P<attribute>href|src|action)="\.\./', r'\g<attribute>="', content
+        )
+        content = re.sub(
+            r'(?P<attribute>href|src|action)="\.\."', r'\g<attribute>="."', content
+        )
+        content = content.replace('new URL("..",location)', 'new URL(".",location)')
+        (output / "404.html").write_text(content)
     for relative in ("index.html", "404.html"):
         if not (output / relative).is_file():
             message = f"generated documentation is missing {relative}"

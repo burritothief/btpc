@@ -1,3 +1,7 @@
+---
+title: BitTorrent concepts
+---
+
 # Concepts
 
 Understand the protocol choices that affect compatibility and identity:

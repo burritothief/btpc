@@ -242,6 +242,9 @@ Every pull request must prove:
 - Spelling checks cover handwritten documentation but exclude generated command
   output where appropriate.
 - The resulting Pages artifact remains below a documented size budget.
+- Initial budgets are 16,000,000 uncompressed bytes and 4,500,000 deterministic
+  normalized gzip bytes. The July 2, 2026 complete-build baseline is 12,295,435
+  and 3,195,405 bytes respectively; increases require recorded build evidence.
 - Workflow files pass existing YAML, action-pinning, and `zizmor` checks.
 
 Run external-link validation separately on a schedule. Network instability should

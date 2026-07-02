@@ -11,13 +11,12 @@ case "${1:-}" in
     cargo test --workspace --doc
     uv run pytest tests/python
     cargo deny check
+    make docs-check
     ;;
   manual)
     uv run python scripts/check_specs.py
-    uv run python scripts/check_docs.py
-    uv run codespell README.md CONTRIBUTING.md SECURITY.md CHANGELOG.md docs specs python tests scripts crates Cargo.toml pyproject.toml Makefile deny.toml .github --skip='*.bin,*.torrent,*.stderr,docs/completions/*,docs/reference/*' --ignore-words-list=relese
+    make docs-check
     uv run python scripts/render_benchmark_fixture.py
-    cargo test -p btpc-cli --test reference
     uv run actionlint .github/workflows/*.yml
     uv run zizmor --offline --persona=regular --min-severity=medium .github
     cargo check --manifest-path tests/rust-consumer/Cargo.toml

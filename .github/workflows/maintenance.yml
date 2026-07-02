@@ -30,7 +30,5 @@ jobs:
           python-version: "3.11"
       - name: Install locked maintenance tools
         run: uv sync --all-groups --locked
-      - name: Check documentation links
-        run: uv run python scripts/check_docs.py
-      - name: Check spelling
-        run: uv run codespell README.md CONTRIBUTING.md SECURITY.md CHANGELOG.md docs specs python tests scripts crates Cargo.toml pyproject.toml Makefile deny.toml .github --skip='*.bin,*.torrent,*.stderr,docs/completions/*,docs/reference/*' --ignore-words-list=relese
+      - name: Run canonical documentation gate
+        run: make docs-check

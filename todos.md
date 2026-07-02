@@ -4742,8 +4742,8 @@ remain adapters over `btpc-core` throughout.
      `config-preset-save.md`); parent/child links and hierarchical Material
      navigation present the logical command tree without filesystem ambiguity.
 
-101. [ ] Add production generated-site QA, size budgets, and contributor gates
-   Claimed by:
+101. [x] Add production generated-site QA, size budgets, and contributor gates
+   Claimed by: Codex implementer (2026-07-02 14:52 PDT)
    Requirements:
    `DOCSITE-BUILD-001`, `DOCSITE-QUALITY-001`, `DOCSITE-UX-001`,
    `TEST-TDD-001`.
@@ -4778,7 +4778,43 @@ remain adapters over `btpc-core` throughout.
    the broader repository documentation checks. Record initial artifact sizes and
    configured budgets.
    Evidence:
+   - Added `tests/docs/test_site_quality.py` first; collection initially failed
+     because the production validator did not exist. The retained parameterized
+     suite now passes 13 cases covering broken targets, missing anchors/assets,
+     project-root escapes, `file://`, localhost, checkout-path leakage, missing
+     canonical metadata, duplicate titles, required entries, private Python API
+     anchors, both size budgets, and a valid complete fixture.
+   - Added `scripts/check_docs_site.py`, an offline deterministic generated-site
+     validator. It resolves internal links under `/btpc/`, validates static-page
+     anchors and all local assets, rejects external runtime assets and forbidden
+     local URLs, checks canonical metadata and title uniqueness, protects Python
+     reference privacy, inventories required entry points, and reports normalized
+     gzip and uncompressed sizes.
+   - The checker exposed and fixed root `404.html` links that escaped the project
+     subpath and duplicate MkDocs titles caused by generic navigation labels.
+     Generated CLI pages now carry unique title metadata, and handwritten overview
+     pages declare descriptive titles. Rustdoc links/assets are checked, while its
+     generator-specific dynamic/range anchors remain covered by warning-denied
+     rustdoc rather than generic static-anchor rules.
+   - The final artifact contains 397 files and 185 HTML pages, measuring 12,295,435
+     uncompressed bytes and 3,195,405 deterministic normalized gzip bytes. Enforced
+     budgets are 16,000,000 and 4,500,000 bytes, with the baseline and evidence rule
+     documented in `CONTRIBUTING.md`, `DOCUMENTATION_PLAN.md`, public contribution
+     guidance, and `AGENTS.md`.
+   - Added canonical `make docs-check` and fast `make docs-fast` targets. The full
+     gate consolidates Rust doctests, all docs tests, strict complete-site build,
+     CLI drift, Python inventory, warning-denied rustdoc, offline artifact QA,
+     source links, and handwritten spelling. It passes from the repository and via
+     `make -C /Users/jeff/src/btpc docs-check` from `/tmp`; both runs report 31 docs
+     tests and identical artifact sizes.
+   - Added the fast applicable gate to pre-commit and the full canonical gate to
+     pre-push/manual hooks and scheduled maintenance CI. `pre-commit --all-files`
+     reformatted one new file on its first run and passed on rerun; the actual
+     `pre-push-gate` hook passes. Repository Ruff lint/format, `git diff --check`,
+     and spec validation (16 specs, 118 requirements) pass.
    Notes:
+   - External HTTP link validation intentionally remains outside the merge gate;
+     Todo 105 adds scheduled network health checks.
 
 102. [ ] Add the least-privilege GitHub Pages build and deployment workflow
    Claimed by:

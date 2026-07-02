@@ -1,3 +1,7 @@
+---
+title: Getting started
+---
+
 # Getting started
 
 Choose the interface that matches your application. All three interfaces use the

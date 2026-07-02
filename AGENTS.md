@@ -89,6 +89,20 @@ user-facing guidance in the same change.
 - Avoid filler such as “This method is used to.” Do not repeat annotations in prose,
   document obvious getters at length, or add comments that merely narrate the code.
 
+## Documentation Site Rules
+
+- Handwritten public pages belong in `docs/`. Python API reference text comes from
+  public docstrings, Rust API reference text comes from rustdoc comments, and CLI
+  reference sources come from the Clap model through
+  `scripts/generate-cli-reference.sh`.
+- Never hand-edit generated CLI reference files, raw help, manpages, completions,
+  or generated HTML. Update their source model and regenerate instead. Never commit
+  the ignored `site/` artifact.
+- Use `make docs-serve` for local preview and `make docs-check` as the canonical
+  offline documentation gate. The pre-commit subset is `make docs-fast`.
+- The site budgets are 16,000,000 uncompressed bytes and 4,500,000 normalized gzip
+  bytes. Do not increase them without measured artifact evidence in `todos.md`.
+
 ## Tooling Baseline
 
 - Rust 2024 edition with an explicit `rust-version` MSRV.

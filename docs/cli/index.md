@@ -1,3 +1,7 @@
+---
+title: CLI guide
+---
+
 # CLI Guide
 
 The [generated command reference](reference/index.md) documents every visible

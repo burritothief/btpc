@@ -66,6 +66,23 @@ server with Ctrl-C. Both commands resolve repository inputs through the checked-
 configuration, and `scripts/build_docs_site.py --site-dir PATH` may be invoked from
 outside the checkout when an explicit destination is useful.
 
+Run `make docs-check` before pushing documentation changes. It is the canonical
+offline gate for source links, generated CLI drift, Python inventory, Rust
+doctests/rustdoc, strict rendering, generated-site links and anchors, canonical
+metadata, private-name leakage, and size budgets. `make docs-fast` is the
+pre-commit subset.
+
+Handwritten pages live under `docs/`; Python API text comes from public docstrings,
+Rust API text comes from rustdoc comments, and CLI reference pages, raw help,
+manpages, and completions come from the Clap model through
+`scripts/generate-cli-reference.sh`. Never edit generated CLI files or generated
+HTML directly. Generated `site/` output remains ignored and must not be committed.
+
+The initial complete-site budgets are 16,000,000 uncompressed bytes and 4,500,000
+normalized gzip bytes. The baseline recorded on July 2, 2026 is 12,295,435 and
+3,195,405 bytes respectively. Increase either budget only with measured artifact
+evidence recorded in the relevant todo or review.
+
 ### Required pull-request checks
 
 Protect `main` by requiring a pull request, one approving review, dismissal of
