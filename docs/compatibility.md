@@ -29,7 +29,7 @@ processes. Runtime callers can inspect `btpc._native.__gil_required__` and
 The committed fixture corpus covers mktorrent 1.1, mkbrr 1.23.0, torf-cli 5.2.1,
 and torrenttools 0.6.2 in every mode each tool supports. It also records malformed,
 noncanonical, and prior-fuzz cases with explicit accept/preserve/reject behavior.
-See [`../tests/fixtures/interoperability/README.md`](../tests/fixtures/interoperability/README.md).
+See the [interoperability fixture documentation][interop-fixtures] in the repository.
 
 ## Stability
 
@@ -44,7 +44,7 @@ best-effort only.
 Release wheels and archives must be produced from one verified version, install in
 clean environments, run all three torrent modes, inspect and magnetize output, and
 verify payloads. Publication should use least privilege and provenance. Normative
-requirements live in [`../specs/release.md`](../specs/release.md).
+requirements live in the [release specification][release-spec].
 
 The Cargo workspace package version is the single source. Start a release bump
 with `make version VERSION=X.Y.Z`, update `CHANGELOG.md`, then validate the tag
@@ -55,4 +55,8 @@ with `uv run python scripts/check_version.py --tag vX.Y.Z`.
 No universal performance claim is valid without the canonical benchmark preflight,
 pinned competitor versions, repeated randomized measurements, raw result files,
 and machine/tool metadata. Reports must name limitations. See
-[`../benches/README.md`](../benches/README.md).
+the [benchmark documentation][benchmark-docs].
+
+[benchmark-docs]: https://github.com/burritothief/btpc/blob/main/benches/README.md
+[interop-fixtures]: https://github.com/burritothief/btpc/blob/main/tests/fixtures/interoperability/README.md
+[release-spec]: https://github.com/burritothief/btpc/blob/main/specs/release.md

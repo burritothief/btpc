@@ -1,0 +1,68 @@
+site_name: BTPC Documentation
+site_description: Development documentation for the BTPC BitTorrent metainfo toolkit
+site_author: Jeff
+site_url: https://burritothief.github.io/btpc/
+repo_name: burritothief/btpc
+repo_url: https://github.com/burritothief/btpc
+edit_uri: edit/main/docs/
+use_directory_urls: true
+strict: true
+
+nav:
+  - Home: index.md
+  - CLI Guide: cli.md
+  - Python API Guide: python-api.md
+  - Rust API Guide: rust-api.md
+  - Compatibility: compatibility.md
+  - Security: security.md
+
+theme:
+  name: material
+  language: en
+  font: false
+  features:
+    - navigation.indexes
+    - navigation.sections
+    - search.highlight
+    - search.suggest
+    - content.code.copy
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths:
+            - python
+          options:
+            docstring_style: google
+            show_source: false
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+
+copyright: Copyright &copy; 2026 Jeff. Licensed under MIT.

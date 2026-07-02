@@ -1,103 +1,143 @@
-# BTPC Documentation Site Plan
+# BTPC Production Documentation Site Plan
 
-## Decision Summary
+## Outcome
 
-BTPC will have one unified documentation website containing handwritten guides,
-the CLI reference, the Python API reference, and the Rust API reference.
+BTPC will publish one production documentation site at:
 
-The recommended stack is:
+```text
+https://burritothief.github.io/btpc/
+```
 
-| Concern | Choice |
+The site will be rebuilt automatically from the default branch and deployed to
+GitHub Pages. Pull requests will run the identical build in strict mode without
+receiving deployment permissions. The repository remains the source of truth for
+handwritten guides, generated CLI reference, Python docstrings, and Rust rustdoc.
+
+## Architecture Decision
+
+Use one unified site rather than separate Python and Rust websites:
+
+| Concern | Decision |
 | --- | --- |
-| Main documentation site | Material for MkDocs |
-| Python API generation | mkdocstrings-python |
-| Rust API generation | rustdoc through `cargo doc` |
-| CLI reference generation | Existing Clap-based generators |
-| Hosting | GitHub Pages |
-| Deployment | GitHub Actions |
-| Documentation source | `docs/` in this repository |
-| Rust release documentation | docs.rs after publishing |
+| Site generator and theme | Material for MkDocs |
+| Python API reference | mkdocstrings with the current Griffe-based Python handler |
+| Rust API reference | `cargo doc`/rustdoc embedded below `/rust/` |
+| CLI reference | Generated from the Clap command model |
+| Hosting | GitHub Pages project site |
+| Deployment | Official GitHub Pages Actions workflow |
+| Source | `docs/` plus API documentation in source code |
+| Contract | `specs/documentation-site.md` |
+| Release Rust documentation | docs.rs after publication |
 
-## One Site, Two Native API Renderers
+MkDocs owns the landing pages, navigation, search, tutorials, Python reference,
+and CLI guide. Rustdoc remains the native Rust renderer because it provides the
+best trait, implementation, source, feature, and intra-doc-link experience. The
+MkDocs Rust landing page links into rustdoc copied under the same Pages artifact.
 
-BTPC should not maintain unrelated Python and Rust documentation websites. Users
-should have one obvious documentation destination with language-specific sections:
+## Information Architecture
 
 ```text
 BTPC Documentation
+|-- Home
 |-- Getting Started
+|   |-- Installation
+|   |-- CLI Quick Start
+|   |-- Python Quick Start
+|   `-- Rust Quick Start
+|-- Guides
+|   |-- Creating Torrents
+|   |-- Inspecting and Validating
+|   |-- Verifying Payloads
+|   |-- Editing Metainfo
+|   `-- Configuration and Presets
 |-- Concepts
-|-- CLI Guide
-|-- Python API
-|   |-- btpc.creation
-|   |-- btpc.metainfo
-|   |-- btpc.verification
-|   |-- btpc.types
-|   `-- btpc.errors
-`-- Rust API
-    `-- btpc-core rustdoc
+|   |-- BitTorrent v1
+|   |-- BitTorrent v2
+|   |-- Hybrid Torrents
+|   |-- Piece Length
+|   `-- Reproducibility and Bytes
+|-- CLI
+|   |-- Overview
+|   |-- Configuration
+|   |-- Shell Completion
+|   `-- Command Reference
+|-- Python
+|   |-- Overview
+|   |-- Examples
+|   `-- API Reference
+|       |-- creation
+|       |-- metainfo
+|       |-- verification
+|       |-- types
+|       `-- errors
+|-- Rust
+|   |-- Overview
+|   `-- btpc-core rustdoc
+|-- Performance
+|-- Compatibility
+|-- Security
+`-- Contributing
 ```
 
-Each language should still use its native documentation generator. Python API
-pages will use the MkDocs theme, while Rust API pages retain rustdoc's standard
-presentation. Rustdoc provides better trait, implementation, feature, source-link,
-and intra-doc-link handling than a language-neutral renderer.
+The first release documents `main` and labels it as development documentation.
+Do not introduce `mike`, multiple version roots, or another version manager until
+BTPC has more than one supported release line.
 
-## Proposed Repository Layout
+## Repository Layout
 
 ```text
 btpc/
 |-- mkdocs.yml
 |-- docs/
 |   |-- index.md
-|   |-- getting-started.md
+|   |-- 404.md
+|   |-- getting-started/
+|   |-- guides/
 |   |-- concepts/
-|   |   |-- bittorrent-v1.md
-|   |   |-- bittorrent-v2.md
-|   |   `-- hybrid.md
 |   |-- cli/
-|   |   |-- index.md
-|   |   `-- configuration.md
+|   |   `-- reference/       # generated Markdown pages
 |   |-- python/
-|   |   |-- index.md
-|   |   `-- reference/
-|   |       |-- creation.md
-|   |       |-- metainfo.md
-|   |       |-- verification.md
-|   |       |-- types.md
-|   |       `-- errors.md
-|   `-- rust/
-|       `-- index.md
-|-- python/btpc/
-|-- crates/btpc-core/
+|   |   `-- reference/       # small mkdocstrings directives
+|   |-- rust/
+|   |   `-- index.md
+|   |-- performance.md
+|   |-- compatibility.md
+|   |-- security.md
+|   `-- contributing.md
+|-- python/btpc/             # authoritative Python docstrings
+|-- crates/btpc-core/src/    # authoritative Rust docs and doctests
+|-- scripts/build_docs.*     # one local/CI build entry point
+|-- tests/docs/              # generated-site and navigation checks
 `-- .github/workflows/docs.yml
 ```
 
-Keeping documentation beside the code lets an API implementation, its docstrings,
-examples, and generated reference changes land in the same pull request.
+Generated site output belongs in `site/` and must remain ignored. Generated CLI
+Markdown may be checked in so changes to command help are reviewable and drift can
+fail CI. Rustdoc and MkDocs HTML are build artifacts and must not be committed.
 
-## Main Site
+## Deterministic Build Pipeline
 
-Use Material for MkDocs for navigation, search, responsive presentation, syntax
-highlighting, admonitions, and handwritten guides. MkDocs produces a static site,
-so deployment does not require a server or database.
+There must be one repository command that local development, pre-push checks,
+pull requests, and Pages deployment all invoke. Its logical steps are:
 
-The main site should contain:
+1. Verify locked Python and Rust toolchains.
+2. Regenerate CLI reference pages from the current `btpc` command model.
+3. Fail if checked-in generated reference pages drift.
+4. Build MkDocs with `--strict` into a clean staging directory.
+5. Build `btpc-core` rustdoc with dependencies excluded and warnings denied.
+6. Copy rustdoc into the staged site at `rust/btpc_core/`.
+7. Validate required pages, local links, anchors, assets, canonical URLs, and the
+   absence of repository-local paths or unpublished files.
+8. Produce one self-contained Pages artifact with `index.html` at its root.
 
-- Installation and build instructions.
-- Getting-started tutorials for the CLI, Python, and Rust.
-- BitTorrent v1, v2, and hybrid concepts.
-- CLI workflows, configuration, presets, output formats, and shell completion.
-- Python tutorials and generated API reference.
-- A Rust API landing page linking into generated rustdoc.
-- Performance and benchmarking methodology.
-- Compatibility, release, and migration guidance.
+The build must not depend on a developer's editable installation, home directory,
+network-fetched application data, or previously generated `target/doc` contents.
+Use a dedicated Cargo target directory or clean rustdoc destination so stale docs
+cannot survive between builds.
 
 ## Python API Reference
 
-Use `mkdocstrings-python` to generate API pages from the public Python modules,
-annotations, signatures, and docstrings. The authoritative documentation should
-live with the public implementation in:
+Generate the Python reference from the public modules:
 
 - `btpc.creation`
 - `btpc.metainfo`
@@ -105,176 +145,156 @@ live with the public implementation in:
 - `btpc.types`
 - `btpc.errors`
 
-Common names remain re-exported from `btpc`, but each object has one canonical
-defining module.
+Use mkdocstrings' source discovery path instead of relying on the current working
+directory. Render public symbols, annotations, signatures, attributes, examples,
+and documented exceptions while excluding `_native`, `_conversion`, and private
+implementation names. Common root re-exports should link to one canonical defining
+module instead of producing duplicate pages.
 
-A reference page can remain intentionally small:
-
-```markdown
-# Creation
-
-::: btpc.creation
-    options:
-      show_root_heading: true
-      show_source: false
-      members_order: source
-      show_signature_annotations: true
-      separate_signature: true
-```
-
-Documentation generation should use the public Python facade rather than private
-PyO3 implementation classes. Build the extension before documentation generation
-only when runtime import is required.
+Todo 95 supplies the polished public docstrings. The site implementation must add
+an export inventory test so every supported public symbol is either rendered or
+explicitly documented as intentionally omitted.
 
 ## Rust API Reference
 
-Generate the Rust reference with rustdoc:
+Build rustdoc from the workspace's pinned stable toolchain:
 
 ```console
-RUSTDOCFLAGS="-D warnings" cargo doc -p btpc-core --no-deps
+RUSTDOCFLAGS="-D warnings" cargo doc -p btpc-core --all-features --no-deps
+cargo test -p btpc-core --doc
 ```
 
-Public Rust modules and items should use `//!` and `///` documentation with:
-
-- Concise purpose and behavior.
-- Errors and panic behavior.
-- Safety and resource guarantees where relevant.
-- Executable examples and doctests.
-- Intra-doc links to related types and operations.
-
-The documentation workflow will copy generated rustdoc from `target/doc` into the
-final static site under a stable location such as:
-
-```text
-site/rust/btpc_core/index.html
-```
-
-After `btpc-core` is published to crates.io, docs.rs will provide version-specific
-release documentation automatically. The BTPC site may continue embedding the
-documentation for `main` while linking released versions to docs.rs.
+Rust public items should use concise `//!` and `///` documentation, executable
+examples, error and panic contracts where relevant, and intra-doc links. Copy only
+the fresh rustdoc output needed by `btpc-core` into the staged site. The public
+landing page must explain that embedded rustdoc documents `main`; released crate
+versions will link to docs.rs once available.
 
 ## CLI Reference
 
-Continue generating CLI reference material from the single Clap command model.
-Generated command help, shell completions, and the manpage must not be maintained by
-hand. The documentation build should either generate these artifacts directly or
-verify that checked-in generated artifacts have no drift.
+The Clap command model is the only source of truth for command reference. Extend
+the current generator to produce readable Markdown pages with command synopsis,
+options, inherited global flags, examples, and links between parent and child
+commands. Preserve generated manpages and shell completions for packaging, but do
+not expose raw completion scripts in the primary documentation navigation.
 
-The main documentation site should provide task-oriented CLI guides in addition to
-the complete generated command reference.
+Task-oriented CLI guides remain handwritten. Generated pages answer “what flags
+exist”; guides answer “how do I complete a workflow.” CI must fail when the binary
+and checked-in command reference differ.
 
-## Generated and Handwritten Content
+## Presentation and User Experience
 
-Use handwritten documentation for:
+The initial production theme should include:
 
-- Tutorials and workflows.
-- Installation and packaging.
-- Protocol concepts.
-- Performance guidance.
-- Choosing between the Rust, Python, and CLI surfaces.
-- Migration and compatibility notes.
+- Responsive Material layout with light and dark palettes.
+- Client-side search, code-copy controls, anchored headings, and readable tables.
+- Syntax highlighting for shell, Python, Rust, TOML, JSON, and bencode examples.
+- Repository, issue tracker, edit-page, and license links.
+- A custom 404 page, generated sitemap, canonical `site_url`, and social metadata.
+- Clear “development documentation” labeling until the first stable release.
+- Keyboard-accessible navigation, meaningful heading order, alt text for images,
+  visible focus states, and respect for reduced-motion preferences.
 
-Use generated documentation for:
+Do not add analytics, advertising, cookie banners, externally hosted fonts, or
+third-party JavaScript initially. Prefer system fonts and self-contained assets so
+the site remains fast, private, and reproducible.
 
-- Python modules, classes, functions, properties, and signatures.
-- Rust types, traits, methods, implementations, and doctests.
-- CLI commands, options, aliases, completions, and manpage content.
+## GitHub Actions Design
 
-Generated API references explain what exists. Handwritten guides explain how and
-why to use it.
+Use one documentation workflow triggered by `pull_request`, pushes to `main`, and
+`workflow_dispatch`.
 
-## Hosting
+### Build Job
 
-Host the generated static site with GitHub Pages. The initial project URL will be
-similar to:
+- Runs for pull requests, default-branch pushes, and manual dispatches.
+- Uses read-only repository permissions.
+- Installs locked dependencies with `uv` and the pinned Rust toolchain.
+- Invokes the same repository documentation build command used locally.
+- Uploads the complete static site as the Pages artifact.
+- May upload a short-retention diagnostic artifact on failed or pull-request builds.
+- Pins every third-party action to an immutable commit SHA with a version comment.
 
-```text
-https://burritothief.github.io/btpc/
-```
+### Deploy Job
 
-A custom domain can be added later without changing the documentation architecture.
-GitHub Pages is sufficient because the complete output is static HTML and assets.
+- Runs only after a successful build from `main` or an authorized manual dispatch.
+- Uses the `github-pages` environment and reports the deployed URL.
+- Receives only `pages: write` and `id-token: write` in addition to read access.
+- Uses the official `actions/deploy-pages` action.
+- Uses concurrency that cancels obsolete in-progress deployments but never cancels
+  an active production deployment midway through publishing.
+- Never runs for pull requests, including pull requests from forks.
 
-## GitHub Actions
+GitHub Pages must be configured to use GitHub Actions as its publishing source.
+Add a deployment protection rule that allows only the default branch to deploy.
 
-Use separate checking and deployment responsibilities.
+## Quality Gates
 
-### Pull Request Documentation Check
+Every pull request must prove:
 
-The pull-request workflow should:
+- `mkdocs build --strict` succeeds from the locked environment.
+- Python API collection succeeds and the public export inventory is complete.
+- rustdoc has no warnings and Rust doctests pass.
+- CLI generated reference has no drift.
+- Internal links, anchors, images, scripts, styles, and canonical project-subpath
+  URLs resolve from the generated artifact.
+- The root page, custom 404 page, Python reference, CLI reference, and rustdoc entry
+  point exist.
+- Spelling checks cover handwritten documentation but exclude generated command
+  output where appropriate.
+- The resulting Pages artifact remains below a documented size budget.
+- Workflow files pass existing YAML, action-pinning, and `zizmor` checks.
 
-1. Install the locked Rust and Python toolchains.
-2. Install documentation dependencies.
-3. Build the Python extension if API collection requires it.
-4. Build MkDocs in strict mode.
-5. Build rustdoc with warnings denied.
-6. Run Rust doctests.
-7. Generate or drift-check CLI reference artifacts.
-8. Check internal links and required pages.
+Run external-link validation separately on a schedule. Network instability should
+not make ordinary documentation pull requests flaky, but recurring broken links
+must remain visible as a maintenance failure.
 
-The check should fail on broken links, missing imports, invalid docstrings, rustdoc
-warnings, failing doctests, missing navigation pages, or generated-reference drift.
+## Production Operations
 
-### Main Branch Deployment
-
-The deployment workflow should:
-
-1. Build the MkDocs site.
-2. Build rustdoc.
-3. Copy rustdoc into the MkDocs output directory under `rust/`.
-4. Upload the combined static site with the official Pages artifact action.
-5. Deploy it with the official GitHub Pages deployment action.
-
-Keep deployment permissions isolated from normal CI. Ordinary test workflows need
-read-only repository permissions; only the Pages deployment job needs Pages and
-identity-token permissions.
-
-## Documentation Dependencies
-
-Add a dedicated documentation dependency group rather than mixing site tooling into
-runtime dependencies. The expected packages are:
-
-```text
-mkdocs
-mkdocs-material
-mkdocstrings[python]
-```
-
-Pin them through the existing lockfile workflow. Documentation tooling must not
-become a dependency of the installed `btpc` Python package.
-
-## Versioning Strategy
-
-Initially publish documentation for the current `main` branch only. Avoid adding a
-documentation-version manager before the first public release.
-
-After releases stabilize:
-
-- Let docs.rs host versioned Rust crate documentation.
-- Consider versioned Python/CLI paths such as `/latest/`, `/0.1/`, and `/0.2/`.
-- Keep the site root pointed at the latest stable or clearly labeled development
-  documentation.
-
-Versioning should be introduced only after there is more than one supported release
-line.
+- Publish on every successful push to `main` and permit manual redeployment.
+- Keep only the current `main` site until versioned docs are justified.
+- Add a weekly live-site smoke check for the homepage and key entry points.
+- Keep a maintainer runbook for enabling Pages, re-running deployment, diagnosing
+  404/base-path problems, rotating a future custom domain, and rolling back by
+  redeploying a known-good commit.
+- Validate HTTPS and the canonical project URL after first deployment.
+- Add the documentation URL to `README.md`, Cargo package metadata, Python project
+  URLs, and the GitHub repository homepage.
 
 ## Implementation Sequence
 
-1. Add the documentation dependency group and `mkdocs.yml`.
-2. Create the site navigation and landing pages.
-3. Add Python reference pages for each public domain module.
-4. Improve public Python docstrings until strict generation passes.
-5. Enable strict rustdoc and fill missing public Rust documentation.
-6. Integrate generated CLI reference pages.
-7. Add the pull-request documentation check.
-8. Add the GitHub Pages build and deployment workflow.
-9. Enable Pages for the repository and verify the published URL.
-10. Add versioning only after the first stable release requires it.
+1. Accept the documentation-site contract and lock the toolchain.
+2. Add the deterministic site builder and minimal strict MkDocs skeleton.
+3. Build the public information architecture and production theme.
+4. Generate and validate the Python API reference.
+5. Generate and embed fresh Rust rustdoc.
+6. Generate readable CLI Markdown and enforce drift checks.
+7. Add generated-site QA, contributor commands, and artifact budgets.
+8. Add the least-privilege GitHub Pages build/deploy workflow.
+9. Add discoverability metadata and maintainer operations guidance.
+10. Enable Pages and verify the live production site end to end.
 
-## Reference Documentation
+## Deferred Work
 
-- Material for MkDocs: <https://squidfunk.github.io/mkdocs-material/>
-- mkdocstrings: <https://mkdocstrings.github.io/>
-- Cargo `doc`: <https://doc.rust-lang.org/cargo/commands/cargo-doc.html>
-- GitHub Pages: <https://docs.github.com/pages>
+- Versioned documentation and `mike`.
+- A custom domain.
+- Analytics or telemetry.
+- Search services that require an external crawler.
+- PR-specific public preview environments.
+- Translations.
+
+These can be reconsidered after the first stable release or demonstrated user
+need. They are not required for a production-quality initial GitHub Pages site.
+
+## Primary References
+
+- GitHub Pages custom workflows:
+  <https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages>
+- GitHub Pages publishing sources:
+  <https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site>
+- Material for MkDocs:
+  <https://squidfunk.github.io/mkdocs-material/>
+- mkdocstrings Python handler:
+  <https://mkdocstrings.github.io/python/usage/>
+- Cargo `doc`:
+  <https://doc.rust-lang.org/cargo/commands/cargo-doc.html>
 - docs.rs builds: <https://docs.rs/about/builds>

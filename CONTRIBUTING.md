@@ -58,6 +58,14 @@ Windows, Rust 1.85 as the MSRV with minimal direct dependencies, CPython 3.11 th
 wheel build. Cargo and uv download caches are reused, but project build artifacts
 are not shared across unrelated toolchains.
 
+Build the complete documentation site from locked dependencies with `make
+docs-site`. The command removes its own staging directory and recreates `site/`
+from scratch, so generated output never depends on an earlier build. Preview the
+same configuration at `http://127.0.0.1:8000/btpc/` with `make docs-serve`; stop the
+server with Ctrl-C. Both commands resolve repository inputs through the checked-in
+configuration, and `scripts/build_docs_site.py --site-dir PATH` may be invoked from
+outside the checkout when an explicit destination is useful.
+
 ### Required pull-request checks
 
 Protect `main` by requiring a pull request, one approving review, dismissal of

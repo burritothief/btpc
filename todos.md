@@ -53,6 +53,10 @@ approved planner action.
   `TEST-FIXTURE-001`.
 - Todos 34-36 and 41-46: `SEC-DEPS-001`, `RELEASE-VERSION-001`,
   `RELEASE-MATRIX-001`, `RELEASE-ARTIFACT-001`, `RELEASE-GATE-001`.
+- Todos 96-105: `DOCSITE-ARCH-001`, `DOCSITE-BUILD-001`,
+  `DOCSITE-PYTHON-001`, `DOCSITE-RUST-001`, `DOCSITE-CLI-001`,
+  `DOCSITE-UX-001`, `DOCSITE-QUALITY-001`, `DOCSITE-DEPLOY-001`, and
+  `DOCSITE-OPS-001`.
 
 ## Minimum Verification Gate
 
@@ -4398,3 +4402,423 @@ remain adapters over `btpc-core` throughout.
    Notes:
    - MkDocs/mkdocstrings is not installed in the locked development environment, so
      the optional strict generated-site build was not applicable to this todo.
+
+96. [x] Bootstrap the locked documentation toolchain and deterministic site builder
+   Claimed by: Codex implementer (2026-07-02 14:00 PDT)
+   Requirements:
+   `DOCSITE-ARCH-001`, `DOCSITE-BUILD-001`, `DOCSITE-UX-001`, `TEST-TDD-001`.
+   Context:
+   `DOCUMENTATION_PLAN.md` and `specs/documentation-site.md` define one unified
+   Material for MkDocs site, but the repository does not yet have `mkdocs.yml`, a
+   dedicated documentation dependency group, or one build entry point shared by
+   local development and CI. This todo creates the smallest complete site skeleton;
+   later todos populate each reference surface and harden deployment.
+   Implementation:
+   Start with failing tests under `tests/docs/` for the required configuration,
+   clean-output behavior, project-subpath-safe URLs, expected root files, and a
+   successful strict minimal build. Add current stable open-source MkDocs Material
+   and mkdocstrings Python tooling through `uv add --group docs` (or the current uv
+   equivalent) and commit the resolved lockfile. Keep documentation packages out of
+   BTPC's runtime dependencies. Use the supported Material 9.x line unless the
+   current release documentation requires a newer compatible major; do not use
+   sponsor-only/Insiders features.
+
+   Add `mkdocs.yml` with the canonical project site URL
+   `https://burritothief.github.io/btpc/`, repository/edit links, explicit
+   navigation, strict Markdown extensions, client-side search, and deterministic
+   theme settings. Add a cross-platform repository build entry point, preferably a
+   typed Python script rather than shell-only orchestration, that removes its own
+   staging directory and creates the complete site at an explicit destination.
+   Reserve documented stages for CLI generation, MkDocs, rustdoc, and generated-site
+   validation even if the later stages are initially placeholders. Add `make
+   docs-site` and `make docs-serve` (or equivalently named existing-project targets),
+   ignore generated `site/`/staging output, and document the commands in
+   `CONTRIBUTING.md`. The command must work from outside the repository checkout by
+   resolving paths relative to the script, not the caller's current directory.
+   Tests and verification:
+   Prove the tests fail before the toolchain/configuration exists. Run the focused
+   docs tests, `uv lock --check`, a clean strict site build, and the local serve
+   command long enough to request the homepage. Run Ruff on new Python code,
+   `uv run python scripts/check_specs.py`, `uv run python scripts/check_docs.py`,
+   and inspect the generated artifact to confirm `index.html` is at its root and no
+   generated output is tracked. Record exact package versions and commands.
+   Evidence:
+   - Added `tests/docs/test_site_builder.py` first; all five tests initially failed
+     because the docs group, `mkdocs.yml`, root pages, and builder were absent. The
+     suite now passes `5/5`, including invocation from outside the checkout, stale
+     destination removal, reserved stage order, strict output, and root-relative
+     asset rejection.
+   - Added the docs dependency group through `uv add --group docs`, resolving and
+     locking MkDocs 1.6.1, Material for MkDocs 9.7.6, mkdocstrings 1.0.4, and
+     mkdocstrings-python 2.0.5 without adding runtime dependencies. `uv lock --check`
+     passes against the resulting 57-package environment.
+   - Added `mkdocs.yml` with the canonical Pages project URL, repository/edit links,
+     explicit navigation, Material search and deterministic local-font settings,
+     Google-style mkdocstrings configuration, and supported Markdown extensions.
+     Added development-labelled `docs/index.md` and a custom `docs/404.md`.
+   - Added typed `scripts/build_docs_site.py` with explicit `cli`, `mkdocs`,
+     `rustdoc`, and `validate` stages. It resolves the repository from its own path,
+     removes `.tmp/docs-site` and the requested destination, runs MkDocs in strict
+     mode, verifies root `index.html`/`404.html`, and copies a fresh artifact.
+   - Added `make docs-site` and `make docs-serve`, contributor instructions, and
+     ignored `site/`. A strict `make docs-site` succeeded; generated files included
+     root `index.html`, `404.html`, search, sitemap, local assets, and guide pages,
+     while `git ls-files site .tmp/docs-site` remained empty.
+   - Ruff check/format passed for the builder and docs tests. Specification
+     validation passed 16 specs/118 requirements, and Markdown link validation
+     passed across 36 files. The locked server served
+     `http://127.0.0.1:8123/btpc/`; curl verified the BTPC title and local Material
+     stylesheet before clean shutdown.
+   Notes:
+   - CLI generation and rustdoc stages intentionally validate their current source
+     inputs only; Todos 99 and 100 replace them with fresh generated-site content.
+
+97. [ ] Build the production information architecture and accessible Material theme
+   Claimed by:
+   Requirements:
+   `DOCSITE-ARCH-001`, `DOCSITE-UX-001`, `DOCSITE-BUILD-001`, `TEST-TDD-001`.
+   Context:
+   The existing `docs/*.md` files contain useful CLI, compatibility, Python, Rust,
+   and security material, but they are not organized as a coherent user journey.
+   The site needs production navigation and presentation before generated API
+   references are integrated. Preserve additive content instead of replacing it
+   with marketing filler.
+   Implementation:
+   Add failing navigation/content tests for every required top-level section and
+   key landing page in `DOCUMENTATION_PLAN.md`. Reorganize handwritten site content
+   into Getting Started, Guides, Concepts, CLI, Python, Rust, Performance,
+   Compatibility, Security, and Contributing sections. Write concise installation
+   and quick-start pages for CLI, Python, and Rust; task-oriented creation,
+   inspection, validation, verification, editing, configuration, preset, and shell
+   completion guides; and v1, v2, hybrid, piece-length, reproducibility, and byte
+   semantics concepts. Reuse tested README examples and existing docs rather than
+   duplicating incompatible commands. Link to normative specs only from an explicit
+   contributor/developer area; do not confuse implementation contracts with public
+   API documentation.
+
+   Configure responsive light/dark palettes, code-copy controls, anchored headings,
+   syntax highlighting, readable tables/admonitions, keyboard-visible focus, and
+   reduced-motion-safe behavior. Add a useful custom `404.md`. Disable external
+   fonts and do not add analytics, cookies, advertising, third-party runtime
+   JavaScript, or network-dependent page assets. Use text or existing project assets
+   until a reviewed logo exists. Require descriptive page titles, one H1 per page,
+   meaningful link text, image alt text, and a visible development-documentation
+   notice until the first stable release. Keep CSS overrides minimal, documented,
+   and covered by the build.
+   Tests and verification:
+   Run navigation/content tests first and retain their initial failures. Run the
+   complete strict docs build, Markdown link checker, codespell over handwritten
+   docs, and an HTML inspection test covering titles, H1s, missing alt text, external
+   runtime assets, and required 404 output. Serve the generated project site under
+   `/btpc/` and manually smoke-test keyboard navigation, search, both palettes, code
+   copy, narrow viewport layout, and the 404 page. Record screenshots or precise
+   observations without committing temporary captures. Run spec validation.
+   Evidence:
+   Notes:
+
+98. [ ] Generate a complete Python API reference from public btpc modules
+   Claimed by:
+   Requirements:
+   `DOCSITE-PYTHON-001`, `DOCSITE-BUILD-001`, `DOCSITE-QUALITY-001`,
+   `PYAPI-DOCSTRING-001`, `PYAPI-MODULES-001`, `TEST-TDD-001`.
+   Context:
+   Todo 95 upgrades editor-facing docstrings. This todo turns those same docstrings,
+   signatures, annotations, and examples into the website's canonical Python API
+   reference without exposing private PyO3 or conversion machinery. It must execute
+   after Todo 95 and consume its public inventory rather than inventing a second API
+   description.
+   Implementation:
+   Begin with failing documentation tests that enumerate every supported public
+   symbol from the public modules and root re-exports. Add small mkdocstrings pages
+   for `btpc.creation`, `btpc.metainfo`, `btpc.verification`, `btpc.types`, and
+   `btpc.errors`. Configure the current Griffe-based Python handler with an explicit
+   `paths: [python]`-style source path, Google docstring parsing, annotation-aware
+   signatures, stable source ordering, cross-reference support, and only features
+   available in the open-source distribution. Prefer static source collection so
+   documentation can build without compiling the native extension; if a runtime
+   import is genuinely necessary, document why and build/install the extension in
+   an isolated environment rather than relying on an editable developer install.
+
+   Render only intentional public names. Ensure root aliases resolve to one
+   canonical defining-module page, hide `_native`, `_conversion`, and other private
+   symbols, and preserve visible return types, exceptions, attributes, overloads,
+   callback contracts, and examples. Add a friendly Python overview that links
+   creation, parsing, editing, magnet, serialization, and verification workflows to
+   their exact reference objects. Do not duplicate or rewrite source docstrings in
+   Markdown merely to improve rendering; fix deficient source documentation and
+   Todo 95's quality tests instead.
+   Tests and verification:
+   Demonstrate the public-inventory test failing before pages/configuration are
+   added. Run the Todo 95 docstring tests, Pyrefly and Pyright consumer smoke,
+   mkdocstrings collection with warnings treated as errors, and the strict complete
+   site build. Assert every expected public symbol has one canonical reference URL,
+   no private symbol is rendered, and key signatures/types appear in generated HTML.
+   Build from a clean checkout context with no editable `btpc` import available.
+   Run Ruff, the Python test suite, spec validation, and generated-site link checks.
+   Evidence:
+   Notes:
+
+99. [ ] Embed fresh warning-free btpc-core rustdoc into the unified site
+   Claimed by:
+   Requirements:
+   `DOCSITE-RUST-001`, `DOCSITE-BUILD-001`, `DOCSITE-QUALITY-001`,
+   `RUSTAPI-DOC-001`, `TEST-TDD-001`.
+   Context:
+   Rust users need native rustdoc features, but the output must appear under the
+   same GitHub Pages project site and must never reuse stale `target/doc` files.
+   Existing CI already denies rustdoc warnings; this todo integrates that output
+   into the documentation artifact and makes its relationship to `main` explicit.
+   Implementation:
+   Add failing docs-build tests for the Rust landing page, stable
+   `/rust/btpc_core/` entry point, same-origin links, and stale-output rejection.
+   Extend the shared site builder to run `cargo doc -p btpc-core --all-features
+   --no-deps` with `RUSTDOCFLAGS=-D warnings` using a dedicated clean target or
+   output directory. Copy only the fresh files required for `btpc_core` and rustdoc
+   static assets into the staged MkDocs site at `rust/btpc_core/`; do not commit
+   generated HTML and do not copy dependency documentation accidentally.
+
+   Add a Rust overview and quick start linking into embedded rustdoc, source code,
+   and executable examples. Audit public crate/module/item docs for warnings,
+   broken intra-doc links, missing error/panic/resource notes, and examples that no
+   longer compile. Keep wording concise and source-native. State that embedded docs
+   describe `main`, and add a disabled/future docs.rs link only when the crate is
+   actually published rather than linking to a nonexistent release page.
+   Tests and verification:
+   Retain the initial failing integration tests. Run `cargo test -p btpc-core --doc`,
+   warning-denied `cargo doc`, and the strict shared site build twice after planting
+   a sentinel in the first rustdoc output; prove the sentinel cannot survive the
+   clean rebuild. Validate the Rust landing page and `rust/btpc_core/index.html`
+   through a local HTTP server under `/btpc/`, check internal links/assets, run
+   strict clippy for affected Rust code if any, and run spec validation.
+   Evidence:
+   Notes:
+
+100. [ ] Publish readable generated CLI command reference pages without drift
+   Claimed by:
+   Requirements:
+   `DOCSITE-CLI-001`, `DOCSITE-BUILD-001`, `DOCSITE-QUALITY-001`,
+   `CLI-DOC-001`, `RELEASE-CLI-DOC-001`, `TEST-TDD-001`.
+   Context:
+   `scripts/generate-cli-reference.sh` and `crates/btpc-cli/tests/reference.rs`
+   currently maintain raw help text, manpage, and completion artifacts. The website
+   needs navigable Markdown command pages while keeping the Clap model as the sole
+   command definition and preserving packaging artifacts.
+   Implementation:
+   Start with failing generator and golden tests for every top-level command,
+   nested config/completion command, global option, alias, and cross-link required
+   by the current command model. Refactor or extend generation so one invocation
+   emits deterministic website Markdown pages with synopsis, description, options,
+   inherited global flags, subcommands, exit behavior links, and concise examples.
+   Keep manpage and shell-completion generation intact for packaging. Generate from
+   Clap metadata or the running pinned workspace binary; never hand-maintain a
+   second argument table. Make output independent of terminal width, color, locale,
+   home/config files, and current directory, and ensure secrets or real tracker
+   configuration can never enter generated docs.
+
+   Place generated web pages under the documented CLI reference directory and add
+   them to MkDocs navigation. Provide parent/child breadcrumbs or links and link
+   common flags to task-oriented guides. Extend the drift test so generation into a
+   temporary directory compares byte-for-byte with checked-in generated source.
+   The shared site build must run this drift check before rendering. Preserve
+   existing raw artifacts if they remain release inputs; otherwise remove only
+   demonstrably redundant web copies and update all consumers atomically.
+   Tests and verification:
+   Show the new tests failing before implementation. Run focused CLI reference
+   tests, the generator twice and compare outputs, config-isolated CLI tests, the
+   strict site build, codespell with justified generated-output exclusions, and
+   generated-site link/anchor checks. Confirm all commands shown by `btpc --help`
+   have a reference page and no undocumented extra page exists. Run Rust formatting,
+   strict clippy for `btpc-cli`, relevant CLI tests, and spec validation.
+   Evidence:
+   Notes:
+
+101. [ ] Add production generated-site QA, size budgets, and contributor gates
+   Claimed by:
+   Requirements:
+   `DOCSITE-BUILD-001`, `DOCSITE-QUALITY-001`, `DOCSITE-UX-001`,
+   `TEST-TDD-001`.
+   Context:
+   A successful MkDocs process is insufficient: project-subpath mistakes, missing
+   copied rustdoc assets, private Python names, broken anchors, and oversized output
+   can still produce a bad Pages deployment. This todo establishes one fast local
+   quality gate over the complete generated artifact.
+   Implementation:
+   Add failing tests for representative broken internal links, missing anchors,
+   absent assets, root-relative links that escape `/btpc/`, `file://` or localhost
+   URLs, leaked absolute checkout paths, missing canonical metadata, duplicate page
+   titles, required entry points, private API names, and an intentionally exceeded
+   artifact-size budget. Implement or adopt a maintained deterministic link/HTML
+   checker that can run offline against the staged site. Keep external HTTP link
+   checking out of the pull-request gate. Set and document a realistic initial
+   compressed and uncompressed site-size budget based on the first complete build;
+   changes to that budget require recorded evidence, not silent increases.
+
+   Consolidate the strict build, CLI drift check, Python inventory check, rustdoc,
+   doctests, offline generated-site validation, and handwritten spelling check into
+   `make docs-check` or the project's equivalent canonical command. Add the fast
+   applicable subset to pre-commit and the full command to pre-push/manual hooks
+   without duplicating implementation logic. Update `CONTRIBUTING.md` and
+   `AGENTS.md` with source ownership (handwritten vs generated), local preview,
+   verification, and the rule that generated HTML is never committed.
+   Tests and verification:
+   Keep one fixture or parameterized test proving each failure class is detected,
+   then run all docs tests and the canonical docs gate from a clean tree and from a
+   non-repository current directory. Run pre-commit on all files and the pre-push
+   documentation hook, Ruff, codespell, Rust doctests/rustdoc, spec validation, and
+   the broader repository documentation checks. Record initial artifact sizes and
+   configured budgets.
+   Evidence:
+   Notes:
+
+102. [ ] Add the least-privilege GitHub Pages build and deployment workflow
+   Claimed by:
+   Requirements:
+   `DOCSITE-DEPLOY-001`, `DOCSITE-BUILD-001`, `DOCSITE-QUALITY-001`,
+   `SEC-DEPS-001`.
+   Context:
+   The complete site can now be built and validated locally. It must rebuild for
+   every pull request and every push to `main`, while only trusted default-branch
+   runs may deploy. The repository already pins Actions to immutable SHAs and runs
+   `zizmor`; preserve those supply-chain rules.
+   Implementation:
+   Add `.github/workflows/docs.yml` triggered by `pull_request`, pushes to `main`,
+   and `workflow_dispatch`. Do not use restrictive path filters: the documentation
+   check should be a reliable required status, and code/docstring changes anywhere
+   can affect generated API output. Give the workflow read-only default permissions.
+   The build job must check out without persisted credentials, install the pinned
+   Rust toolchain and locked uv environment with safe caches, invoke the canonical
+   docs gate/build command, call the official Pages configuration action, and upload
+   exactly the staged site using the official Pages artifact action. Pin every
+   action to a reviewed immutable commit SHA with its release tag in a comment.
+
+   Add a dependent deploy job that runs only for a successful trusted `main` push or
+   explicitly authorized manual dispatch, never for pull requests. Give only this
+   job `pages: write` and `id-token: write`, attach it to the `github-pages`
+   environment with the deployment URL output, and use the official Pages deploy
+   action. Configure workflow/deployment concurrency so obsolete queued builds are
+   cancelled while an active production deployment is not interrupted. Set explicit
+   timeouts, keep fork PRs safe, avoid repository write tokens and branch-pushing
+   deploy tools, and retain artifacts only as long as operationally useful.
+   Tests and verification:
+   Parse workflow YAML, run `zizmor` and existing action-pin checks, and add a
+   structural test that asserts triggers, job dependencies, conditions,
+   permissions, environment, concurrency, timeouts, locked install, canonical build
+   command, and official Pages actions. Exercise the build job locally where
+   feasible without pretending to deploy. Push through the normal implementation
+   workflow and record successful pull-request/build and trusted deployment run URLs
+   when available; if repository Pages settings block deployment, record the exact
+   GitHub response and leave only Todo 104's owner-setting step outstanding. Run
+   spec validation and the full docs gate.
+   Evidence:
+   Notes:
+
+103. [ ] Add documentation discoverability, package metadata, and maintainer runbooks
+   Claimed by:
+   Requirements:
+   `DOCSITE-ARCH-001`, `DOCSITE-UX-001`, `DOCSITE-OPS-001`,
+   `RELEASE-VERSION-001`.
+   Context:
+   A deployed site is useful only if users and maintainers can find and operate it.
+   Repository metadata currently contains inconsistent repository ownership
+   (`Cargo.toml` references `btpc-dev/btpc` while the actual remote is
+   `burritothief/btpc`), and the production workflow needs a recovery procedure.
+   Implementation:
+   Add prominent Documentation links to `README.md` and the site header/footer.
+   Correct canonical repository, homepage, documentation, issue tracker, and source
+   URLs across Cargo workspace/package metadata, Python `[project.urls]`, generated
+   package metadata, and any docs configuration, using
+   `https://github.com/burritothief/btpc` and the GitHub Pages project URL. Preserve
+   one canonical URL definition where tooling permits and add tests preventing
+   owner/path drift. Ensure MkDocs emits canonical page URLs, sitemap metadata,
+   repository/edit links, license links, and a useful page description; do not
+   claim docs.rs or package-index pages before they exist.
+
+   Add a concise documentation operations section to `CONTRIBUTING.md` covering
+   prerequisites, local preview, strict build, generated-source ownership, Pages
+   configuration, manual dispatch, deployment status, common project-subpath/404
+   failures, artifact inspection, and rollback by redeploying a known-good commit.
+   Document the one-time GitHub Settings steps: Pages source `GitHub Actions`, the
+   `github-pages` environment, and default-branch-only deployment protection. Add a
+   release checklist item to verify documentation links and clearly distinguish
+   `main` docs from future versioned release docs.
+   Tests and verification:
+   Add failing metadata consistency tests first. Run Cargo metadata checks, Python
+   package metadata/build smoke tests, the strict docs gate, link checks, README
+   command/example tests, and spec validation. Search the repository for stale
+   `btpc-dev/btpc`, placeholder documentation URLs, localhost production links, and
+   unsupported docs.rs claims. Confirm generated pages include the canonical Pages
+   URL, sitemap, edit links, license link, and development-docs label.
+   Evidence:
+   Notes:
+
+104. [ ] Enable GitHub Pages and verify the first production deployment end to end
+   Claimed by:
+   Requirements:
+   `DOCSITE-DEPLOY-001`, `DOCSITE-OPS-001`, `DOCSITE-QUALITY-001`.
+   Context:
+   Workflow code alone does not create a usable site. GitHub must use Actions as the
+   Pages source, the protected environment must permit only trusted deployments,
+   and the real project-subpath site must be tested over HTTPS. This is the only
+   todo that may require repository-admin authorization; it must not guess around a
+   missing permission.
+   Implementation:
+   Using the authenticated GitHub CLI/API when authorized, inspect the repository's
+   current Pages and environment settings. Configure Pages with `build_type=workflow`
+   if it is not already enabled. Create or update the `github-pages` environment so
+   only `main` may deploy, without adding unnecessary human approval that would
+   prevent automatic publishing after every push. Trigger the workflow from a known
+   commit, wait for build and deployment completion, and capture the deployment URL
+   from the official action output. Do not create or push a `gh-pages` branch.
+
+   Verify `https://burritothief.github.io/btpc/` and key Getting Started, CLI,
+   Python API, and `rust/btpc_core/` entry points over HTTPS. Check status codes,
+   content types, canonical URLs, CSS/JavaScript/images, search index, sitemap,
+   custom 404 behavior, navigation, project-subpath links, and absence of mixed
+   content. Confirm a harmless documentation-only push causes an automatic rebuild
+   and that a pull request builds but cannot deploy. If admin/API permission is
+   unavailable, record the exact required Settings action and response in `Notes:`;
+   do not claim completion until an owner performs it and the live checks pass.
+   Tests and verification:
+   Record the successful Actions run and Pages deployment URLs, deployed commit SHA,
+   UTC/Pacific deployment time, and HTTP smoke results for all required entry
+   points. Compare a local build from the deployed SHA with the artifact structure,
+   run the canonical docs gate locally, and verify repository/environment settings
+   through the GitHub API. Confirm there is no `gh-pages` branch and no deployment
+   token or secret was introduced.
+   Evidence:
+   Notes:
+
+105. [ ] Add scheduled external-link and live-site health monitoring
+   Claimed by:
+   Requirements:
+   `DOCSITE-OPS-001`, `DOCSITE-QUALITY-001`, `SEC-DEPS-001`.
+   Context:
+   Pull-request checks intentionally validate the generated site offline so network
+   failures do not make merges flaky. Production still needs recurring visibility
+   into external link rot and a broken or missing GitHub Pages deployment.
+   Implementation:
+   Extend the existing scheduled maintenance workflow or add a narrowly scoped
+   documentation-health workflow. Use a maintained pinned link checker to validate
+   external links from source/generated documentation with retry, timeout, rate
+   limit, and allowlist settings that distinguish transient failures from intentional
+   exclusions. Do not allow blanket `ignore all 4xx` rules. Check the live HTTPS
+   homepage and key CLI, Python, Rust, sitemap, asset, and 404 paths. Validate a
+   unique expected marker on each page so a generic GitHub error page cannot pass.
+
+   Keep default permissions read-only, pin actions and installed tools, set explicit
+   job timeouts and concurrency, and write actionable summaries naming broken URLs
+   and source pages without exposing secrets. Run weekly and on manual dispatch.
+   Do not add an auto-commit bot or grant issue-writing permissions solely for this
+   check; failed Actions runs are the initial alert channel. Document how maintainers
+   reproduce and triage failures locally, including temporary network failures and
+   deliberate URL migrations.
+   Tests and verification:
+   Add structural workflow tests and deterministic fixtures proving the checker
+   catches a broken external URL, a GitHub 404 page returning HTML, a missing page
+   marker, and mixed content while respecting narrow documented exclusions. Run
+   action-pin checks, `zizmor`, YAML validation, the maintenance command locally
+   against fixtures, and one authorized live manual workflow dispatch. Record the
+   successful run URL and exact URLs checked. Run the canonical docs gate and spec
+   validation.
+   Evidence:
+   Notes:

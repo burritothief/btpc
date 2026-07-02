@@ -1,4 +1,4 @@
-.PHONY: check gate-summary specs spec-sync docs docs-generate version test-rust test-python lint build-wheel benchmark-iso hooks-manual hooks-push install-hooks uninstall-hooks
+.PHONY: check gate-summary specs spec-sync docs docs-generate docs-site docs-serve version test-rust test-python lint build-wheel benchmark-iso hooks-manual hooks-push install-hooks uninstall-hooks
 
 check: specs docs lint test-rust test-python
 
@@ -18,6 +18,12 @@ docs:
 
 docs-generate:
 	./scripts/generate-cli-reference.sh
+
+docs-site:
+	uv run --group docs python scripts/build_docs_site.py --site-dir site
+
+docs-serve:
+	uv run --group docs mkdocs serve --strict --config-file mkdocs.yml
 
 version:
 	@test -n "$(VERSION)" || (echo "usage: make version VERSION=X.Y.Z" >&2; exit 2)

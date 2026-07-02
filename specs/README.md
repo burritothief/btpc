@@ -78,6 +78,7 @@ their owning specs.
 - [Testing](testing.md)
 - [Security](security.md)
 - [Release](release.md)
+- [Production Documentation Site](documentation-site.md)
 
 ## Project Map
 
@@ -88,4 +89,5 @@ then [Architecture](architecture.md) for system boundaries. Protocol contracts a
 [Python API](python-api.md), and [CLI](cli.md). Quality and operations are covered by
 [Errors](errors.md), [Security](security.md), [Testing](testing.md),
 [Performance](performance.md), [Benchmarking](benchmarking.md), and
-[Release](release.md).
+[Release](release.md). The public documentation build and deployment contract is
+[Production Documentation Site](documentation-site.md).
