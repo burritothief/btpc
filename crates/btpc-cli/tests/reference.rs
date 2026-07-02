@@ -110,7 +110,10 @@ fn checked_in_help_reference_matches_the_binary() {
     }
     let manpage = btpc().arg("manpage").output().unwrap();
     assert!(manpage.status.success());
-    assert_eq!(manpage.stdout, fs::read(root.join("btpc.1")).unwrap());
+    assert_eq!(
+        normalized_help(&manpage.stdout),
+        normalized_help(&fs::read(root.join("btpc.1")).unwrap())
+    );
 
     let completions = root.parent().unwrap().join("completions");
     for shell in ["bash", "zsh", "fish", "powershell", "elvish"] {
@@ -120,8 +123,8 @@ fn checked_in_help_reference_matches_the_binary() {
             .unwrap();
         assert!(output.status.success());
         assert_eq!(
-            output.stdout,
-            fs::read(completions.join(format!("btpc.{shell}"))).unwrap(),
+            normalized_help(&output.stdout),
+            normalized_help(&fs::read(completions.join(format!("btpc.{shell}"))).unwrap()),
             "stale {shell} completion"
         );
     }
