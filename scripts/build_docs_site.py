@@ -14,6 +14,7 @@ STAGING_DIR = ROOT / ".tmp/docs-site"
 RUSTDOC_TARGET_DIR = ROOT / ".tmp/docs-rustdoc-target"
 CLI_REFERENCE_DIR = ROOT / "docs/cli/reference"
 STAGES = ("cli", "mkdocs", "rustdoc", "validate")
+PAGES_ROOT = "/btpc/"
 RUSTDOC_ENTRIES = (
     "btpc_core",
     "crates.js",
@@ -127,12 +128,18 @@ def _stage_validate(output: Path) -> None:
     if custom_not_found.is_file():
         content = custom_not_found.read_text()
         content = re.sub(
-            r'(?P<attribute>href|src|action)="\.\./', r'\g<attribute>="', content
+            r'(?P<attribute>href|src|action)="\.\./',
+            rf'\g<attribute>="{PAGES_ROOT}',
+            content,
         )
         content = re.sub(
-            r'(?P<attribute>href|src|action)="\.\."', r'\g<attribute>="."', content
+            r'(?P<attribute>href|src|action)="\.\."',
+            rf'\g<attribute>="{PAGES_ROOT}"',
+            content,
         )
-        content = content.replace('new URL("..",location)', 'new URL(".",location)')
+        content = content.replace(
+            'new URL("..",location)', f'new URL("{PAGES_ROOT}",location)'
+        )
         (output / "404.html").write_text(content)
     for relative in ("index.html", "404.html"):
         if not (output / relative).is_file():

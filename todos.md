@@ -4962,8 +4962,8 @@ remain adapters over `btpc-core` throughout.
      not enabled; Todo 104 owns that one-time repository setting and production
      verification.
 
-104. [ ] Enable GitHub Pages and verify the first production deployment end to end
-   Claimed by:
+104. [-] Enable GitHub Pages and verify the first production deployment end to end
+   Claimed by: Codex implementer (2026-07-02 16:03 PDT)
    Requirements:
    `DOCSITE-DEPLOY-001`, `DOCSITE-OPS-001`, `DOCSITE-QUALITY-001`.
    Context:

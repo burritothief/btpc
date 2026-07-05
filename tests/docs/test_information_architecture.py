@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import subprocess
 import sys
 from html.parser import HTMLParser
@@ -131,6 +132,10 @@ def test_generated_html_has_accessible_structure_and_local_assets(
     not_found = (destination / "404.html").read_text()
     assert "Page not found" in not_found
     assert "The requested BTPC documentation page does not exist." in not_found
+    assert 'href="/btpc/assets/' in not_found
+    assert 'src="/btpc/assets/' in not_found
+    assert 'new URL("/btpc/",location)' in not_found
+    assert not re.search(r'(?:href|src|action)="(?:\.\.?/)?assets/', not_found)
     for page in destination.rglob("*.html"):
         inspector = PageInspector()
         inspector.feed(page.read_text())
