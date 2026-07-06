@@ -5041,7 +5041,7 @@ remain adapters over `btpc-core` throughout.
      recreating the not-yet-live Pages site once, then dispatching the same known
      commit, provisioned it successfully; both subsequent deployments succeeded.
 
-105. [-] Add scheduled external-link and live-site health monitoring
+105. [x] Add scheduled external-link and live-site health monitoring
    Claimed by: Codex implementer (2026-07-06 10:12 PDT)
    Requirements:
    `DOCSITE-OPS-001`, `DOCSITE-QUALITY-001`, `SEC-DEPS-001`.
@@ -5074,7 +5074,54 @@ remain adapters over `btpc-core` throughout.
    successful run URL and exact URLs checked. Run the canonical docs gate and spec
    validation.
    Evidence:
+   - Added `tests/docs/test_documentation_health.py` and response fixtures first;
+     the initial run reported five failures for the absent workflow policy,
+     Lychee configuration, live manifest, and validator. The completed focused
+     suite reports 6 passed and covers a broken 503 response, generic GitHub Pages
+     error HTML returned with status 200, a missing marker, mixed content, a healthy
+     response, narrow exclusions, and deterministic source/generated URL inventory.
+   - Extended the weekly/manual Repository maintenance workflow with Rust 1.94.1,
+     exact Lychee 0.24.2 installation, the reviewed Linux archive SHA-256
+     `1f4e0ef7f6554a6ed33dd7ac144fb2e1bbed98598e7af973042fc5cd43951c9a`,
+     a 20-minute timeout, read-only repository permission, and the existing bounded
+     concurrency. All referenced actions remain pinned to 40-character commits;
+     no issue-writing, auto-commit, or deployment permission was added.
+   - Added `.lychee.toml` with three retries, 20-second request timeout, two-second
+     retry wait, eight global/two per-host requests, 250 ms host spacing, HTTPS
+     enforcement, full fragments, and only documented exact/domain-purpose
+     exclusions. It accepts only 200-399 responses and does not ignore a 4xx class,
+     timeouts, or TLS failures.
+   - Added a deterministic source-attributed inventory over documentation Markdown
+     and generated non-rustdoc HTML. The live local run found 147 unique URLs;
+     Lychee checked 16 external URLs successfully and classified 131 intentional
+     local/example/Pages/edit/pre-release URLs through the reviewed exclusions with
+     zero errors. Failure summaries include the broken URL and expose the inventory
+     mapping back to every originating source page.
+   - The exact external URLs checked were the GitHub Pages custom-workflow guide;
+     the BTPC repository, issues, license, benchmarks, Rust consumer test, release
+     specification, interoperability fixture, core source, and specs tree; plus the
+     mdBook overview, CI, preprocessor, general configuration, renderer, and summary
+     documentation URLs.
+   - The live manifest checked the exact production homepage,
+     `/getting-started/`, `/cli/`, `/python/`, `/rust/btpc_core/`,
+     `/search/search_index.json`, `/sitemap.xml`, `/stylesheets/extra.css`, and
+     nested `/health-check/missing/nested/` custom-404 URL. All returned the exact
+     expected status, content type, page-specific marker, final HTTPS URL, and no
+     mixed content; the custom path correctly returned status 404 rather than a
+     generic GitHub error page.
+   - `make docs-check` reports 43 documentation tests, 398 files, 186 HTML pages,
+     12,496,616 uncompressed bytes, 3,233,623 normalized gzip bytes, and 92 checked
+     Markdown files. Ruff, formatting, Actionlint, offline Zizmor, YAML parsing,
+     `git diff --check`, and spec validation (16 specs, 120 requirements) pass.
+   - Authorized manual workflow run `28828571228` at commit
+     `d14210ac71ed547f17d19296adac4f1c6748f41d` succeeded in 1m23s. Its log records
+     the canonical site gate, 147-URL inventory, all nine live PASS results, and the
+     always-published Actions summary.
    Notes:
+   - The repository pre-push advisory feed currently rejects unrelated
+     `crossbeam-epoch 0.9.18` as RUSTSEC-2026-0204. Todo-specific docs, workflow,
+     and live checks passed; pushes used the documented hook skip for that external
+     advisory rather than mixing a dependency update into this todo.
 
 106. [ ] [Review] Finish descriptor-relative safe payload verification
    Claimed by:
