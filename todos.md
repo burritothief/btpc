@@ -4962,7 +4962,7 @@ remain adapters over `btpc-core` throughout.
      not enabled; Todo 104 owns that one-time repository setting and production
      verification.
 
-104. [-] Enable GitHub Pages and verify the first production deployment end to end
+104. [x] Enable GitHub Pages and verify the first production deployment end to end
    Claimed by: Codex implementer (2026-07-02 16:03 PDT)
    Requirements:
    `DOCSITE-DEPLOY-001`, `DOCSITE-OPS-001`, `DOCSITE-QUALITY-001`.
@@ -4997,7 +4997,45 @@ remain adapters over `btpc-core` throughout.
    through the GitHub API. Confirm there is no `gh-pages` branch and no deployment
    token or secret was introduced.
    Evidence:
+   - Enabled the repository Pages site through the authenticated REST API with
+     `build_type=workflow`; `GET /repos/burritothief/btpc/pages` reports the
+     canonical `https://burritothief.github.io/btpc/` URL, public visibility, and
+     enforced HTTPS. Created the `github-pages` environment with custom deployment
+     branch policies and verified its sole policy is the `main` branch, with no
+     required reviewer or wait timer.
+   - Manual workflow run `28627062606` successfully built and deployed commit
+     `37432d8051bdf7a62ee0273119f9b6b040937281` after a clean Pages
+     reprovision. The official deploy action reported the production URL and a
+     successful Pages deployment.
+   - The production smoke audit found that nested custom-404 requests loaded the
+     correct content but resolved runtime assets relative to the missing path.
+     Added a failing regression assertion in
+     `tests/docs/test_information_architecture.py`, made `404.html` references
+     explicitly `/btpc/`-rooted in `scripts/build_docs_site.py`, and retained the
+     fix in commit `b78ed2872cbda8b2c7fb229d84aba4a633c2a69a`.
+   - Pushing that documentation-only fix automatically triggered Actions run
+     `28808981236`; both build and deploy jobs succeeded. The deployment completed
+     at 2026-07-06 17:05:00 UTC / 2026-07-06 10:05:00 PDT, and
+     `GET /pages/deployments/b78ed2872cbda8b2c7fb229d84aba4a633c2a69a`
+     reports `succeed`.
+   - HTTPS checks returned 200 with expected content types and unique markers for
+     the homepage, Getting Started, CLI guide, Python guide, embedded
+     `rust/btpc_core/`, search index, sitemap, and local CSS. A nested absent path
+     returned the custom 404 with status 404; every referenced CSS, JavaScript,
+     image, favicon, and rustdoc asset returned 200. HTML canonical URLs use the
+     project Pages root and no checked page contained mixed-content references.
+   - `make docs-check` reports 37 documentation tests and a valid 398-file,
+     186-HTML-page site. SHA-256 manifests for all 398 files in the local build and
+     downloaded `github-pages` artifact from run `28808981236` match exactly.
+   - Pull-request run `28807684227` for PR 2 built successfully while its
+     `Documentation / deploy` job was skipped. API and remote-ref checks confirm
+     there is no `gh-pages` branch, no Actions secret, and no deployment token or
+     repository secret was introduced.
    Notes:
+   - The first deployment immediately after initial Pages provisioning failed in
+     GitHub's Pages backend despite a valid uploaded artifact. Deleting and
+     recreating the not-yet-live Pages site once, then dispatching the same known
+     commit, provisioned it successfully; both subsequent deployments succeeded.
 
 105. [ ] Add scheduled external-link and live-site health monitoring
    Claimed by:
