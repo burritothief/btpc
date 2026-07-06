@@ -5123,7 +5123,7 @@ remain adapters over `btpc-core` throughout.
      and live checks passed; pushes used the documented hook skip for that external
      advisory rather than mixing a dependency update into this todo.
 
-106. [-] [Review] Finish descriptor-relative safe payload verification
+106. [x] [Review] Finish descriptor-relative safe payload verification
    Claimed by: Codex implementer (2026-07-06 15:55 PDT)
    Context:
    Todo 77 was marked complete with a documented portable fallback, but the current
@@ -5153,7 +5153,36 @@ remain adapters over `btpc-core` throughout.
    on Linux, macOS, and Windows, including junction/reparse-point cases, plus all
    existing verification, CLI, and Python tests.
    Evidence:
+   - Added `crates/btpc-core/src/verify/safe_fs.rs` using `cap-std` and
+     `cap-fs-ext` capabilities: payload roots are opened once, every descendant
+     component is opened descriptor-relative with no-follow semantics, expected
+     files are hashed through retained handles, path identity is revalidated, and
+     extra-file enumeration recurses through opened directory handles.
+   - Added deterministic `BeforeExpectedOpen`, `AfterStructure`, and
+     `BeforeExtraOpen` test hooks. `verify::race_tests` covers final-file swaps in
+     v1/v2/hybrid mode, 16 repeated intermediate-directory swaps per mode on Unix,
+     16 repeated Windows junction swaps per mode, and extra traversal without ever
+     reporting the outside `nested/secret` path.
+   - Local verification passed: `cargo fmt --all --check`; strict workspace
+     Clippy; `cargo nextest run --workspace --all-features` (224/224);
+     `cargo test --workspace --doc`; Ruff check/format; Pyrefly/Pyright checks;
+     `uv run pytest tests/python` (71/71); `make docs-fast` (14 site tests and 92
+     Markdown files); `uv run python scripts/check_specs.py` (16 specs, 120
+     requirements); focused core, CLI verify, and Python verify tests all passed.
+   - CI run `28829603835` executed
+     `cargo test -p btpc-core --lib verify::race_tests --locked` successfully on
+     `ubuntu-latest`, `macos-latest`, and `windows-latest`, proving the repeated
+     junction/reparse regression on Windows as well as the Unix symlink races.
+   - `cargo check -p btpc-core --tests --target x86_64-pc-windows-gnu` and the
+     locked external Rust consumer check passed after refreshing
+     `tests/rust-consumer/Cargo.lock`.
    Notes:
+   - Full CI still reports the pre-existing `RUSTSEC-2026-0204` advisory in the
+     Criterion-only Crossbeam dependency. A Windows broad-workspace run can also
+     fail later in the unrelated CLI reference test when Windows keeps its output
+     temp directory open; the focused verifier race step completes successfully
+     before that test. Pushes used the documented `pre-push-gate` skip rather than
+     mixing either unrelated issue into this verification-security todo.
 
 107. [ ] [Review] Preserve raw info identity for top-level edits and update hybrid attributes atomically
    Claimed by:
