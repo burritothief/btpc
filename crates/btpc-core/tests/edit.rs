@@ -2,8 +2,207 @@ use std::fs;
 
 use btpc_core::Metainfo;
 use btpc_core::bencode::OwnedValue;
-use btpc_core::create::{CreateOptions, Creator, NoProgress};
+use btpc_core::create::{CreateMode, CreateOptions, Creator, NoProgress};
 use btpc_core::edit::MetainfoEditor;
+use btpc_core::metainfo::RawMetainfo;
+
+fn noncanonical_torrent(payload: &std::path::Path, mode: CreateMode) -> Vec<u8> {
+    let options = CreateOptions::builder().mode(mode).build().unwrap();
+    let canonical = Creator::new(payload)
+        .options(options)
+        .create(&NoProgress)
+        .unwrap()
+        .bytes()
+        .to_vec();
+    let raw = RawMetainfo::from_bytes(&canonical).unwrap();
+    let info = btpc_core::bencode::parse(raw.info_bytes()).unwrap();
+    let btpc_core::bencode::ValueKind::Dictionary(entries) = info.kind() else {
+        unreachable!();
+    };
+    let mut reordered = vec![b'd'];
+    for (key, value) in entries.iter().rev() {
+        reordered.extend_from_slice(&raw.info_bytes()[key.span().start()..value.span().end()]);
+    }
+    reordered.push(b'e');
+    let info_range = raw.info_span().range();
+    let mut output = canonical;
+    output.splice(info_range, reordered);
+    output
+}
+
+fn info_bytes(metainfo: &Metainfo) -> &[u8] {
+    RawMetainfo::from_bytes(metainfo.original_bytes())
+        .unwrap()
+        .info_bytes()
+}
+
+#[test]
+fn every_top_level_edit_preserves_exact_noncanonical_info_bytes() {
+    for mode in [CreateMode::V1, CreateMode::V2, CreateMode::Hybrid] {
+        let temp = tempfile::tempdir().unwrap();
+        let payload = temp.path().join("payload");
+        fs::write(&payload, b"data").unwrap();
+        let bytes = noncanonical_torrent(&payload, mode);
+        let parsed = Metainfo::from_bytes(&bytes).unwrap();
+        let original_info = info_bytes(&parsed).to_vec();
+        let original_v1 = parsed.info_hash_v1();
+        let original_v2 = parsed.info_hash_v2();
+
+        let set = MetainfoEditor::from_metainfo(&parsed)
+            .unwrap()
+            .trackers([vec![b"https://tracker".to_vec()]])
+            .web_seeds([b"https://seed".to_vec()])
+            .nodes([(b"router.example".to_vec(), 6881)])
+            .comment(Some(b"comment".to_vec()))
+            .created_by(Some(b"creator".to_vec()))
+            .creation_date(Some(123))
+            .raw_top_level(b"x-custom".to_vec(), OwnedValue::integer(7))
+            .unwrap()
+            .to_metainfo()
+            .unwrap();
+        assert_eq!(info_bytes(&set), original_info, "set {mode:?}");
+        assert_eq!(set.info_hash_v1(), original_v1, "set {mode:?}");
+        assert_eq!(set.info_hash_v2(), original_v2, "set {mode:?}");
+
+        let removed = MetainfoEditor::from_metainfo(&set)
+            .unwrap()
+            .trackers([])
+            .web_seeds([])
+            .nodes([])
+            .comment(None)
+            .created_by(None)
+            .creation_date(None)
+            .to_metainfo()
+            .unwrap();
+        assert_eq!(info_bytes(&removed), original_info, "remove {mode:?}");
+        assert_eq!(removed.info_hash_v1(), original_v1, "remove {mode:?}");
+        assert_eq!(removed.info_hash_v2(), original_v2, "remove {mode:?}");
+        assert!(
+            removed
+                .unknown_fields()
+                .iter()
+                .any(|field| field.key() == b"x-custom")
+        );
+        let canonical = Metainfo::from_bytes(&removed.to_bytes().unwrap()).unwrap();
+        assert_ne!(canonical.original_bytes(), removed.original_bytes());
+        if original_v1.is_some() {
+            assert_ne!(canonical.info_hash_v1(), original_v1, "canonical {mode:?}");
+        }
+        if original_v2.is_some() {
+            assert_ne!(canonical.info_hash_v2(), original_v2, "canonical {mode:?}");
+        }
+    }
+}
+
+#[test]
+fn info_edits_canonicalize_and_recompute_every_applicable_hash() {
+    for mode in [CreateMode::V1, CreateMode::V2, CreateMode::Hybrid] {
+        let temp = tempfile::tempdir().unwrap();
+        let payload = temp.path().join("payload");
+        fs::write(&payload, b"data").unwrap();
+        let parsed = Metainfo::from_bytes(&noncanonical_torrent(&payload, mode)).unwrap();
+        let original_v1 = parsed.info_hash_v1();
+        let original_v2 = parsed.info_hash_v2();
+
+        let edited = MetainfoEditor::from_metainfo(&parsed)
+            .unwrap()
+            .source(Some(b"source".to_vec()))
+            .to_metainfo()
+            .unwrap();
+
+        btpc_core::bencode::validate_canonical(info_bytes(&edited)).unwrap();
+        if original_v1.is_some() {
+            assert_ne!(edited.info_hash_v1(), original_v1, "{mode:?}");
+        }
+        if original_v2.is_some() {
+            assert_ne!(edited.info_hash_v2(), original_v2, "{mode:?}");
+        }
+    }
+}
+
+#[test]
+fn hybrid_real_file_attributes_update_v1_and_v2_representations() {
+    for multifile in [false, true] {
+        let temp = tempfile::tempdir().unwrap();
+        let payload = temp.path().join("payload");
+        let path = if multifile {
+            fs::create_dir(&payload).unwrap();
+            fs::write(payload.join("a"), b"a").unwrap();
+            fs::write(payload.join("b"), b"b").unwrap();
+            vec![b"a".to_vec()]
+        } else {
+            fs::write(&payload, b"data").unwrap();
+            vec![b"payload".to_vec()]
+        };
+        let options = CreateOptions::builder()
+            .mode(CreateMode::Hybrid)
+            .build()
+            .unwrap();
+        let parsed = Metainfo::from_bytes(
+            Creator::new(&payload)
+                .options(options)
+                .create(&NoProgress)
+                .unwrap()
+                .bytes(),
+        )
+        .unwrap();
+        let edited = MetainfoEditor::from_metainfo(&parsed)
+            .unwrap()
+            .file_attributes(&path, b"x".to_vec())
+            .unwrap()
+            .to_metainfo()
+            .unwrap();
+        assert_eq!(
+            edited
+                .original_bytes()
+                .windows(b"4:attr1:x".len())
+                .filter(|window| *window == b"4:attr1:x")
+                .count(),
+            2,
+            "multifile={multifile}"
+        );
+    }
+}
+
+#[test]
+fn hybrid_padding_attributes_only_update_the_v1_padding_entry() {
+    let temp = tempfile::tempdir().unwrap();
+    let payload = temp.path().join("payload");
+    fs::create_dir(&payload).unwrap();
+    fs::write(payload.join("a"), b"a").unwrap();
+    fs::write(payload.join("b"), b"b").unwrap();
+    let options = CreateOptions::builder()
+        .mode(CreateMode::Hybrid)
+        .build()
+        .unwrap();
+    let parsed = Metainfo::from_bytes(
+        Creator::new(&payload)
+            .options(options)
+            .create(&NoProgress)
+            .unwrap()
+            .bytes(),
+    )
+    .unwrap();
+    let padding = parsed
+        .files()
+        .iter()
+        .find(|file| file.is_padding())
+        .expect("hybrid multifile creation inserts padding");
+    let edited = MetainfoEditor::from_metainfo(&parsed)
+        .unwrap()
+        .file_attributes(padding.path_components(), b"px".to_vec())
+        .unwrap()
+        .to_metainfo()
+        .unwrap();
+    assert_eq!(
+        edited
+            .original_bytes()
+            .windows(b"4:attr2:px".len())
+            .filter(|window| *window == b"4:attr2:px")
+            .count(),
+        1
+    );
+}
 
 #[test]
 fn top_level_edits_preserve_info_hash_and_unknown_fields() {

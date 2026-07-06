@@ -86,3 +86,34 @@ def test_python_editor_raw_fields_and_attributes(tmp_path: Path) -> None:
     assert edited.files[0].attributes == b"x"
     with pytest.raises(btpc.MetainfoError, match="reserved"):
         original.edit(raw_top_level={b"announce": b"bad"})
+
+
+def test_python_top_level_edit_preserves_noncanonical_info_bytes() -> None:
+    data = b"d4:infod6:pieces0:12:piece lengthi16384e4:name7:payload6:lengthi0eee"
+    original_info = data[len(b"d4:info") : -1]
+    original = btpc.Metainfo.from_bytes(data)
+
+    edited = original.edit(comment="updated", raw_top_level={b"x-custom": 7})
+
+    assert edited.info_hash_v1 == original.info_hash_v1
+    assert original_info in edited.original_bytes
+    assert edited.to_bytes() != edited.original_bytes
+    assert b"x-custom" in edited.unknown_fields
+
+
+def test_python_hybrid_attributes_update_both_representations(
+    tmp_path: Path,
+) -> None:
+    hybrid_representation_count = 2
+    payload = tmp_path / "payload"
+    payload.write_bytes(b"data")
+    original = btpc.Metainfo.from_bytes(
+        btpc.create_bytes(
+            payload,
+            options=btpc.CreateOptions(mode=btpc.TorrentMode.HYBRID),
+        ).bytes
+    )
+
+    edited = original.edit(file_attributes={(b"payload",): b"x"})
+
+    assert edited.original_bytes.count(b"4:attr1:x") == hybrid_representation_count

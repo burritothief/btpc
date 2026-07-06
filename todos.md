@@ -5184,8 +5184,8 @@ remain adapters over `btpc-core` throughout.
      before that test. Pushes used the documented `pre-push-gate` skip rather than
      mixing either unrelated issue into this verification-security todo.
 
-107. [ ] [Review] Preserve raw info identity for top-level edits and update hybrid attributes atomically
-   Claimed by:
+107. [x] [Review] Preserve raw info identity for top-level edits and update hybrid attributes atomically
+   Claimed by: Codex implementer (2026-07-06 16:12 PDT)
    Context:
    `MetainfoEditor::from_metainfo` converts the complete original tree to canonical
    `OwnedValue`, so a top-level-only edit canonicalizes a noncanonical `info`
@@ -5213,7 +5213,39 @@ remain adapters over `btpc-core` throughout.
    CLI `edit`, Python `Metainfo.edit`, original/canonical output choices, and unknown
    top-level-field preservation.
    Evidence:
+   - Refactored `MetainfoEditor` into owned canonical top-level fields plus an
+     `EditorInfo::Raw` exact source slice that is converted to owned form only by
+     an info-level mutation. `to_metainfo` now writes the surrounding dictionary
+     in unsigned-byte key order while embedding untouched `info` bytes verbatim;
+     `Metainfo::to_bytes` remains the explicit canonicalize-all operation.
+   - Reworked file-attribute editing around a cloned candidate dictionary and a
+     single commit point. Hybrid real files must update matching v1 and v2 paths,
+     inconsistent representations return an error, and v1 padding entries update
+     without touching the v2 tree.
+   - `crates/btpc-core/tests/edit.rs` now generates noncanonical v1, v2, and hybrid
+     fixtures and proves all top-level set/remove operations preserve exact info
+     bytes and hashes, unknown top-level fields survive, explicit canonical output
+     changes the noncanonical identity, and info edits canonicalize/recompute every
+     applicable hash. Hybrid single/multifile and padding cases pass.
+   - The private `edit::tests::injected_hybrid_attribute_failure_leaves_info_unchanged`
+     test forces a failure after the v1 candidate update and proves the original
+     dictionary is unchanged.
+   - CLI tests `top_level_cli_edit_preserves_noncanonical_info_bytes` and
+     `hybrid_cli_file_attributes_update_both_representations`, plus Python tests
+     `test_python_top_level_edit_preserves_noncanonical_info_bytes` and
+     `test_python_hybrid_attributes_update_both_representations`, pass. Python
+     docstrings and editing guides document preserved raw info versus explicit
+     canonical output.
+   - Full verification passed: `cargo fmt --all --check`; strict workspace Clippy;
+     `cargo nextest run --workspace --all-features` (231/231);
+     `cargo test --workspace --doc`; Ruff check/format; Python type checks;
+     `uv run pytest tests/python` (73/73); `make docs-fast` (14 site tests and 92
+     Markdown files); and the spec registry (16 specs, 120 requirements).
    Notes:
+   - The repository-wide dependency policy still has the previously documented
+     Criterion-only `RUSTSEC-2026-0204` advisory, so pushes use the documented
+     `pre-push-gate` skip rather than mixing an unrelated dependency update into
+     this editor-correctness todo.
 
 108. [ ] [Review] Validate and expose all recognized optional metainfo fields consistently
    Claimed by:

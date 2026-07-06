@@ -1,7 +1,8 @@
 use std::fs;
 
 use assert_cmd::Command;
-use btpc_core::create::{Creator, NoProgress};
+use btpc_core::create::{CreateMode, CreateOptions, Creator, NoProgress};
+use btpc_core::metainfo::RawMetainfo;
 use predicates::prelude::*;
 use tempfile::TempDir;
 
@@ -201,5 +202,83 @@ fn json_summary_and_config_tracker_aliases_are_supported() {
             .trackers()
             .len(),
         1
+    );
+}
+
+#[test]
+fn top_level_cli_edit_preserves_noncanonical_info_bytes() {
+    let temp = TempDir::new().unwrap();
+    let input = temp.path().join("input.torrent");
+    let output = temp.path().join("output.torrent");
+    let bytes = b"d4:infod6:pieces0:12:piece lengthi16384e4:name7:payload6:lengthi0eee";
+    fs::write(&input, bytes).unwrap();
+    let original = btpc_core::Metainfo::from_bytes(bytes).unwrap();
+    let original_info = RawMetainfo::from_bytes(bytes)
+        .unwrap()
+        .info_bytes()
+        .to_vec();
+
+    btpc()
+        .args([
+            "edit",
+            input.to_str().unwrap(),
+            "--output",
+            output.to_str().unwrap(),
+            "--comment",
+            "updated",
+        ])
+        .assert()
+        .success();
+
+    let edited = btpc_core::Metainfo::from_path(&output).unwrap();
+    assert_eq!(edited.info_hash_v1(), original.info_hash_v1());
+    assert_eq!(
+        RawMetainfo::from_bytes(edited.original_bytes())
+            .unwrap()
+            .info_bytes(),
+        original_info
+    );
+}
+
+#[test]
+fn hybrid_cli_file_attributes_update_both_representations() {
+    let temp = TempDir::new().unwrap();
+    let payload = temp.path().join("payload");
+    let input = temp.path().join("input.torrent");
+    let output = temp.path().join("output.torrent");
+    fs::write(&payload, b"data").unwrap();
+    let options = CreateOptions::builder()
+        .mode(CreateMode::Hybrid)
+        .build()
+        .unwrap();
+    fs::write(
+        &input,
+        Creator::new(&payload)
+            .options(options)
+            .create(&NoProgress)
+            .unwrap()
+            .bytes(),
+    )
+    .unwrap();
+
+    btpc()
+        .args([
+            "edit",
+            input.to_str().unwrap(),
+            "--output",
+            output.to_str().unwrap(),
+            "--file-attributes",
+            "payload=x",
+        ])
+        .assert()
+        .success();
+
+    let bytes = fs::read(output).unwrap();
+    assert_eq!(
+        bytes
+            .windows(b"4:attr1:x".len())
+            .filter(|window| *window == b"4:attr1:x")
+            .count(),
+        2
     );
 }

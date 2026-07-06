@@ -363,13 +363,16 @@ class Metainfo:
         raw_top_level: dict[bytes, int | bytes] | None = None,
         file_attributes: dict[tuple[bytes, ...], bytes] | None = None,
     ) -> Metainfo:
-        """Return a canonical copy with explicit preserve, remove, or set edits.
+        """Return a validated copy with explicit preserve, remove, or set edits.
 
         Optional fields use three states: :data:`btpc.UNCHANGED` preserves the
         current value, ``None`` removes it, and a typed value replaces it. Trackers,
         web seeds, nodes, comments, creator, and creation date are top-level fields
         and do not affect info hashes. ``private``, ``source``, and file attributes
         edit the ``info`` dictionary and therefore change applicable info hashes.
+        Top-level-only edits retain the exact original ``info`` bytes, including a
+        noncanonical source encoding. Use :meth:`to_bytes` for an explicit fully
+        canonical serialization.
 
         Args:
             trackers: Tracker tiers, ``None`` to remove, or ``UNCHANGED``.
@@ -384,7 +387,7 @@ class Metainfo:
             file_attributes: Raw attributes keyed by raw torrent path components.
 
         Returns:
-            A newly validated immutable object serialized canonically.
+            A newly validated immutable object retaining untouched ``info`` bytes.
 
         Raises:
             TypeError: If a textual field receives a non-string value.

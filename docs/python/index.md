@@ -161,9 +161,11 @@ accepted.
 
 ## Editing
 
-`Metainfo.edit()` returns a newly validated canonical object. Top-level-only edits
-such as trackers or comments preserve info hashes. Edits inside `info`, including
-`private`, `source`, or file attributes, recompute applicable hashes.
+`Metainfo.edit()` returns a newly validated object. Top-level-only edits such as
+trackers or comments preserve the exact original `info` bytes and hashes, including
+noncanonical source encoding. Edits inside `info`, including `private`, `source`,
+or file attributes, canonicalize the updated dictionary and recompute applicable
+hashes. `to_bytes()` remains the explicit fully canonical output choice.
 
 ```python
 from btpc import UNCHANGED
