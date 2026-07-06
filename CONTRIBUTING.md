@@ -114,6 +114,30 @@ deployment token. If deployment fails, first distinguish a successful build from
 Pages source/environment rejection, then verify the uploaded artifact structure
 and the project subpath/404 behavior locally.
 
+The weekly Repository maintenance workflow runs the offline gate, Lychee 0.24.2,
+and the live Pages contract. Reproduce it after `make docs-site` with:
+
+```console
+cargo install lychee --version 0.24.2 --locked
+make docs-health
+```
+
+The command first writes `.tmp/docs-external-links.md`, a deterministic inventory
+of absolute links from source Markdown and generated non-rustdoc HTML with every
+originating page listed beside its URL. Lychee retries transient failures, limits
+host concurrency, and excludes only the documented local preview, reserved example
+trackers, Pages URLs owned by the live validator, generated edit actions, and the
+not-yet-published `v0.1.0` release and comparison URLs in `.lychee.toml`. Do not
+suppress an entire HTTP status class. For a failure, rerun the exact reported URL,
+identify its source page from Lychee's detailed output, and distinguish a temporary
+timeout, rate limit, or server error from a deliberate URL migration. Update a link
+at its authoritative source; add an exclusion only for an intentional non-routable
+example or a URL covered by a more specific validator. The live validator also
+rejects generic GitHub Pages error HTML, missing page-specific markers, insecure
+final URLs, and mixed-content assets. When a production route intentionally
+changes, update `.github/docs-health.json` in the same reviewed change and verify
+the replacement URL over HTTPS.
+
 The release checklist is maintained in
 [`docs/release-checklist.md`](docs/release-checklist.md).
 

@@ -16,12 +16,19 @@ jobs:
   documentation:
     name: Maintenance / documentation
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
+    env:
+      LYCHEE_VERSION: "0.24.2"
+      LYCHEE_SHA256: 1f4e0ef7f6554a6ed33dd7ac144fb2e1bbed98598e7af973042fc5cd43951c9a
     steps:
       - name: Check out source
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           persist-credentials: false
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@fa04a1451ff1842e2626ccb99004d0195b455a88 # master
+        with:
+          toolchain: 1.94.1
       - name: Install uv and Python
         uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6
         with:
@@ -30,5 +37,39 @@ jobs:
           python-version: "3.11"
       - name: Install locked maintenance tools
         run: uv sync --all-groups --locked
+      - name: Install Lychee
+        shell: bash
+        run: |
+          archive="lychee-x86_64-unknown-linux-gnu.tar.gz"
+          url="https://github.com/lycheeverse/lychee/releases/download/lychee-v${LYCHEE_VERSION}/${archive}"
+          curl --proto '=https' --tlsv1.2 --fail --location --retry 3 \
+            --output "${RUNNER_TEMP}/${archive}" "$url"
+          echo "${LYCHEE_SHA256}  ${RUNNER_TEMP}/${archive}" | sha256sum --check
+          mkdir "${RUNNER_TEMP}/lychee"
+          tar -xzf "${RUNNER_TEMP}/${archive}" -C "${RUNNER_TEMP}/lychee"
+          mkdir "${RUNNER_TEMP}/lychee-bin"
+          install "${RUNNER_TEMP}/lychee/lychee-x86_64-unknown-linux-gnu/lychee" \
+            "${RUNNER_TEMP}/lychee-bin/lychee"
+          echo "${RUNNER_TEMP}/lychee-bin" >> "$GITHUB_PATH"
       - name: Run canonical documentation gate
         run: make docs-check
+      - name: Check external links and live documentation
+        run: make docs-health
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+      - name: Publish documentation health summary
+        if: always()
+        shell: bash
+        run: |
+          if [[ -f .tmp/docs-link-health.md ]]; then
+            cat .tmp/docs-link-health.md >> "$GITHUB_STEP_SUMMARY"
+          fi
+          if grep -Eq '^\| 🚫 Errors +\| [1-9]' .tmp/docs-link-health.md 2>/dev/null; then
+            {
+              echo
+              echo '<details><summary>External URL source inventory</summary>'
+              echo
+              cat .tmp/docs-external-links.md
+              echo '</details>'
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi

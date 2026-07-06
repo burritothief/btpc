@@ -1,4 +1,4 @@
-.PHONY: check gate-summary specs spec-sync docs docs-fast docs-check docs-generate docs-site docs-serve version test-rust test-python lint build-wheel benchmark-iso hooks-manual hooks-push install-hooks uninstall-hooks
+.PHONY: check gate-summary specs spec-sync docs docs-fast docs-check docs-health docs-generate docs-site docs-serve version test-rust test-python lint build-wheel benchmark-iso hooks-manual hooks-push install-hooks uninstall-hooks
 
 check: specs docs lint test-rust test-python
 
@@ -27,6 +27,13 @@ docs-check:
 	uv run python scripts/check_docs_site.py site
 	uv run python scripts/check_docs.py
 	uv run codespell README.md CONTRIBUTING.md SECURITY.md CHANGELOG.md DOCUMENTATION_PLAN.md AGENTS.md docs specs --skip='docs/completions/*,docs/reference/*,docs/cli/reference/*'
+
+docs-health:
+	uv run python scripts/collect_docs_external_links.py
+	@set +e; \
+	lychee --config .lychee.toml --format markdown --output .tmp/docs-link-health.md .tmp/docs-external-links.md; link_status=$$?; \
+	uv run python scripts/check_docs_health.py; live_status=$$?; \
+	test $$link_status -eq 0 -a $$live_status -eq 0
 
 docs-generate:
 	./scripts/generate-cli-reference.sh

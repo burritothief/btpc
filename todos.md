@@ -5041,8 +5041,8 @@ remain adapters over `btpc-core` throughout.
      recreating the not-yet-live Pages site once, then dispatching the same known
      commit, provisioned it successfully; both subsequent deployments succeeded.
 
-105. [ ] Add scheduled external-link and live-site health monitoring
-   Claimed by:
+105. [-] Add scheduled external-link and live-site health monitoring
+   Claimed by: Codex implementer (2026-07-06 10:12 PDT)
    Requirements:
    `DOCSITE-OPS-001`, `DOCSITE-QUALITY-001`, `SEC-DEPS-001`.
    Context:

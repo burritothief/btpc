@@ -1,0 +1,65 @@
+[
+  {
+    "name": "homepage",
+    "url": "https://burritothief.github.io/btpc/",
+    "status": 200,
+    "content_type": "text/html",
+    "marker": "<h1 id=\"btpc-documentation\">BTPC Documentation"
+  },
+  {
+    "name": "getting-started",
+    "url": "https://burritothief.github.io/btpc/getting-started/",
+    "status": 200,
+    "content_type": "text/html",
+    "marker": "<h1 id=\"getting-started\">Getting started"
+  },
+  {
+    "name": "cli",
+    "url": "https://burritothief.github.io/btpc/cli/",
+    "status": 200,
+    "content_type": "text/html",
+    "marker": "<h1 id=\"cli-guide\">CLI Guide"
+  },
+  {
+    "name": "python",
+    "url": "https://burritothief.github.io/btpc/python/",
+    "status": 200,
+    "content_type": "text/html",
+    "marker": "<h1 id=\"python-api-guide\">Python API Guide"
+  },
+  {
+    "name": "rust",
+    "url": "https://burritothief.github.io/btpc/rust/btpc_core/",
+    "status": 200,
+    "content_type": "text/html",
+    "marker": "Crate btpc_core"
+  },
+  {
+    "name": "search-index",
+    "url": "https://burritothief.github.io/btpc/search/search_index.json",
+    "status": 200,
+    "content_type": "application/json",
+    "marker": "\"title\":\"BTPC Documentation\""
+  },
+  {
+    "name": "sitemap",
+    "url": "https://burritothief.github.io/btpc/sitemap.xml",
+    "status": 200,
+    "content_type": "application/xml",
+    "marker": "<loc>https://burritothief.github.io/btpc/</loc>"
+  },
+  {
+    "name": "stylesheet",
+    "url": "https://burritothief.github.io/btpc/stylesheets/extra.css",
+    "status": 200,
+    "content_type": "text/css",
+    "marker": ":focus-visible"
+  },
+  {
+    "name": "custom-404",
+    "url": "https://burritothief.github.io/btpc/health-check/missing/nested/",
+    "status": 404,
+    "content_type": "text/html",
+    "marker": "The requested BTPC documentation page does not exist."
+  }
+]

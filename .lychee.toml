@@ -1,0 +1,25 @@
+verbose = "info"
+format = "detailed"
+no_progress = true
+cache = false
+max_redirects = 10
+max_retries = 3
+max_concurrency = 8
+timeout = 20
+retry_wait_time = 2
+accept = ["200..=399"]
+scheme = ["https", "http"]
+require_https = true
+include_fragments = "full"
+include_verbatim = false
+host_concurrency = 2
+host_request_interval = "250ms"
+exclude = [
+  '^http://127\.0\.0\.1:8000/btpc/$',
+  '^https://(?:tracker|seed)\.example/',
+  '^https://tracker\.invalid/',
+  '^https://burritothief\.github\.io/btpc/',
+  '^https://github\.com/burritothief/btpc/edit/main/',
+  '^https://github\.com/burritothief/btpc/releases/tag/v0\.1\.0$',
+  '^https://github\.com/burritothief/btpc/compare/v0\.1\.0\.\.\.HEAD$',
+]
