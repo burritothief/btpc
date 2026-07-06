@@ -89,6 +89,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@fa04a1451ff1842e2626ccb99004d0195b455a88 # master
         with:
           toolchain: 1.94.1
+      - run: cargo test -p btpc-core --lib verify::race_tests --locked
       - run: cargo test --workspace --all-features --locked
 
   rust-msrv:
