@@ -830,42 +830,45 @@ mod race_tests {
 
     #[cfg(windows)]
     #[test]
-    fn replacing_intermediate_directory_with_junction_is_rejected() {
-        for mode in [CreateMode::V1, CreateMode::V2, CreateMode::Hybrid] {
-            let temp = tempfile::tempdir().unwrap();
-            let payload = temp.path().join("payload");
-            fs::create_dir_all(payload.join("nested")).unwrap();
-            fs::write(payload.join("nested/file"), b"safe payload").unwrap();
-            let metainfo = torrent(&payload, mode);
-            let outside = temp.path().join("outside");
-            fs::create_dir(&outside).unwrap();
-            fs::write(outside.join("file"), b"safe payload").unwrap();
-            let nested = payload.join("nested");
-            let original = payload.join("original");
-            let replaced = Arc::new(Mutex::new(false));
-            let hook_replaced = Arc::clone(&replaced);
-            let hook = Arc::new(move |event| {
-                if event == TestEvent::BeforeExpectedOpen(std::path::PathBuf::from("nested/file"))
-                    && !*hook_replaced.lock().unwrap()
-                {
-                    fs::rename(&nested, &original).unwrap();
-                    junction::create(&outside, &nested).unwrap();
-                    *hook_replaced.lock().unwrap() = true;
-                }
-            });
-            let report = Verifier::new(&metainfo, &payload)
-                .test_hook(hook)
-                .verify(&NoProgress)
-                .unwrap();
-            assert!(!report.is_valid(), "{mode:?}");
-            assert!(
-                report
-                    .mismatches()
-                    .iter()
-                    .any(|mismatch| mismatch.kind() == MismatchKind::UnsafePath),
-                "{mode:?}: {:?}",
-                report.mismatches()
-            );
+    fn replacing_intermediate_directory_with_junction_is_rejected_repeatedly() {
+        for iteration in 0..16 {
+            for mode in [CreateMode::V1, CreateMode::V2, CreateMode::Hybrid] {
+                let temp = tempfile::tempdir().unwrap();
+                let payload = temp.path().join("payload");
+                fs::create_dir_all(payload.join("nested")).unwrap();
+                fs::write(payload.join("nested/file"), b"safe payload").unwrap();
+                let metainfo = torrent(&payload, mode);
+                let outside = temp.path().join("outside");
+                fs::create_dir(&outside).unwrap();
+                fs::write(outside.join("file"), b"safe payload").unwrap();
+                let nested = payload.join("nested");
+                let original = payload.join("original");
+                let replaced = Arc::new(Mutex::new(false));
+                let hook_replaced = Arc::clone(&replaced);
+                let hook = Arc::new(move |event| {
+                    if event
+                        == TestEvent::BeforeExpectedOpen(std::path::PathBuf::from("nested/file"))
+                        && !*hook_replaced.lock().unwrap()
+                    {
+                        fs::rename(&nested, &original).unwrap();
+                        junction::create(&outside, &nested).unwrap();
+                        *hook_replaced.lock().unwrap() = true;
+                    }
+                });
+                let report = Verifier::new(&metainfo, &payload)
+                    .test_hook(hook)
+                    .verify(&NoProgress)
+                    .unwrap();
+                assert!(!report.is_valid(), "iteration {iteration}, {mode:?}");
+                assert!(
+                    report
+                        .mismatches()
+                        .iter()
+                        .any(|mismatch| mismatch.kind() == MismatchKind::UnsafePath),
+                    "iteration {iteration}, {mode:?}: {:?}",
+                    report.mismatches()
+                );
+            }
         }
     }
 
