@@ -14,7 +14,7 @@ test_paths:
   - "scripts/check_docs.py"
   - "crates/btpc-cli/tests/reference.rs"
   - ".github/workflows/maintenance.yml"
-last_reviewed: "2026-07-02"
+last_reviewed: "2026-07-06"
 ---
 
 # Production Documentation Site
@@ -33,6 +33,19 @@ generated CLI reference, generated Python API reference, and an entry point to
 embedded `btpc-core` rustdoc. The initial site **MUST** document `main` and clearly
 identify itself as development documentation.
 
+### DOCSITE-ARCH-002 — Use mdBook as the primary site renderer
+
+- **Status:** Accepted
+- **Sources:** `DOCUMENTATION_PLAN.md`, `docs`
+- **Verification:** `scripts/check_docs.py`
+- **Depends on:** `DOCSITE-ARCH-001`
+
+BTPC **MUST** use a pinned mdBook 0.5.x release as the primary renderer for
+handwritten chapters, navigation, search, and generated Markdown references. mdBook
+**MUST** remain an external documentation tool so its Rust requirement does not
+raise the supported MSRV of BTPC crates. Native `btpc-core` rustdoc **MUST** remain
+embedded as a separate renderer within the unified artifact.
+
 ### DOCSITE-BUILD-001 — Build the complete site reproducibly
 
 - **Status:** Accepted
@@ -42,8 +55,9 @@ identify itself as development documentation.
 
 One documented repository command **MUST** create the same complete static site in
 local development and CI from locked dependencies. It **MUST** begin from clean
-output, run MkDocs in strict mode, reject stale generated references, and avoid
-depending on a developer home directory, editable installation, or stale rustdoc.
+output, validate the exact mdBook version, reject missing `SUMMARY.md` chapters and
+stale generated references, run supported Rust chapter tests, and avoid depending on
+a developer home directory, editable installation, or stale rustdoc.
 
 ### DOCSITE-PYTHON-001 — Generate Python reference from the public facade
 
@@ -56,6 +70,9 @@ The Python API reference **MUST** be generated from the documented public module
 annotations, signatures, and docstrings. Private native and conversion machinery
 **MUST NOT** appear as public API. Automated verification **MUST** account for every
 supported public export and prevent duplicate canonical pages for root re-exports.
+Generation **MUST** use static source analysis and **MUST NOT** import the native
+extension. The in-repository mdBook preprocessor **MUST** implement and test the
+documented preprocessor protocol and emit deterministic Markdown.
 
 ### DOCSITE-RUST-001 — Embed warning-free btpc-core rustdoc
 
@@ -92,6 +109,8 @@ The site **MUST** provide responsive navigation, client-side search, light and d
 palettes, keyboard-visible focus, meaningful heading order, image alt text, syntax
 highlighting, and a custom 404 page. The initial site **MUST NOT** require analytics,
 cookies, externally hosted fonts, advertising, or third-party runtime JavaScript.
+Customization **SHOULD** use mdBook configuration and surgical local CSS rather than
+forking the complete upstream HTML theme.
 
 ### DOCSITE-QUALITY-001 — Validate generated-site behavior before deployment
 
@@ -105,6 +124,19 @@ internal links and anchors, local assets, project-subpath URLs, canonical metada
 spelling, generated-reference drift, and a documented artifact-size budget.
 External network link checks **SHOULD** run on a separate schedule to avoid flaky
 merge gates.
+
+### DOCSITE-MIGRATE-001 — Preserve public routes during renderer migration
+
+- **Status:** Accepted
+- **Sources:** `DOCUMENTATION_PLAN.md`, `docs`
+- **Verification:** `scripts/check_docs_site.py`
+- **Depends on:** `DOCSITE-ARCH-002`, `DOCSITE-QUALITY-001`
+
+Before replacing the production MkDocs deployment, BTPC **MUST** record the existing
+public page and important fragment routes. The mdBook artifact **MUST** keep stable
+routes directly or provide project-subpath-safe, loop-free redirects for every
+recorded route. The migration **MUST** preserve the site root, 404 page, generated
+CLI and Python entry points, and embedded rustdoc location.
 
 ### DOCSITE-DEPLOY-001 — Deploy main through least-privilege GitHub Actions
 

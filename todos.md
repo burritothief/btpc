@@ -57,6 +57,10 @@ approved planner action.
   `DOCSITE-PYTHON-001`, `DOCSITE-RUST-001`, `DOCSITE-CLI-001`,
   `DOCSITE-UX-001`, `DOCSITE-QUALITY-001`, `DOCSITE-DEPLOY-001`, and
   `DOCSITE-OPS-001`.
+- Todos 112-119: `DOCSITE-ARCH-002`, `DOCSITE-BUILD-001`,
+  `DOCSITE-PYTHON-001`, `DOCSITE-RUST-001`, `DOCSITE-CLI-001`,
+  `DOCSITE-UX-001`, `DOCSITE-QUALITY-001`, `DOCSITE-MIGRATE-001`,
+  `DOCSITE-DEPLOY-001`, and `DOCSITE-OPS-001`.
 
 ## Minimum Verification Gate
 
@@ -5244,5 +5248,346 @@ remain adapters over `btpc-core` throughout.
    run cargo-semver-checks against the previous published/tagged baseline, and dry-
    run `cargo publish`. Verify docs.rs metadata/features and README links without
    claiming a live registry page until the owner performs the first publish.
+   Evidence:
+   Notes:
+
+112. [ ] Freeze the current MkDocs site as the mdBook migration baseline
+   Claimed by:
+   Requirements:
+   `DOCSITE-MIGRATE-001`, `DOCSITE-QUALITY-001`, `DOCSITE-OPS-001`,
+   `TEST-TDD-001`.
+   Context:
+   Todos 96-104 produced and deployed a production Material for MkDocs site. The
+   renderer is now changing, but users must not lose public pages, important API
+   anchors, expected site features, or the existing GitHub Pages project URL. This
+   todo records an objective baseline before any MkDocs files or dependencies are
+   removed. It must consume the completed Todo 104 deployment evidence when
+   available and must not modify the live deployment workflow yet.
+   Implementation:
+   Begin with failing tests for a checked-in renderer-migration manifest. Build the
+   current MkDocs artifact from a clean tree and inventory every generated HTML
+   route, canonical URL, navigation chapter, important Python API anchor, CLI
+   command page/anchor, rustdoc entry point, static asset class, sitemap entry, and
+   custom 404 location. Record the route and anchor compatibility set in a compact
+   deterministic fixture under `tests/docs/fixtures/`; do not commit the full
+   generated site or volatile hashes. Include the site root, all handwritten
+   chapters, every generated CLI/Python reference page, and key public API object
+   anchors. Mark which routes may become redirects and which must remain direct.
+
+   Record the uncompressed/compressed artifact size, HTML page count, current
+   documentation build duration, required search/theme/edit/copy/keyboard features,
+   privacy constraints, and successful live URLs from Todo 104. Add a reusable
+   comparison helper that can evaluate any future generated site against the
+   baseline without assuming MkDocs internals. Capture local screenshots only for
+   human comparison and do not commit them unless an existing repository policy
+   explicitly calls for visual fixtures. Keep `mkdocs.yml`, dependencies, tests,
+   and workflows unchanged in this todo.
+   Tests and verification:
+   Demonstrate the migration-manifest test failing before the fixture exists. Run
+   the existing complete `make docs-check`, generate the baseline twice and prove
+   byte-stable manifest ordering, validate every recorded route/anchor against the
+   current artifact, and run the comparison helper against one deliberately missing
+   route and anchor. If the live Pages site exists, smoke every required top-level
+   route over HTTPS and record its deployed commit. Run Ruff, docs tests, link
+   checks, codespell, and spec validation.
+   Evidence:
+   Notes:
+
+113. [ ] Bootstrap pinned mdBook beside the working MkDocs build
+   Claimed by:
+   Requirements:
+   `DOCSITE-ARCH-002`, `DOCSITE-BUILD-001`, `DOCSITE-UX-001`,
+   `TEST-TDD-001`.
+   Context:
+   The migration must remain bisectable and must not replace a functioning site
+   before mdBook can render the complete chapter tree. mdBook 0.5.3 was current when
+   `DOCUMENTATION_PLAN.md` was approved, and its Rust requirement is newer than
+   BTPC's crate MSRV. Treat it as an exact external docs tool, not a workspace
+   dependency. This todo establishes a side-by-side mdBook build only; MkDocs remains
+   the canonical Pages artifact until later todos reach parity.
+   Implementation:
+   Write failing tests for `book.toml`, exact tool-version validation,
+   `build.create-missing = false`, Rust edition 2024, `/btpc/` `site-url`, local
+   search, repository/edit links, custom 404 input, and a complete
+   `docs/SUMMARY.md`. Add `book.toml` using `docs` as the source directory and add a
+   strict summary that represents the existing information architecture and every
+   generated CLI/Python reference chapter exactly once. Configure mdBook's built-in
+   HTML/search/theme capabilities, local additional CSS, no remote runtime assets,
+   and extra watch paths for authoritative Python/Rust/CLI documentation inputs.
+
+   Add an exact mdBook version constant or tool manifest consumed by local scripts
+   and CI. The local command must fail clearly when mdBook is missing or has the
+   wrong version and print the exact `cargo install ... --locked` remediation. Do
+   not add mdBook to the workspace dependency graph or change the crate MSRV. Add a
+   temporary explicit side-by-side build command such as `make docs-mdbook-site`
+   that writes only to `.tmp/` or another ignored path and does not alter
+   `make docs-site`, `make docs-check`, or `.github/workflows/docs.yml` yet. The
+   side-by-side build should invoke mdBook directly, not shell out through MkDocs.
+   Tests and verification:
+   Preserve initial test failures. Verify the exact pinned mdBook release and its
+   checksum/installer provenance, run `mdbook build` from the repository root and a
+   different current directory, and prove a missing `SUMMARY.md` chapter fails
+   without creating a file. Serve the book locally under `/btpc/` and request the
+   homepage, search index, CSS, and 404 page. Confirm `cargo tree -p btpc-core` and
+   MSRV checks do not include mdBook. Run focused docs tests, Ruff, spec validation,
+   and the unchanged MkDocs `make docs-check` to prove side-by-side safety.
+   Evidence:
+   Notes:
+
+114. [ ] Port all handwritten content, navigation, theme behavior, and public routes
+   Claimed by:
+   Requirements:
+   `DOCSITE-ARCH-002`, `DOCSITE-UX-001`, `DOCSITE-MIGRATE-001`,
+   `DOCSITE-BUILD-001`, `TEST-TDD-001`.
+   Context:
+   Existing Markdown contains Material/PyMdown conventions, MkDocs directory-style
+   URL assumptions, template overrides, and CSS selectors that mdBook does not
+   share. This todo makes the human-authored book complete and usable while the
+   Python API generator and combined Rust artifact are still handled in later
+   todos. Preserve meaning and examples; do not rewrite the documentation merely to
+   sound different.
+   Implementation:
+   Start with failing tests that compare `SUMMARY.md` coverage, required page titles,
+   hierarchy, feature markers, and baseline routes. Convert Material-only
+   admonitions, tabs, attribute-list syntax, template macros, and link patterns to
+   mdBook-supported Markdown or minimal semantic HTML. Keep one H1 per chapter and
+   ensure chapter-relative links work both in source validation and rendered HTML.
+   Add explicit stable anchors where current public links depend on MkDocs slug
+   behavior. Remove no substantive installation, CLI, Python, Rust, protocol,
+   performance, compatibility, security, or contributor guidance.
+
+   Replace the Material override and CSS behavior with surgical mdBook additional
+   CSS that preserves the development-docs notice, responsive layout, visible focus,
+   reduced-motion policy, readable tables/admonitions, code presentation, and local
+   light/dark themes. Do not fork the complete upstream mdBook theme unless a
+   separately documented, tested requirement cannot be met otherwise. Add a route
+   compatibility generator driven by Todo 112's manifest. It must create relative,
+   `/btpc/`-safe, loop-free redirect pages for old MkDocs directory URLs that mdBook
+   does not render directly, while leaving root, 404, and high-value direct routes
+   intact. Preserve important existing fragment IDs with explicit anchors or tested
+   fragment redirects.
+   Tests and verification:
+   Retain initial failures, then run the side-by-side mdBook build and baseline
+   comparison. Validate all handwritten chapters are reachable exactly once through
+   `SUMMARY.md`, all internal source/rendered links and anchors resolve, every old
+   public route is direct or redirects once to a valid canonical page, and no
+   redirect escapes `/btpc/` or loops. Serve under the project subpath and manually
+   inspect narrow/wide layouts, keyboard navigation, search, theme switching, code
+   copy, print, development notice, and 404 behavior. Run codespell, offline site
+   validation, focused docs tests, Ruff, spec validation, and the unchanged MkDocs
+   production gate.
+   Evidence:
+   Notes:
+
+115. [ ] Replace mkdocstrings with a Griffe-backed mdBook Python API preprocessor
+   Claimed by:
+   Requirements:
+   `DOCSITE-PYTHON-001`, `DOCSITE-ARCH-002`, `DOCSITE-QUALITY-001`,
+   `PYAPI-DOCSTRING-001`, `PYAPI-MODULES-001`, `TEST-TDD-001`.
+   Context:
+   The current site renders Python docstrings through mkdocstrings. mdBook has no
+   native Python API renderer, so BTPC needs a small in-repository preprocessor that
+   preserves the public export inventory, signatures, annotations, examples,
+   cross-references, and stable anchors without importing `btpc._native`. Griffe is
+   already used in docs tests and should become the direct locked source-analysis
+   dependency after the MkDocs stack is removed.
+   Implementation:
+   Begin with failing protocol, golden-rendering, inventory, and error tests. Add a
+   typed Python executable implementing mdBook's JSON preprocessor contract,
+   including the `supports <renderer>` handshake. Configure it before the built-in
+   links preprocessor. Reference chapters must contain an explicit BTPC module marker
+   rather than mkdocstrings directives. Statically load only `btpc.creation`,
+   `btpc.metainfo`, `btpc.verification`, `btpc.types`, and `btpc.errors` through
+   Griffe with inspection disabled and no native extension present.
+
+   Generate deterministic Markdown for modules, public classes, enums, exceptions,
+   functions, methods, properties, attributes, signatures, annotations, Google-style
+   docstring sections, examples, and related-object links. Emit explicit canonical
+   anchors compatible with the current `btpc.<module>.<symbol>` IDs wherever
+   possible. Render each root re-export only on its defining module page. Reject
+   unknown markers, duplicate symbols, unresolved public BTPC cross-references, and
+   unsupported object shapes with actionable stderr diagnostics; stdout must contain
+   only protocol JSON. Do not expose `_native`, `_conversion`, private PyO3 classes,
+   source checkout paths, or requirement IDs. Keep source docstrings authoritative;
+   do not create a second prose copy in generated files.
+   Tests and verification:
+   Show each focused test failing before implementation. Add golden cases for a
+   function with callbacks and raises, a dataclass/options object, enum, exception,
+   classmethod, property, overloaded/optional annotation, example block, and
+   cross-module link. Test protocol version/context parsing, `supports html`, an
+   unsupported renderer, malformed JSON, unknown module markers, deterministic
+   repeated output, and absence of the compiled extension. Run the complete public
+   export inventory and assert every object has one canonical rendered anchor and
+   every private symbol has none. Run Pyrefly, Pyright compatibility smoke, Ruff,
+   Python docstring tests, the side-by-side mdBook build, rendered-site checks,
+   spec validation, and the unchanged MkDocs gate.
+   Evidence:
+   Notes:
+
+116. [ ] Integrate CLI reference, Rust chapter tests, and rustdoc into the mdBook artifact
+   Claimed by:
+   Requirements:
+   `DOCSITE-CLI-001`, `DOCSITE-RUST-001`, `DOCSITE-BUILD-001`,
+   `DOCSITE-MIGRATE-001`, `TEST-TDD-001`.
+   Context:
+   The side-by-side mdBook now renders handwritten and Python content. The production
+   artifact must also preserve Clap-generated command pages and fresh native
+   `btpc-core` rustdoc, and it should use mdBook's Rust snippet testing without
+   weakening existing crate doctests.
+   Implementation:
+   Add failing integration tests for every generated CLI chapter in `SUMMARY.md`,
+   current byte-for-byte generator drift, stable CLI anchors, successful
+   `mdbook test`, the Rust landing page, and the embedded
+   `rust/btpc_core/index.html` entry point. Refactor the shared typed builder so its
+   side-by-side mdBook stages are: exact tool check, CLI generation/drift, Python
+   preprocessor validation, clean mdBook build, `mdbook test`, warning-denied fresh
+   rustdoc, rustdoc copy, route/canonical/sitemap post-processing, offline
+   validation, and atomic output publication. Use an isolated Cargo target for
+   rustdoc and remove stale output before every run.
+
+   Keep the Clap command model as the only CLI schema and retain raw help, manpage,
+   and completion artifacts used by releases. Ensure mdBook navigation follows the
+   actual command hierarchy and all command-to-guide links resolve. Configure Rust
+   examples for edition 2024 and provide `mdbook test` the built `btpc-core` library
+   search path only where required. Do not replace normal `cargo test -p btpc-core
+   --doc`; both test layers must remain. Make canonical URL and sitemap
+   post-processing renderer-neutral, deterministic, idempotent, and route-aware.
+   Tests and verification:
+   Preserve initial failures. Run the CLI reference generator twice, focused CLI
+   reference tests, `mdbook test`, `cargo test -p btpc-core --doc`, warning-denied
+   rustdoc, and the complete side-by-side mdBook artifact build from two current
+   directories. Plant stale sentinels in mdBook/rustdoc staging and prove they cannot
+   survive. Validate CLI links/anchors, Rust landing and API assets, canonical URLs,
+   sitemap entries, route redirects, and atomic failure behavior. Run Rust formatting,
+   strict affected clippy, Ruff, docs tests, spec validation, and the unchanged
+   MkDocs production gate.
+   Evidence:
+   Notes:
+
+117. [ ] Port the production docs gate and remove all MkDocs-specific code and dependencies
+   Claimed by:
+   Requirements:
+   `DOCSITE-ARCH-002`, `DOCSITE-BUILD-001`, `DOCSITE-QUALITY-001`,
+   `DOCSITE-MIGRATE-001`, `TEST-TDD-001`.
+   Context:
+   mdBook has reached content and artifact parity, so the repository can now switch
+   its canonical local gate. This is the atomic cleanup point: no committed test,
+   script, hook, command, dependency, or agent instruction may continue to require
+   MkDocs after this todo. GitHub Actions remains on the old production build until
+   Todo 118, providing one final separation between local cutover and deployment.
+   Implementation:
+   Start with failing assertions that canonical commands use mdBook and that no
+   forbidden MkDocs/Material/mkdocstrings dependency or configuration remains.
+   Replace MkDocs-specific navigation, configuration, HTML-layout, and Python
+   reference tests with contract-equivalent `book.toml`, `SUMMARY.md`, preprocessor,
+   route, and rendered mdBook assertions. Keep the generated-site validator
+   renderer-neutral and preserve all quality classes: required entries, links,
+   anchors, assets, canonical URLs, sitemap, private API exclusion, checkout-path
+   leakage, local-only URLs, external runtime assets, duplicate titles, privacy,
+   404, redirect compatibility, and compressed/uncompressed budgets. Rebaseline size
+   limits from the first complete mdBook artifact with recorded evidence rather than
+   silently relaxing them.
+
+   Make `make docs-site`, `make docs-serve`, `make docs-check`, pre-commit/pre-push
+   hooks, maintenance commands, and contributor instructions use the exact mdBook
+   tool and shared builder. `docs-serve` must run through a wrapper or supported
+   configuration that executes the Python preprocessor and watches its authoritative
+   inputs. Remove `mkdocs.yml`, `docs/overrides/`, Material-only CSS, MkDocs-only
+   scripts/tests, and the MkDocs/Material/mkdocstrings/PyMdown dependency graph from
+   the docs uv group and lockfile. Add Griffe directly if it was previously only
+   transitive. Remove PyYAML only if no remaining repository feature uses it. Update
+   `AGENTS.md`, `CONTRIBUTING.md`, README documentation commands, and specifications
+   to name mdBook and describe source/generated ownership. Do not edit the Pages
+   workflow in this todo.
+   Tests and verification:
+   Demonstrate the forbidden-stack tests failing before cleanup. Run `rg` across all
+   tracked files for `mkdocs`, `mkdocstrings`, `Material for MkDocs`, `pymdownx`, and
+   removed paths, allowing only historical completed todo evidence and an explicit
+   migration note if retained. Run the canonical docs gate, all docs tests, hooks,
+   lockfile check, Ruff, Pyrefly, codespell, CLI reference tests, Rust doctests,
+   warning-denied rustdoc, offline site validation, migration baseline comparison,
+   spec validation, and the broader repository gate. Preview locally and record the
+   final mdBook artifact sizes and page/redirect counts.
+   Evidence:
+   Notes:
+
+118. [ ] Switch GitHub Actions and GitHub Pages deployment from MkDocs to mdBook
+   Claimed by:
+   Requirements:
+   `DOCSITE-DEPLOY-001`, `DOCSITE-ARCH-002`, `DOCSITE-BUILD-001`,
+   `DOCSITE-QUALITY-001`, `SEC-DEPS-001`.
+   Context:
+   Local commands and tests now use only mdBook, but production must not switch until
+   the pull-request artifact has been inspected. Preserve the existing official
+   GitHub Pages actions, least-privilege job split, fork safety, environment, and
+   deployment concurrency. Only the renderer installation/build details should
+   change.
+   Implementation:
+   Add failing structural workflow tests for the exact mdBook version, installer
+   provenance, canonical `make docs-check` command, absence of MkDocs installation,
+   immutable action pins, job permissions, trusted deploy condition, environment,
+   timeouts, and concurrency. Update the docs build job to install the pinned mdBook
+   release without changing BTPC's MSRV, sync the locked docs dependencies, run the
+   canonical gate, and upload exactly `site/`. Prefer the already-used pinned
+   `taiki-e/install-action` when it supports the exact mdBook release; otherwise use
+   a checksum-verified official release artifact. Do not use an unpinned curl pipe,
+   mutable floating tool version, branch-pushing deploy action, or `gh-pages` branch.
+
+   Update scheduled maintenance setup so docs checks have mdBook available. Keep
+   pull-request jobs read-only and ensure fork PRs can build the Python preprocessor
+   without secrets. Before merging, download and inspect the PR Pages artifact or an
+   equivalent manual non-deploy artifact for homepage/navigation/search/theme/CLI/
+   Python/Rust/404/redirect behavior. The deploy job must remain restricted to a
+   successful trusted `main` push or authorized manual dispatch with only
+   `pages: write` and `id-token: write`.
+   Tests and verification:
+   Retain initial workflow-test failures. Parse YAML, run action-pin checks and
+   `zizmor`, assert the workflow does not mention MkDocs, and execute the build job's
+   commands locally with the exact CI tool versions. Record a successful pull-request
+   or manual build run URL and inspect the uploaded artifact before merge. After the
+   normal merge, record the successful trusted Pages deployment run URL and deployed
+   SHA. Run the complete docs gate and spec validation.
+   Evidence:
+   Notes:
+
+119. [ ] Verify the live mdBook cutover and update documentation operations monitoring
+   Claimed by:
+   Requirements:
+   `DOCSITE-MIGRATE-001`, `DOCSITE-OPS-001`, `DOCSITE-DEPLOY-001`,
+   `DOCSITE-QUALITY-001`.
+   Context:
+   The renderer migration is not complete merely because Actions deployed an
+   artifact. The live project-subpath site must preserve canonical content, every
+   recorded MkDocs route, key fragment links, search/assets, and operational health
+   checks. Todo 105 may already have installed live-site monitoring; update that
+   implementation rather than creating a competing monitor.
+   Implementation:
+   Fetch the production site and verify the deployed commit marker, homepage,
+   Getting Started, representative guide/concept pages, complete CLI/Python reference
+   indexes, representative public API anchors, Rust overview, embedded rustdoc,
+   sitemap, search index, theme assets, custom 404, and HTTPS/mixed-content policy.
+   Exercise every route and important anchor in Todo 112's manifest; direct routes
+   must load the intended page and compatibility routes must perform one valid,
+   loop-free redirect to the expected mdBook canonical destination. Compare the live
+   route set with the locally generated artifact from the deployed SHA.
+
+   Update scheduled external-link/live-site monitoring fixtures and expected page
+   markers for mdBook's output while preserving read-only permissions, pinned tools,
+   retries, timeouts, and actionable summaries. Update the operations runbook with
+   mdBook installation, local preview, preprocessor failures, missing `SUMMARY.md`
+   chapters, route redirect diagnosis, search-index problems, deployment rollback,
+   and upgrade procedure. Document rollback as redeploying the last known-good
+   commit; do not restore or maintain a second live documentation branch. Record a
+   future mdBook upgrade checklist that reruns the theme, preprocessor protocol,
+   route, artifact-size, and live smoke baselines.
+   Tests and verification:
+   Record the production URL, deployed commit SHA, Actions deployment URL, exact
+   mdBook version, UTC/Pacific deployment time, and status/final URL/marker results
+   for every baseline route. Run the scheduled monitoring workflow manually and
+   record its successful run URL. Run a negative fixture proving the monitor rejects
+   a generic GitHub 404 page and a redirect loop. Confirm the repository contains no
+   `gh-pages` branch, deployment secret, MkDocs runtime dependency, or stale live
+   canonical URL. Run the canonical docs gate, offline/live validators, spec
+   validation, and `git diff --check`.
    Evidence:
    Notes:

@@ -1,143 +1,142 @@
-# BTPC Production Documentation Site Plan
+# BTPC mdBook Documentation Migration Plan
 
-## Outcome
+## Decision
 
-BTPC will publish one production documentation site at:
+BTPC will replace Material for MkDocs with mdBook as the primary documentation
+renderer while keeping the existing GitHub Pages URL:
 
 ```text
 https://burritothief.github.io/btpc/
 ```
 
-The site will be rebuilt automatically from the default branch and deployed to
-GitHub Pages. Pull requests will run the identical build in strict mode without
-receiving deployment permissions. The repository remains the source of truth for
-handwritten guides, generated CLI reference, Python docstrings, and Rust rustdoc.
+The migration will be a staged cutover rather than an in-place rewrite. The current
+MkDocs site remains deployable until the mdBook artifact has equivalent content,
+API coverage, quality checks, and route compatibility. The final cutover removes
+MkDocs, Material, mkdocstrings, and their configuration in one verified change.
 
-## Architecture Decision
+## Why mdBook
 
-Use one unified site rather than separate Python and Rust websites:
+mdBook is a good fit for BTPC because the project is Rust-first, the documentation
+is already Markdown-based, and the site needs a fast static build with hierarchical
+navigation, local search, syntax highlighting, light/dark themes, code-copy tools,
+keyboard navigation, and Rust example testing. mdBook 0.5 also supports custom
+preprocessors, redirects, custom CSS/theme assets, Git repository/edit links, a
+project-relative `site-url`, and a GitHub Pages-compatible 404 page.
 
-| Concern | Decision |
+The tradeoff is Python API generation. mdBook has no native equivalent of
+mkdocstrings, so BTPC will own a small, tested preprocessor that reads the public
+Python facade with Griffe and emits deterministic mdBook Markdown. This keeps
+docstrings and annotations authoritative without retaining the MkDocs runtime.
+
+## Target Architecture
+
+| Concern | Target |
 | --- | --- |
-| Site generator and theme | Material for MkDocs |
-| Python API reference | mkdocstrings with the current Griffe-based Python handler |
-| Rust API reference | `cargo doc`/rustdoc embedded below `/rust/` |
-| CLI reference | Generated from the Clap command model |
-| Hosting | GitHub Pages project site |
-| Deployment | Official GitHub Pages Actions workflow |
-| Source | `docs/` plus API documentation in source code |
-| Contract | `specs/documentation-site.md` |
-| Release Rust documentation | docs.rs after publication |
+| Main site renderer | mdBook 0.5.x, pinned exactly for CI and contributors |
+| Source directory | Existing `docs/` tree |
+| Navigation | `docs/SUMMARY.md` |
+| Python API reference | In-repository Griffe-backed mdBook preprocessor |
+| Rust API reference | Fresh `cargo doc` embedded below `/rust/btpc_core/` |
+| CLI reference | Existing Clap-generated Markdown pages |
+| Site post-processing | Existing typed Python build/validation scripts |
+| Hosting | GitHub Pages custom workflow |
+| Deployment URL | `https://burritothief.github.io/btpc/` |
 
-MkDocs owns the landing pages, navigation, search, tutorials, Python reference,
-and CLI guide. Rustdoc remains the native Rust renderer because it provides the
-best trait, implementation, source, feature, and intra-doc-link experience. The
-MkDocs Rust landing page links into rustdoc copied under the same Pages artifact.
-
-## Information Architecture
+The unified site remains organized as:
 
 ```text
 BTPC Documentation
 |-- Home
 |-- Getting Started
-|   |-- Installation
-|   |-- CLI Quick Start
-|   |-- Python Quick Start
-|   `-- Rust Quick Start
 |-- Guides
-|   |-- Creating Torrents
-|   |-- Inspecting and Validating
-|   |-- Verifying Payloads
-|   |-- Editing Metainfo
-|   `-- Configuration and Presets
 |-- Concepts
-|   |-- BitTorrent v1
-|   |-- BitTorrent v2
-|   |-- Hybrid Torrents
-|   |-- Piece Length
-|   `-- Reproducibility and Bytes
 |-- CLI
-|   |-- Overview
-|   |-- Configuration
-|   |-- Shell Completion
-|   `-- Command Reference
+|   `-- Generated Command Reference
 |-- Python
-|   |-- Overview
-|   |-- Examples
-|   `-- API Reference
-|       |-- creation
-|       |-- metainfo
-|       |-- verification
-|       |-- types
-|       `-- errors
+|   `-- Generated API Reference
 |-- Rust
-|   |-- Overview
-|   `-- btpc-core rustdoc
+|   `-- Embedded btpc-core rustdoc
 |-- Performance
 |-- Compatibility
 |-- Security
 `-- Contributing
 ```
 
-The first release documents `main` and labels it as development documentation.
-Do not introduce `mike`, multiple version roots, or another version manager until
-BTPC has more than one supported release line.
-
 ## Repository Layout
+
+The migration should preserve the existing documentation source locations and add
+only the files mdBook requires:
 
 ```text
 btpc/
-|-- mkdocs.yml
+|-- book.toml
 |-- docs/
+|   |-- SUMMARY.md
 |   |-- index.md
 |   |-- 404.md
 |   |-- getting-started/
 |   |-- guides/
 |   |-- concepts/
 |   |-- cli/
-|   |   `-- reference/       # generated Markdown pages
+|   |   `-- reference/       # checked-in generated Markdown
 |   |-- python/
-|   |   `-- reference/       # small mkdocstrings directives
+|   |   `-- reference/       # preprocessor markers and prose
 |   |-- rust/
 |   |   `-- index.md
-|   |-- performance.md
-|   |-- compatibility.md
-|   |-- security.md
-|   `-- contributing.md
-|-- python/btpc/             # authoritative Python docstrings
-|-- crates/btpc-core/src/    # authoritative Rust docs and doctests
-|-- scripts/build_docs.*     # one local/CI build entry point
-|-- tests/docs/              # generated-site and navigation checks
+|   `-- theme/
+|       `-- btpc.css
+|-- scripts/
+|   |-- build_docs_site.py
+|   |-- mdbook_python_api.py
+|   `-- check_docs_site.py
+|-- tests/docs/
 `-- .github/workflows/docs.yml
 ```
 
-Generated site output belongs in `site/` and must remain ignored. Generated CLI
-Markdown may be checked in so changes to command help are reviewable and drift can
-fail CI. Rustdoc and MkDocs HTML are build artifacts and must not be committed.
+`mkdocs.yml`, `docs/overrides/`, Material-specific CSS, and MkDocs-only Python
+dependencies are deleted only after the mdBook path passes the complete gate.
 
-## Deterministic Build Pipeline
+## Toolchain Policy
 
-There must be one repository command that local development, pre-push checks,
-pull requests, and Pages deployment all invoke. Its logical steps are:
+Pin mdBook to an exact reviewed 0.5.x release. At the time of this plan, the current
+release is 0.5.3. mdBook requires a newer Rust version than BTPC's crate MSRV, so it
+must remain an external documentation tool rather than a workspace dependency.
 
-1. Verify locked Python and Rust toolchains.
-2. Regenerate CLI reference pages from the current `btpc` command model.
-3. Fail if checked-in generated reference pages drift.
-4. Build MkDocs with `--strict` into a clean staging directory.
-5. Build `btpc-core` rustdoc with dependencies excluded and warnings denied.
-6. Copy rustdoc into the staged site at `rust/btpc_core/`.
-7. Validate required pages, local links, anchors, assets, canonical URLs, and the
-   absence of repository-local paths or unpublished files.
-8. Produce one self-contained Pages artifact with `index.html` at its root.
+- CI installs the exact mdBook binary with a SHA-pinned installer action or a
+  verified release artifact.
+- Contributor setup documents the exact `cargo install mdbook --version ...
+  --locked` command.
+- The canonical documentation command checks the mdBook version and fails with a
+  direct installation instruction when it is missing or incompatible.
+- mdBook is not added to the workspace `Cargo.lock` and must not raise BTPC's MSRV.
+- Griffe remains a direct locked dependency in the `docs` uv group; MkDocs,
+  Material, mkdocstrings, and PyMdown dependencies are removed after cutover.
 
-The build must not depend on a developer's editable installation, home directory,
-network-fetched application data, or previously generated `target/doc` contents.
-Use a dedicated Cargo target directory or clean rustdoc destination so stale docs
-cannot survive between builds.
+## mdBook Configuration
+
+`book.toml` should use `docs` as the source directory and configure:
+
+- `build.create-missing = false` so a bad `SUMMARY.md` cannot create files.
+- Rust edition 2024 for examples.
+- `output.html.site-url = "/btpc/"` for GitHub Pages subpath-safe assets and 404s.
+- Built-in local search with a documented result limit and heading split level.
+- Local light and dark themes, repository/edit links, code-copy support, and
+  sidebar header navigation.
+- `input-404 = "404.md"`.
+- Local additional CSS only; no analytics, cookies, ads, remote fonts, or external
+  runtime JavaScript.
+- A custom BTPC Python API preprocessor ordered before the built-in links
+  preprocessor.
+- Extra watch directories for `python/btpc`, CLI command sources, and relevant Rust
+  docs so the supported preview command rebuilds when authoritative inputs change.
+
+`docs/SUMMARY.md` becomes the sole navigation manifest. Tests must verify that every
+public handwritten or generated chapter is listed exactly once, every listed file
+exists, and no removed page silently disappears from the book.
 
 ## Python API Reference
 
-Generate the Python reference from the public modules:
+The source of truth remains the public modules and their docstrings:
 
 - `btpc.creation`
 - `btpc.metainfo`
@@ -145,159 +144,191 @@ Generate the Python reference from the public modules:
 - `btpc.types`
 - `btpc.errors`
 
-Use mkdocstrings' source discovery path instead of relying on the current working
-directory. Render public symbols, annotations, signatures, attributes, examples,
-and documented exceptions while excluding `_native`, `_conversion`, and private
-implementation names. Common root re-exports should link to one canonical defining
-module instead of producing duplicate pages.
+An in-repository Python preprocessor will implement mdBook's JSON preprocessor
+protocol. Reference chapters contain a small explicit marker naming one public
+module. The preprocessor statically loads the package with Griffe, never imports the
+native extension, and replaces the marker with deterministic Markdown containing:
 
-Todo 95 supplies the polished public docstrings. The site implementation must add
-an export inventory test so every supported public symbol is either rendered or
-explicitly documented as intentionally omitted.
+- Canonical module, class, function, method, property, and attribute headings.
+- Exact public signatures and annotations.
+- Concise source docstrings with Google-style sections rendered consistently.
+- Stable explicit HTML anchors matching the current public anchor IDs where
+  possible, such as `btpc.creation.create`.
+- Cross-links for BTPC public types and related objects.
+- No `_native`, `_conversion`, private members, or duplicate root re-exports.
 
-## Rust API Reference
+The preprocessor must support the `supports html` handshake, reject unsupported or
+unknown module markers, produce no diagnostics on stdout, and report actionable
+errors on stderr. Golden tests should cover representative functions, dataclasses,
+enums, exceptions, overloads, callbacks, examples, and cross-references. The public
+export inventory remains a hard completeness check.
 
-Build rustdoc from the workspace's pinned stable toolchain:
+## CLI Reference
+
+Keep the current generated Markdown command reference and byte-for-byte drift
+checks. Add every generated page to `SUMMARY.md` in command hierarchy order.
+Explicit anchors should preserve stable links for command sections. Raw manpages,
+help text, and completion artifacts may remain release inputs, but only the readable
+Markdown reference appears in primary book navigation.
+
+The mdBook migration must not introduce a second command schema or hand-maintained
+flag tables.
+
+## Rust Reference
+
+Continue generating native rustdoc with:
 
 ```console
 RUSTDOCFLAGS="-D warnings" cargo doc -p btpc-core --all-features --no-deps
 cargo test -p btpc-core --doc
 ```
 
-Rust public items should use concise `//!` and `///` documentation, executable
-examples, error and panic contracts where relevant, and intra-doc links. Copy only
-the fresh rustdoc output needed by `btpc-core` into the staged site. The public
-landing page must explain that embedded rustdoc documents `main`; released crate
-versions will link to docs.rs once available.
+The shared builder copies only fresh `btpc-core` rustdoc and required static assets
+into the completed mdBook artifact at `rust/btpc_core/`. Rustdoc remains outside the
+mdBook chapter renderer because its trait, implementation, source, and intra-doc
+link presentation is superior to converting it into Markdown. The Rust overview
+chapter links to the embedded reference and explains that it documents `main`.
 
-## CLI Reference
+## Route Compatibility
 
-The Clap command model is the only source of truth for command reference. Extend
-the current generator to produce readable Markdown pages with command synopsis,
-options, inherited global flags, examples, and links between parent and child
-commands. Preserve generated manpages and shell completions for packaging, but do
-not expose raw completion scripts in the primary documentation navigation.
+The existing MkDocs deployment uses directory-style routes such as:
 
-Task-oriented CLI guides remain handwritten. Generated pages answer “what flags
-exist”; guides answer “how do I complete a workflow.” CI must fail when the binary
-and checked-in command reference differ.
+```text
+/btpc/getting-started/installation/
+/btpc/cli/reference/create/
+/btpc/python/reference/metainfo/
+```
 
-## Presentation and User Experience
+mdBook normally emits `.html` chapter routes. Before changing the production
+workflow, capture the current generated route and anchor manifest. The mdBook build
+must generate compatibility redirect files for every previous public route and
+preserve important API/CLI fragment identifiers. Redirects must be relative,
+project-subpath safe, loop-free, and validated offline. Existing root, 404, and
+embedded rustdoc routes must remain directly available.
 
-The initial production theme should include:
+The migration may choose directory-index chapter paths for high-value routes where
+that reduces redirects, but source layout should not be contorted solely to mimic
+MkDocs. A checked-in route manifest and generated redirect shims provide an explicit
+compatibility contract.
 
-- Responsive Material layout with light and dark palettes.
-- Client-side search, code-copy controls, anchored headings, and readable tables.
-- Syntax highlighting for shell, Python, Rust, TOML, JSON, and bencode examples.
-- Repository, issue tracker, edit-page, and license links.
-- A custom 404 page, generated sitemap, canonical `site_url`, and social metadata.
-- Clear “development documentation” labeling until the first stable release.
-- Keyboard-accessible navigation, meaningful heading order, alt text for images,
-  visible focus states, and respect for reduced-motion preferences.
+## Theme and User Experience
 
-Do not add analytics, advertising, cookie banners, externally hosted fonts, or
-third-party JavaScript initially. Prefer system fonts and self-contained assets so
-the site remains fast, private, and reproducible.
+Use mdBook's maintained default HTML theme with surgical BTPC CSS rather than
+forking the full theme templates. The result must preserve:
 
-## GitHub Actions Design
+- Responsive sidebar navigation and readable mobile layouts.
+- Local light/dark palettes and visible keyboard focus.
+- Search, anchored headings, code-copy controls, keyboard shortcuts, and print.
+- Syntax highlighting for shell, Python, Rust, TOML, JSON, and text examples.
+- A development-documentation notice, repository/edit/license links, and custom 404.
+- Reduced-motion behavior and meaningful semantic heading order.
 
-Use one documentation workflow triggered by `pull_request`, pushes to `main`, and
-`workflow_dispatch`.
+Post-process generated chapter HTML only for capabilities mdBook does not expose
+cleanly in configuration, such as per-page canonical URLs and the sitemap. Keep that
+post-processing deterministic, idempotent, parser-based where practical, and
+covered by fixture tests. Do not maintain a full copied `index.hbs` unless a tested
+requirement cannot be met through configuration, CSS, or post-processing.
 
-### Build Job
+## Deterministic Build Pipeline
 
-- Runs for pull requests, default-branch pushes, and manual dispatches.
-- Uses read-only repository permissions.
-- Installs locked dependencies with `uv` and the pinned Rust toolchain.
-- Invokes the same repository documentation build command used locally.
-- Uploads the complete static site as the Pages artifact.
-- May upload a short-retention diagnostic artifact on failed or pull-request builds.
-- Pins every third-party action to an immutable commit SHA with a version comment.
+Retain one typed repository command for local builds and CI. Its stages become:
 
-### Deploy Job
+1. Check the exact mdBook version and locked Python docs environment.
+2. Build the CLI and reject generated Markdown drift.
+3. Run the Python API preprocessor inventory/golden checks.
+4. Build mdBook from `book.toml` and `docs/SUMMARY.md` into a clean staging path.
+5. Run `mdbook test` for Rust snippets, with the built `btpc-core` library path when
+   required.
+6. Generate fresh warning-denied `btpc-core` rustdoc into an isolated target path.
+7. Copy rustdoc into the combined artifact.
+8. Add canonical metadata, sitemap, route-compatibility redirects, and any required
+   GitHub Pages metadata.
+9. Run offline HTML, link, anchor, asset, privacy, route, and size-budget checks.
+10. Atomically publish the completed staging tree to `site/`.
 
-- Runs only after a successful build from `main` or an authorized manual dispatch.
-- Uses the `github-pages` environment and reports the deployed URL.
-- Receives only `pages: write` and `id-token: write` in addition to read access.
-- Uses the official `actions/deploy-pages` action.
-- Uses concurrency that cancels obsolete in-progress deployments but never cancels
-  an active production deployment midway through publishing.
-- Never runs for pull requests, including pull requests from forks.
+The builder must work from any current directory, remove stale staging output,
+avoid developer-home state and editable imports, and leave no partially published
+site when a stage fails.
 
-GitHub Pages must be configured to use GitHub Actions as its publishing source.
-Add a deployment protection rule that allows only the default branch to deploy.
+## Test Migration
 
-## Quality Gates
+Port tests by contract rather than mechanically renaming assertions:
 
-Every pull request must prove:
+- Replace `mkdocs.yml` navigation tests with `book.toml` and strict `SUMMARY.md`
+  coverage tests.
+- Replace mkdocstrings HTML assumptions with preprocessor Markdown and rendered
+  mdBook HTML assertions.
+- Preserve public Python inventory, canonical anchor, private-symbol exclusion, CLI
+  drift, rustdoc freshness, 404, canonical URL, sitemap, link, privacy, and artifact
+  budget tests.
+- Add preprocessor protocol tests, mdBook version checks, missing chapter failures,
+  route redirect tests, and `mdbook test` execution.
+- Keep the generated-site validator renderer-neutral where possible.
+- Remove tests whose only purpose was verifying Material or MkDocs configuration.
 
-- `mkdocs build --strict` succeeds from the locked environment.
-- Python API collection succeeds and the public export inventory is complete.
-- rustdoc has no warnings and Rust doctests pass.
-- CLI generated reference has no drift.
-- Internal links, anchors, images, scripts, styles, and canonical project-subpath
-  URLs resolve from the generated artifact.
-- The root page, custom 404 page, Python reference, CLI reference, and rustdoc entry
-  point exist.
-- Spelling checks cover handwritten documentation but exclude generated command
-  output where appropriate.
-- The resulting Pages artifact remains below a documented size budget.
-- Initial budgets are 16,000,000 uncompressed bytes and 4,500,000 deterministic
-  normalized gzip bytes. The July 2, 2026 complete-build baseline is 12,295,435
-  and 3,195,405 bytes respectively; increases require recorded build evidence.
-- Workflow files pass existing YAML, action-pinning, and `zizmor` checks.
+The migration is complete only when no test, script, hook, workflow, contributor
+command, or specification expects MkDocs.
 
-Run external-link validation separately on a schedule. Network instability should
-not make ordinary documentation pull requests flaky, but recurring broken links
-must remain visible as a maintenance failure.
+## GitHub Actions Cutover
 
-## Production Operations
+Keep the current least-privilege Pages architecture. Update only the build toolchain:
 
-- Publish on every successful push to `main` and permit manual redeployment.
-- Keep only the current `main` site until versioned docs are justified.
-- Add a weekly live-site smoke check for the homepage and key entry points.
-- Keep a maintainer runbook for enabling Pages, re-running deployment, diagnosing
-  404/base-path problems, rotating a future custom domain, and rolling back by
-  redeploying a known-good commit.
-- Validate HTTPS and the canonical project URL after first deployment.
-- Add the documentation URL to `README.md`, Cargo package metadata, Python project
-  URLs, and the GitHub repository homepage.
+- Pull requests and pushes to `main` run the same canonical mdBook gate.
+- CI installs the exact pinned mdBook version without changing the project MSRV.
+- The build job retains read-only contents permission.
+- Only the trusted deploy job receives `pages: write` and `id-token: write`.
+- The official configure, artifact upload, and deploy Pages actions remain pinned to
+  immutable revisions.
+- Fork pull requests build but never deploy.
+- The `github-pages` environment and production concurrency policy remain intact.
 
-## Implementation Sequence
+Before the first mdBook deployment, upload the artifact from a pull request or
+manual non-deploy run and inspect it. After cutover, verify all canonical and legacy
+routes against the live GitHub Pages site. Rollback is redeploying the last known
+good MkDocs commit; do not introduce a `gh-pages` branch.
 
-1. Accept the documentation-site contract and lock the toolchain.
-2. Add the deterministic site builder and minimal strict MkDocs skeleton.
-3. Build the public information architecture and production theme.
-4. Generate and validate the Python API reference.
-5. Generate and embed fresh Rust rustdoc.
-6. Generate readable CLI Markdown and enforce drift checks.
-7. Add generated-site QA, contributor commands, and artifact budgets.
-8. Add the least-privilege GitHub Pages build/deploy workflow.
-9. Add discoverability metadata and maintainer operations guidance.
-10. Enable Pages and verify the live production site end to end.
+## Migration Sequence
+
+1. Freeze a route, anchor, feature, and size baseline from the current MkDocs site.
+2. Add pinned mdBook tooling, `book.toml`, and `SUMMARY.md` beside MkDocs.
+3. Port content, navigation, theme behavior, and legacy-route redirects.
+4. Implement the Griffe-backed Python API preprocessor.
+5. Integrate CLI reference, Rust snippets, and embedded rustdoc.
+6. Port the full generated-site quality gate and developer commands.
+7. Switch CI and Pages builds to mdBook, then remove the MkDocs stack.
+8. Deploy, verify production and legacy URLs, and update monitoring/runbooks.
+
+## Removal Checklist
+
+The final cleanup removes all of the following only after the mdBook gate passes:
+
+- `mkdocs.yml`
+- `docs/overrides/`
+- Material-specific styles or template assumptions
+- `mkdocs`, `mkdocs-material`, `mkdocstrings`, `mkdocstrings-python`, PyMdown, and
+  dependencies needed only by those packages
+- MkDocs-specific test helpers and YAML parsing dependencies if unused elsewhere
+- `mkdocs`/`mkdocstrings` terminology in scripts, Make targets, hooks, workflows,
+  contributor docs, specs, and agent guidance
+
+Retain Griffe directly for Python source analysis unless a future replacement has
+equivalent static typing and docstring support.
 
 ## Deferred Work
 
-- Versioned documentation and `mike`.
+- Versioned documentation or multiple books.
 - A custom domain.
 - Analytics or telemetry.
-- Search services that require an external crawler.
-- PR-specific public preview environments.
-- Translations.
-
-These can be reconsidered after the first stable release or demonstrated user
-need. They are not required for a production-quality initial GitHub Pages site.
+- External hosted search.
+- A fully forked mdBook theme.
+- Public pull-request preview deployments.
 
 ## Primary References
 
-- GitHub Pages custom workflows:
-  <https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages>
-- GitHub Pages publishing sources:
-  <https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site>
-- Material for MkDocs:
-  <https://squidfunk.github.io/mkdocs-material/>
-- mkdocstrings Python handler:
-  <https://mkdocstrings.github.io/python/usage/>
-- Cargo `doc`:
-  <https://doc.rust-lang.org/cargo/commands/cargo-doc.html>
-- docs.rs builds: <https://docs.rs/about/builds>
+- mdBook introduction and current version: <https://rust-lang.github.io/mdBook/>
+- `SUMMARY.md` format: <https://rust-lang.github.io/mdBook/format/summary.html>
+- General configuration: <https://rust-lang.github.io/mdBook/format/configuration/general.html>
+- HTML renderer, redirects, search, and `site-url`: <https://rust-lang.github.io/mdBook/format/configuration/renderers.html>
+- Preprocessors: <https://rust-lang.github.io/mdBook/for_developers/preprocessors.html>
+- Continuous integration: <https://rust-lang.github.io/mdBook/continuous-integration.html>
+- GitHub Pages custom workflows: <https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages>
