@@ -63,6 +63,10 @@ path = "crates/btpc-core/src/verify.rs"
 specs = ["VERIFY", "RUSTAPI", "SEC"]
 
 [[ownership]]
+path = "crates/btpc-core/src/verify/safe_fs.rs"
+specs = ["VERIFY", "SEC", "ARCH"]
+
+[[ownership]]
 path = "crates/btpc-cli/src/main.rs"
 specs = ["CLI", "ARCH"]
 

@@ -323,29 +323,6 @@ impl FileSnapshot {
 }
 
 impl ManifestEntry {
-    pub(crate) fn from_verified_path(
-        source: impl Into<PathBuf>,
-        torrent_path: Vec<Vec<u8>>,
-        metadata: &fs::Metadata,
-    ) -> Result<Self> {
-        let source_path = source.into();
-        Ok(Self {
-            length: metadata.len(),
-            snapshot: FileSnapshot::from_path(&source_path, metadata)?,
-            source_path,
-            torrent_path,
-            modified: metadata.modified().ok(),
-        })
-    }
-
-    pub(crate) fn open_verified(&self) -> Result<fs::File> {
-        open_snapshot(self)
-    }
-
-    pub(crate) fn verify_opened(&self, file: &fs::File) -> Result<()> {
-        verify_open_snapshot(self, file)
-    }
-
     /// Returns the source filesystem path.
     #[must_use]
     pub fn source_path(&self) -> &Path {
@@ -1327,11 +1304,31 @@ pub fn hash_v2_file_sequential(
     cancellation: &CancellationToken,
     progress: &impl ProgressSink,
 ) -> Result<V2HashResult> {
+    let mut file = open_snapshot(entry)?;
+    let result = hash_v2_open_file_sequential(
+        &mut file,
+        &entry.source_path,
+        entry.length,
+        piece_length,
+        cancellation,
+        progress,
+    )?;
+    verify_open_snapshot(entry, &file)?;
+    Ok(result)
+}
+
+pub(crate) fn hash_v2_open_file_sequential(
+    file: &mut fs::File,
+    source_path: &Path,
+    length: u64,
+    piece_length: u64,
+    cancellation: &CancellationToken,
+    progress: &impl ProgressSink,
+) -> Result<V2HashResult> {
     let piece_length = validate_piece_length(piece_length, PieceLengthMode::V2)?;
     let blocks_per_piece = usize::try_from(piece_length / V2_BLOCK_LENGTH as u64)
         .map_err(|_| Error::metainfo_field("piece length", "cannot be represented"))?;
     cancellation.check()?;
-    let mut file = open_snapshot(entry)?;
     let mut buffer = [0_u8; V2_BLOCK_LENGTH];
     let mut file_tree = MerkleAccumulator::default();
     let mut piece_tree = MerkleAccumulator::default();
@@ -1343,8 +1340,8 @@ pub fn hash_v2_file_sequential(
         cancellation.check()?;
         let mut block_length = 0_usize;
         while block_length < buffer.len() {
-            let read = std::io::Read::read(&mut file, &mut buffer[block_length..])
-                .map_err(|source| Error::io(&entry.source_path, source))?;
+            let read = std::io::Read::read(&mut *file, &mut buffer[block_length..])
+                .map_err(|source| Error::io(source_path, source))?;
             if read == 0 {
                 break;
             }
@@ -1367,7 +1364,7 @@ pub fn hash_v2_file_sequential(
         }
         progress.on_progress(HashProgress {
             bytes_hashed,
-            total_bytes: entry.length,
+            total_bytes: length,
             pieces_hashed: u64::try_from(piece_layer.len()).unwrap_or(u64::MAX),
         });
         if block_length < buffer.len() {
@@ -1375,10 +1372,9 @@ pub fn hash_v2_file_sequential(
         }
     }
     cancellation.check()?;
-    verify_open_snapshot(entry, &file)?;
-    if bytes_hashed != entry.length {
+    if bytes_hashed != length {
         return Err(Error::io(
-            &entry.source_path,
+            source_path,
             std::io::Error::new(
                 std::io::ErrorKind::InvalidData,
                 "file length differs from manifest snapshot",
@@ -1400,7 +1396,7 @@ pub fn hash_v2_file_sequential(
     }
     progress.on_progress(HashProgress {
         bytes_hashed,
-        total_bytes: entry.length,
+        total_bytes: length,
         pieces_hashed: u64::try_from(piece_layer.len()).unwrap_or(u64::MAX),
     });
     cancellation.check()?;

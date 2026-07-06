@@ -5123,8 +5123,8 @@ remain adapters over `btpc-core` throughout.
      and live checks passed; pushes used the documented hook skip for that external
      advisory rather than mixing a dependency update into this todo.
 
-106. [ ] [Review] Finish descriptor-relative safe payload verification
-   Claimed by:
+106. [-] [Review] Finish descriptor-relative safe payload verification
+   Claimed by: Codex implementer (2026-07-06 15:55 PDT)
    Context:
    Todo 77 was marked complete with a documented portable fallback, but the current
    verifier still performs `symlink_metadata` checks and then snapshots/opens the
