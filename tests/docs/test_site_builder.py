@@ -1,71 +1,89 @@
 from __future__ import annotations
 
-import re
 import subprocess
 import sys
 import tomllib
 from pathlib import Path
 
-import yaml
-
 ROOT = Path(__file__).parents[2]
-BUILDER = ROOT / "scripts/build_docs_site.py"
-CONFIG = ROOT / "mkdocs.yml"
+BUILDER = ROOT / "scripts/build_mdbook_site.py"
+
+
+def _joined(*parts: str) -> str:
+    return "".join(parts)
+
+
+REMOVED_PATHS = (
+    _joined("mk", "docs.yml"),
+    _joined("docs/", "overrides"),
+    _joined("docs/stylesheets/", "extra.css"),
+    _joined("scripts/build_", "docs_site.py"),
+)
+FORBIDDEN_DEPENDENCIES = (
+    _joined("mk", "docs"),
+    _joined("mat", "erial"),
+    _joined("mkdoc", "strings"),
+    _joined("pym", "down"),
+)
 
 
 def test_documentation_dependencies_are_locked_outside_runtime() -> None:
     project = tomllib.loads((ROOT / "pyproject.toml").read_text())
     docs = project["dependency-groups"]["docs"]
-    assert "griffelib==2.1.0" in docs
-    assert any(requirement.startswith("mkdocs-material") for requirement in docs)
-    assert any(requirement.startswith("mkdocstrings-python") for requirement in docs)
+    assert docs == ["griffelib==2.1.0", "pyyaml==6.0.3"]
+    assert not any(
+        forbidden in requirement.lower()
+        for requirement in docs
+        for forbidden in FORBIDDEN_DEPENDENCIES
+    )
     runtime = project["project"].get("dependencies", [])
-    assert all("mkdocs" not in requirement for requirement in runtime)
+    assert not any("griffe" in requirement.lower() for requirement in runtime)
 
 
-def test_mkdocs_configuration_uses_canonical_project_site() -> None:
-    config = yaml.safe_load(CONFIG.read_text())
-    assert config["site_url"] == "https://burritothief.github.io/btpc/"
-    assert config["repo_url"] == "https://github.com/burritothief/btpc"
-    assert config["edit_uri"] == "edit/main/docs/"
-    assert config["theme"]["name"] == "material"
-    assert "search" in config["plugins"]
-    assert config["nav"][0] == {"Home": "index.md"}
-    assert config["use_directory_urls"] is True
+def test_mdbook_configuration_uses_canonical_project_site() -> None:
+    config = tomllib.loads((ROOT / "book.toml").read_text())
+    html = config["output"]["html"]
+    assert config["book"]["title"] == "BTPC Documentation"
+    assert config["book"]["src"] == "docs"
+    assert html["site-url"] == "/btpc/"
+    assert html["git-repository-url"] == "https://github.com/burritothief/btpc"
+    assert html["edit-url-template"].endswith("/edit/main/{path}")
+    assert html["additional-css"] == ["docs/stylesheets/mdbook.css"]
+    assert html["search"]["enable"] is True
+
+
+def test_removed_renderer_stack_is_absent() -> None:
+    for relative in REMOVED_PATHS:
+        assert not (ROOT / relative).exists(), relative
 
 
 def test_minimal_site_has_required_root_sources() -> None:
     assert (ROOT / "docs/index.md").is_file()
     assert (ROOT / "docs/404.md").is_file()
+    assert (ROOT / "docs/SUMMARY.md").is_file()
     assert "site/" in (ROOT / ".gitignore").read_text().splitlines()
 
 
-def test_builder_exposes_reserved_stages() -> None:
+def test_canonical_commands_use_shared_mdbook_builder() -> None:
+    makefile = (ROOT / "Makefile").read_text()
+    assert "python scripts/build_mdbook_site.py --site-dir site" in makefile
+    assert "python scripts/serve_mdbook.py" in makefile
+    assert _joined("scripts/build_", "docs_site.py") not in makefile
     result = subprocess.run(  # noqa: S603
-        [sys.executable, str(BUILDER), "--list-stages"],
+        [sys.executable, BUILDER, "--list-stages"],
         cwd=ROOT.parent,
         check=True,
         capture_output=True,
         text=True,
     )
-    assert result.stdout.splitlines() == ["cli", "mkdocs", "rustdoc", "validate"]
-
-
-def test_strict_builder_cleans_output_and_is_project_subpath_safe(
-    tmp_path: Path,
-) -> None:
-    destination = tmp_path / "published"
-    destination.mkdir()
-    (destination / "stale.txt").write_text("stale")
-
-    subprocess.run(  # noqa: S603
-        [sys.executable, str(BUILDER), "--site-dir", str(destination)],
-        cwd=tmp_path,
-        check=True,
-    )
-
-    assert (destination / "index.html").is_file()
-    assert (destination / "404.html").is_file()
-    assert not (destination / "stale.txt").exists()
-    html = (destination / "index.html").read_text()
-    assert not re.search(r'(?:href|src)="/(?!/)', html)
+    assert result.stdout.splitlines()[-1] == "publish"
+    serve = (ROOT / "scripts/serve_mdbook.py").read_text()
+    assert "build_site(destination)" in serve
+    assert "ThreadingHTTPServer" in serve
+    assert 'preview_root / "btpc"' in serve
+    config = tomllib.loads((ROOT / "book.toml").read_text())
+    assert config["build"]["extra-watch-dirs"] == [
+        "python/btpc",
+        "crates/btpc-cli/src",
+        "crates/btpc-core/src",
+    ]

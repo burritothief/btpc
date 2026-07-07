@@ -46,7 +46,7 @@ repos:
         entry: make docs-fast
         language: system
         pass_filenames: false
-        files: ^(docs/|specs/|README\.md$|CONTRIBUTING\.md$|DOCUMENTATION_PLAN\.md$|mkdocs\.yml$|scripts/check_docs|scripts/build_docs_site|tests/docs/)
+        files: ^(book\.toml$|docs/|specs/|README\.md$|CONTRIBUTING\.md$|DOCUMENTATION_PLAN\.md$|scripts/(check_docs|build_mdbook_site|serve_mdbook|mdbook_python_api|postprocess_mdbook)|tests/docs/)
       - id: pre-push-gate
         name: full Rust and Python gate
         entry: scripts/run-hook-stage.sh pre-push

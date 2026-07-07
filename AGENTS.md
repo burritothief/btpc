@@ -78,7 +78,7 @@ user-facing guidance in the same change.
 ## Python Documentation Rules
 
 - Write public docstrings for editor hover help first; the same text must render
-  cleanly through mkdocstrings without a separate rewritten API description.
+  cleanly through the Griffe-backed mdBook preprocessor without a rewritten copy.
 - Use concise Google-style docstrings with a direct summary. Add `Args`, `Returns`,
   `Raises`, `Attributes`, `Examples`, or `Notes` only when they clarify behavior.
 - Give the main creation, parsing, editing, magnet, serialization, and verification
@@ -100,7 +100,7 @@ user-facing guidance in the same change.
   the ignored `site/` artifact.
 - Use `make docs-serve` for local preview and `make docs-check` as the canonical
   offline documentation gate. The pre-commit subset is `make docs-fast`.
-- The site budgets are 16,000,000 uncompressed bytes and 4,500,000 normalized gzip
+- The site budgets are 12,000,000 uncompressed bytes and 3,600,000 normalized gzip
   bytes. Do not increase them without measured artifact evidence in `todos.md`.
 
 ## Tooling Baseline

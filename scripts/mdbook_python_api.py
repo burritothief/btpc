@@ -23,6 +23,15 @@ class PreprocessorError(RuntimeError):
     """Report an actionable static API generation error."""
 
 
+def _without_frontmatter(content: str) -> str:
+    if not content.startswith("---\n"):
+        return content
+    end = content.find("\n---\n", 4)
+    if end < 0:
+        raise PreprocessorError("unterminated Markdown front matter")
+    return content[end + 5 :]
+
+
 def _exports(module: str) -> list[str]:
     tree = ast.parse((PACKAGE / f"{module}.py").read_text())
     for node in tree.body:
@@ -268,6 +277,8 @@ def preprocess(payload: object) -> dict[str, Any]:
         content = chapter.get("content")
         if not isinstance(content, str):
             raise PreprocessorError("mdBook chapter content must be text")
+        content = _without_frontmatter(content)
+        chapter["content"] = content
         matches = MARKER.findall(content)
         if len(matches) > 1:
             raise PreprocessorError("chapter contains multiple BTPC Python API markers")

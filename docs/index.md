@@ -16,3 +16,6 @@ raw protocol bytes where identity matters.
 - Read the [Rust API guide](rust/index.md) to embed `btpc-core`.
 - Review [compatibility](compatibility.md) and [security](security.md) policies before
   publishing or integrating BTPC.
+
+BTPC source is hosted on [GitHub](https://github.com/burritothief/btpc) and is
+available under the [MIT License](https://github.com/burritothief/btpc/blob/main/LICENSE).

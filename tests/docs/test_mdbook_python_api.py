@@ -161,3 +161,14 @@ def test_invalid_protocol_context_fails_without_stdout() -> None:
     assert result.returncode == 1
     assert result.stdout == ""
     assert "context lacks mdbook_version" in result.stderr
+
+
+def test_preprocessor_strips_frontmatter_for_direct_source_preview() -> None:
+    payload = _protocol("types")
+    chapter = payload[1]["items"][0]["Chapter"]
+    chapter["content"] = "---\ntitle: Types\n---\n" + chapter["content"]
+    result = _run(payload)
+    assert result.returncode == 0
+    content = json.loads(result.stdout)["items"][0]["Chapter"]["content"]
+    assert not content.startswith("---")
+    assert '<a id="btpc.types"></a>' in content

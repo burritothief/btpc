@@ -5828,7 +5828,7 @@ remain adapters over `btpc-core` throughout.
      `debug`/`debug/deps` library paths. Normal `cargo test -p btpc-core --doc`
      remains an independent required layer.
 
-117. [-] Port the production docs gate and remove all MkDocs-specific code and dependencies
+117. [x] Port the production docs gate and remove all MkDocs-specific code and dependencies
    Claimed by: Codex implementer (2026-07-06 23:16 PDT)
    Requirements:
    `DOCSITE-ARCH-002`, `DOCSITE-BUILD-001`, `DOCSITE-QUALITY-001`,
@@ -5873,7 +5873,40 @@ remain adapters over `btpc-core` throughout.
    spec validation, and the broader repository gate. Preview locally and record the
    final mdBook artifact sizes and page/redirect counts.
    Evidence:
+   - TDD cleanup failures were retained first: `tests/docs/test_site_builder.py`
+     initially failed 3 assertions because forbidden renderer dependencies/files
+     remained and canonical Make targets still used the retired builder.
+   - Removed the retired configuration, override, CSS, builder, Material/plugin
+     dependency graph, and lock entries. The docs group is now exactly locked to
+     `griffelib==2.1.0` and `pyyaml==6.0.3`; `uv lock --check` passed.
+   - A repository scan for the retired renderer/plugin names and removed paths
+     returned no live matches outside `todos.md`, the explicit
+     `DOCUMENTATION_PLAN.md` migration record, and the historical deployed-route
+     fixture. The updated live health manifest no longer names the removed CSS.
+   - `make docs-check` passed all 62 docs tests, exact mdBook 0.5.3 validation,
+     CLI drift checks, Python preprocessing, Rust chapter tests and crate doctest,
+     warning-denied rustdoc, offline site validation, all 191 migration routes,
+     source links, and codespell. The final artifact contains 446 files, 247 HTML
+     pages, and 55 redirects at 9,909,057 uncompressed and 3,017,100 normalized
+     gzip bytes, below the new 12,000,000/3,600,000 budgets.
+   - `make docs-serve` served the complete artifact at
+     `http://127.0.0.1:8000/btpc/`; HTTP checks loaded the homepage, Python API
+     anchor, and local mdBook CSS. Touching `docs/index.md` triggered and completed
+     an authoritative-source rebuild. The in-app browser backend list was empty,
+     so browser visual inspection was unavailable in this session.
+   - `make check` passed specification validation, CLI reference tests, strict
+     workspace Clippy, Rust formatting, Ruff, Pyrefly/Pyright, all Rust tests and
+     doctests, and 79 Python tests with 1 expected skip. `make hooks-manual` passed
+     the documentation/workflow hook, including actionlint, offline zizmor,
+     benchmark fixture rendering, and the external Rust consumer check.
+   - `cargo deny check` remains blocked only by existing unrelated
+     `RUSTSEC-2026-0204` in `crossbeam-epoch 0.9.18` through Criterion; bans,
+     licenses, and sources pass. `git diff --check` and focused/full Ruff checks
+     passed.
    Notes:
+   - The GitHub Pages workflow is intentionally unchanged for Todo 118. This todo
+     switches all local commands, tests, hooks, dependencies, and contributor
+     guidance atomically to the shared mdBook builder.
 
 118. [ ] Switch GitHub Actions and GitHub Pages deployment from MkDocs to mdBook
    Claimed by:

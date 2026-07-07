@@ -49,8 +49,9 @@
     "uncompressed_bytes": 12722862
   },
   "assets": [
-    "assets/javascripts/",
-    "assets/stylesheets/",
+    "css/",
+    "docs/stylesheets/",
+    "fonts/",
     "rust/static.files/",
     "stylesheets/"
   ],
@@ -984,7 +985,6 @@
   "site_url": "https://burritothief.github.io/btpc/",
   "sitemap_routes": [
     "/btpc/",
-    "/btpc/404/",
     "/btpc/cli/",
     "/btpc/cli/completion/",
     "/btpc/cli/configuration/",

@@ -8,12 +8,11 @@ import sys
 from html.parser import HTMLParser
 from pathlib import Path
 
-import yaml
 from griffe import GriffeLoader
 
 ROOT = Path(__file__).parents[2]
 PACKAGE = ROOT / "python/btpc"
-BUILDER = ROOT / "scripts/build_docs_site.py"
+BUILDER = ROOT / "scripts/build_mdbook_site.py"
 PUBLIC_MODULES = ("creation", "metainfo", "verification", "types", "errors")
 
 
@@ -80,18 +79,6 @@ def test_reference_pages_cover_the_static_public_inventory_once() -> None:
         assert target in overview
 
 
-def test_mkdocstrings_configuration_is_static_and_annotation_aware() -> None:
-    config = yaml.safe_load((ROOT / "mkdocs.yml").read_text())
-    handler = config["plugins"][1]["mkdocstrings"]["handlers"]["python"]
-    assert handler["paths"] == ["python"]
-    options = handler["options"]
-    assert options["docstring_style"] == "google"
-    assert options["members_order"] == "source"
-    assert options["show_signature_annotations"] is True
-    assert options["signature_crossrefs"] is True
-    assert options["show_source"] is False
-
-
 def test_griffe_collects_public_modules_without_the_native_extension(
     tmp_path: Path,
 ) -> None:
@@ -119,21 +106,19 @@ def test_generated_reference_has_one_canonical_anchor_per_symbol(
     assert 'id="btpc._native' not in all_html
     assert 'id="btpc._conversion' not in all_html
     for module in PUBLIC_MODULES:
-        page = destination / f"python/reference/{module}/index.html"
+        page = destination / f"python/reference/{module}.html"
         html = page.read_text()
         for symbol in _exports(module):
             anchor = f'id="btpc.{module}.{symbol}"'
             assert html.count(anchor) == 1
             assert all_html.count(anchor) == 1
 
-    creation = (destination / "python/reference/creation/index.html").read_text()
-    metainfo = (destination / "python/reference/metainfo/index.html").read_text()
+    creation = (destination / "python/reference/creation.html").read_text()
+    metainfo = (destination / "python/reference/metainfo.html").read_text()
     creation_text = _visible_text(creation)
     metainfo_text = _visible_text(metainfo)
-    assert "Callable [[ int , int , int ], None ] | None" in creation_text
+    assert "Callable[[int, int, int], None] | None" in creation_text
     assert "Raises:" in creation_text
     assert (
-        "from_bytes ( data : object , * , options : ParseOptions | None = None )"
-        " -> Metainfo"
+        "from_bytes(data: object, *, options: ParseOptions | None = None) -> Metainfo"
     ) in metainfo_text
-    assert 'href="../types/#btpc.types.ParseOptions"' in metainfo

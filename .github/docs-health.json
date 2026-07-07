@@ -49,13 +49,6 @@
     "marker": "<loc>https://burritothief.github.io/btpc/</loc>"
   },
   {
-    "name": "stylesheet",
-    "url": "https://burritothief.github.io/btpc/stylesheets/extra.css",
-    "status": 200,
-    "content_type": "text/css",
-    "marker": ":focus-visible"
-  },
-  {
     "name": "custom-404",
     "url": "https://burritothief.github.io/btpc/health-check/missing/nested/",
     "status": 404,

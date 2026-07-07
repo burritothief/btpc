@@ -28,6 +28,6 @@ def test_canonical_docs_gate_and_hooks_share_commands() -> None:
 def test_documented_site_budgets_match_the_validator() -> None:
     checker = (ROOT / "scripts/check_docs_site.py").read_text()
     contributing = (ROOT / "CONTRIBUTING.md").read_text()
-    for budget in ("16_000_000", "4_500_000"):
+    for budget in ("12_000_000", "3_600_000"):
         assert budget in checker
         assert budget.replace("_", ",") in contributing

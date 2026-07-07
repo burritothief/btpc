@@ -40,13 +40,13 @@ docs-generate:
 	./scripts/generate-cli-reference.sh
 
 docs-site:
-	uv run --group docs python scripts/build_docs_site.py --site-dir site
+	uv run --group docs python scripts/build_mdbook_site.py --site-dir site
 
 docs-mdbook-site:
 	uv run python scripts/build_mdbook_site.py --site-dir .tmp/mdbook-site
 
 docs-serve:
-	uv run --group docs mkdocs serve --strict --config-file mkdocs.yml
+	uv run --group docs python scripts/serve_mdbook.py
 
 version:
 	@test -n "$(VERSION)" || (echo "usage: make version VERSION=X.Y.Z" >&2; exit 2)

@@ -3,10 +3,9 @@ from __future__ import annotations
 import json
 import shutil
 import subprocess
+import sys
 import tomllib
 from pathlib import Path
-
-import yaml
 
 ROOT = Path(__file__).parents[2]
 REPOSITORY = "https://github.com/burritothief/btpc"
@@ -17,7 +16,7 @@ OWNER_DRIFT_FILES = (
     "README.md",
     "CHANGELOG.md",
     "CONTRIBUTING.md",
-    "mkdocs.yml",
+    "book.toml",
 )
 
 
@@ -65,13 +64,12 @@ def test_readme_site_navigation_and_runbooks_are_discoverable() -> None:
     readme = (ROOT / "README.md").read_text()
     assert f"[Documentation]({DOCUMENTATION})" in readme
 
-    config = yaml.safe_load((ROOT / "mkdocs.yml").read_text())
-    assert config["site_url"] == DOCUMENTATION
-    assert config["repo_url"] == REPOSITORY
-    links = {item["name"]: item["link"] for item in config["extra"]["social"]}
-    assert links["Documentation"] == DOCUMENTATION
-    assert links["BTPC source repository"] == REPOSITORY
-    assert links["MIT License"] == f"{REPOSITORY}/blob/main/LICENSE"
+    config = tomllib.loads((ROOT / "book.toml").read_text())
+    html = config["output"]["html"]
+    assert html["site-url"] == "/btpc/"
+    assert html["git-repository-url"] == REPOSITORY
+    homepage = (ROOT / "docs/index.md").read_text()
+    assert f"{REPOSITORY}/blob/main/LICENSE" in homepage
 
     contributing = (ROOT / "CONTRIBUTING.md").read_text()
     for topic in (
@@ -95,10 +93,10 @@ def test_generated_site_has_canonical_sitemap_edit_and_license_links(
     destination = tmp_path / "site"
     subprocess.run(  # noqa: S603
         [
-            str(ROOT / ".venv/bin/python"),
-            str(ROOT / "scripts/build_docs_site.py"),
+            sys.executable,
+            ROOT / "scripts/build_mdbook_site.py",
             "--site-dir",
-            str(destination),
+            destination,
         ],
         cwd=tmp_path,
         check=True,

@@ -1,18 +1,18 @@
-# BTPC mdBook Documentation Migration Plan
+# BTPC mdBook Documentation Migration Record
 
 ## Decision
 
-BTPC will replace Material for MkDocs with mdBook as the primary documentation
-renderer while keeping the existing GitHub Pages URL:
+BTPC selected mdBook as the primary documentation renderer while keeping the
+existing GitHub Pages URL:
 
 ```text
 https://burritothief.github.io/btpc/
 ```
 
-The migration will be a staged cutover rather than an in-place rewrite. The current
-MkDocs site remains deployable until the mdBook artifact has equivalent content,
-API coverage, quality checks, and route compatibility. The final cutover removes
-MkDocs, Material, mkdocstrings, and their configuration in one verified change.
+The migration used a staged cutover rather than an in-place rewrite. The route and
+artifact baseline in this record documents the retired renderer; mdBook is now the
+sole local build, preview, and validation path. GitHub Pages deployment changes are
+tracked separately so local cleanup and production rollout remain auditable.
 
 ## Why mdBook
 
@@ -86,7 +86,7 @@ btpc/
 |   `-- theme/
 |       `-- btpc.css
 |-- scripts/
-|   |-- build_docs_site.py
+|   |-- build_mdbook_site.py
 |   |-- mdbook_python_api.py
 |   `-- check_docs_site.py
 |-- tests/docs/

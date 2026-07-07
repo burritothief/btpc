@@ -8,8 +8,8 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 ROOT = Path(__file__).parents[2]
-BUILDER = ROOT / "scripts/build_docs_site.py"
-RUSTDOC_TARGET = ROOT / ".tmp/docs-rustdoc-target/doc"
+BUILDER = ROOT / "scripts/build_mdbook_site.py"
+RUSTDOC_TARGET = ROOT / ".tmp/mdbook-rustdoc-target/doc"
 ALLOWED_RUSTDOC_ENTRIES = {
     "btpc_core",
     "crates.js",

@@ -3,15 +3,13 @@ from __future__ import annotations
 import re
 import subprocess
 import sys
+import tomllib
 from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import urlparse
 
-import yaml
-
 ROOT = Path(__file__).parents[2]
-CONFIG = ROOT / "mkdocs.yml"
-BUILDER = ROOT / "scripts/build_docs_site.py"
+BUILDER = ROOT / "scripts/build_mdbook_site.py"
 TOP_LEVEL = [
     "Home",
     "Getting Started",
@@ -25,7 +23,6 @@ TOP_LEVEL = [
     "Security",
     "Contributing",
 ]
-PALETTE_COUNT = 2
 REQUIRED_PAGES = [
     "getting-started/index.md",
     "getting-started/installation.md",
@@ -66,16 +63,19 @@ class PageInspector(HTMLParser):
         self.h1_count = 0
         self.images_without_alt: list[str] = []
         self.external_runtime_assets: list[str] = []
+        self.redirect = False
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         """Record titles, headings, images, and runtime asset URLs."""
         values = dict(attrs)
         if tag == "title":
             self.title = True
-        elif tag == "h1":
+        elif tag == "h1" and "menu-title" not in (values.get("class") or ""):
             self.h1_count += 1
         elif tag == "img" and not values.get("alt"):
             self.images_without_alt.append(values.get("src") or "<missing src>")
+        elif tag == "meta" and values.get("name") == "btpc-redirect":
+            self.redirect = True
         if tag == "script" and values.get("src"):
             self._record_runtime_asset(values["src"])
         if tag == "link" and values.get("rel") == "stylesheet" and values.get("href"):
@@ -87,8 +87,9 @@ class PageInspector(HTMLParser):
 
 
 def test_navigation_and_required_pages_match_the_plan() -> None:
-    config = yaml.safe_load(CONFIG.read_text())
-    assert [next(iter(item)) for item in config["nav"]] == TOP_LEVEL
+    summary = (ROOT / "docs/SUMMARY.md").read_text()
+    top_level = re.findall(r"^- \[([^]]+)]", summary, re.MULTILINE)
+    assert top_level == TOP_LEVEL
     for relative in REQUIRED_PAGES:
         page = ROOT / "docs" / relative
         assert page.is_file(), relative
@@ -103,20 +104,18 @@ def test_navigation_and_required_pages_match_the_plan() -> None:
 
 
 def test_theme_is_accessible_private_and_self_contained() -> None:
-    config = yaml.safe_load(CONFIG.read_text())
-    theme = config["theme"]
-    assert theme["font"] is False
-    assert "content.code.copy" in theme["features"]
-    assert len(theme["palette"]) == PALETTE_COUNT
-    assert all("toggle" in palette for palette in theme["palette"])
-    assert config["extra_css"] == ["stylesheets/extra.css"]
+    config = tomllib.loads((ROOT / "book.toml").read_text())
+    html = config["output"]["html"]
+    assert html["default-theme"] == "light"
+    assert html["preferred-dark-theme"] == "navy"
+    assert html["search"]["enable"] is True
+    assert html["additional-css"] == ["docs/stylesheets/mdbook.css"]
     assert "analytics" not in config
 
-    css = (ROOT / "docs/stylesheets/extra.css").read_text()
+    css = (ROOT / "docs/stylesheets/mdbook.css").read_text()
     assert ":focus-visible" in css
     assert "prefers-reduced-motion" in css
-    override = (ROOT / "docs/overrides/main.html").read_text()
-    assert "Development documentation" in override
+    assert "btpc-development-notice" in css
 
 
 def test_generated_html_has_accessible_structure_and_local_assets(
@@ -124,7 +123,7 @@ def test_generated_html_has_accessible_structure_and_local_assets(
 ) -> None:
     destination = tmp_path / "site"
     subprocess.run(  # noqa: S603
-        [sys.executable, str(BUILDER), "--site-dir", str(destination)],
+        [sys.executable, BUILDER, "--site-dir", destination],
         cwd=tmp_path,
         check=True,
     )
@@ -132,10 +131,7 @@ def test_generated_html_has_accessible_structure_and_local_assets(
     not_found = (destination / "404.html").read_text()
     assert "Page not found" in not_found
     assert "The requested BTPC documentation page does not exist." in not_found
-    assert 'href="/btpc/assets/' in not_found
-    assert 'src="/btpc/assets/' in not_found
-    assert 'new URL("/btpc/",location)' in not_found
-    assert not re.search(r'(?:href|src|action)="(?:\.\.?/)?assets/', not_found)
+    assert '<base href="/btpc/">' in not_found
     for page in destination.rglob("*.html"):
         inspector = PageInspector()
         inspector.feed(page.read_text())
@@ -145,14 +141,14 @@ def test_generated_html_has_accessible_structure_and_local_assets(
         is_embedded_rustdoc = relative.parts[0] == "rust" and relative != Path(
             "rust/index.html"
         )
-        if not is_embedded_rustdoc:
+        is_utility = relative.as_posix() in {"print.html", "toc.html"}
+        if not is_embedded_rustdoc and not is_utility and not inspector.redirect:
             assert inspector.h1_count == 1, page
             assert not inspector.images_without_alt, page
 
     homepage = (destination / "index.html").read_text()
     assert "Development documentation" in homepage
     assert 'name="viewport"' in homepage
-    assert 'data-md-component="palette"' in homepage
-    assert 'data-md-component="search"' in homepage
-    assert 'data-md-component="announce"' in homepage
-    assert '"content.code.copy"' in homepage
+    assert "mdbook-theme-list" in homepage
+    assert "mdbook-search-toggle" in homepage
+    assert "fa-copy" in homepage

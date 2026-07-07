@@ -53,8 +53,9 @@ PRIVACY = [
     "local-search-index",
 ]
 ASSET_PREFIXES = [
-    "assets/javascripts/",
-    "assets/stylesheets/",
+    "css/",
+    "docs/stylesheets/",
+    "fonts/",
     "rust/static.files/",
     "stylesheets/",
 ]
@@ -65,6 +66,7 @@ class _PageParser(HTMLParser):
         super().__init__()
         self.ids: set[str] = set()
         self.canonical: str | None = None
+        self.redirect: str | None = None
 
     def handle_starttag(
         self, tag: str, attributes: list[tuple[str, str | None]]
@@ -74,6 +76,8 @@ class _PageParser(HTMLParser):
             self.ids.add(identifier)
         if tag == "link" and values.get("rel") == "canonical":
             self.canonical = values.get("href")
+        if tag == "meta" and values.get("name") == "btpc-redirect":
+            self.redirect = values.get("content")
 
 
 def page_facts(path: Path) -> _PageParser:
@@ -188,6 +192,9 @@ def _anchor_errors(
         facts = pages.get(route)
         if facts is None and (site / route).is_file():
             facts = page_facts(site / route)
+        if facts is not None and facts.redirect is not None:
+            target = site / facts.redirect.removeprefix("/btpc/")
+            facts = page_facts(target) if target.is_file() else None
         errors.extend(
             f"missing anchor: {route}#{anchor}"
             for anchor in anchors

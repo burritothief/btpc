@@ -124,7 +124,6 @@ def test_live_manifest_names_every_required_production_entry() -> None:
         "rust",
         "search-index",
         "sitemap",
-        "stylesheet",
         "custom-404",
     ]
     assert checks[-1]["status"] == NOT_FOUND

@@ -135,6 +135,15 @@ and verification in safe Rust. It is packaged and release-gated for crates.io,
 but use a checkout or Git dependency until the owner performs the first publish.
 Generate crate documentation with `cargo doc`.
 
+## Documentation Development
+
+Install the pinned mdBook release with
+`cargo install mdbook --version 0.5.3 --locked`, then run `make docs-site` for the
+complete static artifact, `make docs-serve` for a local `/btpc/` preview, or
+`make docs-check` for the canonical offline documentation gate. Handwritten pages
+live in `docs/`; public Python docstrings, Rust rustdoc, and the Clap command model
+remain authoritative for generated reference content.
+
 ## Protocol Modes
 
 | Mode | Hash domain | Representation | Typical compatibility |

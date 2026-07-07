@@ -12,13 +12,13 @@ from urllib.parse import unquote, urljoin, urlparse
 ROOT = Path(__file__).parents[1]
 SITE_BASE = "https://burritothief.github.io/btpc/"
 SITE_PATH = "/btpc/"
-MAX_UNCOMPRESSED_BYTES = 16_000_000
-MAX_COMPRESSED_BYTES = 4_500_000
+MAX_UNCOMPRESSED_BYTES = 12_000_000
+MAX_COMPRESSED_BYTES = 3_600_000
 REQUIRED_ENTRIES = (
     "index.html",
     "404.html",
     "python/index.html",
-    "python/reference/creation/index.html",
+    "python/reference/creation.html",
     "cli/reference/index.html",
     "rust/index.html",
     "rust/btpc_core/index.html",

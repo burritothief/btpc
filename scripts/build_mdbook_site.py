@@ -63,7 +63,6 @@ def _prepare_book_root(parent: Path) -> Path:
     book_root.mkdir()
     shutil.copy2(ROOT / "book.toml", book_root / "book.toml")
     shutil.copytree(ROOT / "docs", book_root / "docs")
-    shutil.rmtree(book_root / "docs/overrides")
     for path in book_root.joinpath("docs").rglob("*.md"):
         _strip_frontmatter(path)
     return book_root

@@ -26,7 +26,7 @@ def _valid_site(root: Path) -> None:
         "index.html": _page("Home", CANONICAL, '<a href="cli/reference/#top">CLI</a>'),
         "404.html": _page("Not found", f"{CANONICAL}404/"),
         "python/index.html": _page("Python", f"{CANONICAL}python/"),
-        "python/reference/creation/index.html": _page(
+        "python/reference/creation.html": _page(
             "Python creation", f"{CANONICAL}python/reference/creation/"
         ),
         "cli/reference/index.html": _page(
@@ -99,7 +99,7 @@ def _missing_entry(root: Path) -> None:
 
 
 def _private_api(root: Path) -> None:
-    path = root / "python/reference/creation/index.html"
+    path = root / "python/reference/creation.html"
     content = path.read_text().replace("<body>", '<body><h2 id="btpc._native.Secret">')
     path.write_text(content)
 

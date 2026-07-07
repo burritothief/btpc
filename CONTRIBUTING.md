@@ -63,7 +63,7 @@ docs-site`. The command removes its own staging directory and recreates `site/`
 from scratch, so generated output never depends on an earlier build. Preview the
 same configuration at `http://127.0.0.1:8000/btpc/` with `make docs-serve`; stop the
 server with Ctrl-C. Both commands resolve repository inputs through the checked-in
-configuration, and `scripts/build_docs_site.py --site-dir PATH` may be invoked from
+configuration, and `scripts/build_mdbook_site.py --site-dir PATH` may be invoked from
 outside the checkout when an explicit destination is useful.
 
 Run `make docs-check` before pushing documentation changes. It is the canonical
@@ -72,8 +72,8 @@ doctests/rustdoc, strict rendering, generated-site links and anchors, canonical
 metadata, private-name leakage, and size budgets. `make docs-fast` is the
 pre-commit subset.
 
-The side-by-side mdBook migration build requires exactly mdBook 0.5.3. Install the
-reviewed crates.io release with:
+The documentation build requires exactly mdBook 0.5.3. Install the reviewed
+crates.io release with:
 
 ```console
 cargo install mdbook --version 0.5.3 --locked
@@ -81,8 +81,9 @@ cargo install mdbook --version 0.5.3 --locked
 
 The downloaded `mdbook-0.5.3.crate` SHA-256 is recorded in `.mdbook-sha256` as
 `742264af649df2323b283a4c1a8abc21b6f6880cf030d642500ef85c2ce81598`.
-`make docs-mdbook-site` validates the exact binary version and writes only to
-`.tmp/mdbook-site`; MkDocs remains the canonical build until migration cutover.
+`make docs-site` validates the exact binary version and atomically publishes the
+complete artifact to `site/`. `make docs-mdbook-site` is a scratch-output alias for
+`.tmp/mdbook-site`.
 
 Handwritten pages live under `docs/`; Python API text comes from public docstrings,
 Rust API text comes from rustdoc comments, and CLI reference pages, raw help,
@@ -90,10 +91,10 @@ manpages, and completions come from the Clap model through
 `scripts/generate-cli-reference.sh`. Never edit generated CLI files or generated
 HTML directly. Generated `site/` output remains ignored and must not be committed.
 
-The initial complete-site budgets are 16,000,000 uncompressed bytes and 4,500,000
-normalized gzip bytes. The baseline recorded on July 2, 2026 is 12,295,435 and
-3,195,405 bytes respectively. Increase either budget only with measured artifact
-evidence recorded in the relevant todo or review.
+The complete mdBook site budgets are 12,000,000 uncompressed bytes and 3,600,000
+normalized gzip bytes. The first complete artifact recorded on July 7, 2026 is
+9,908,665 and 3,017,002 bytes respectively. Increase either budget only with
+measured artifact evidence recorded in the relevant todo or review.
 
 ### Documentation operations
 

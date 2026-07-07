@@ -12,6 +12,7 @@ source_paths:
   - "crates/btpc-cli/src"
 test_paths:
   - "scripts/check_docs.py"
+  - "scripts/build_mdbook_site.py"
   - "crates/btpc-cli/tests/reference.rs"
   - ".github/workflows/maintenance.yml"
 last_reviewed: "2026-07-06"
@@ -49,11 +50,11 @@ embedded as a separate renderer within the unified artifact.
 ### DOCSITE-BUILD-001 — Build the complete site reproducibly
 
 - **Status:** Accepted
-- **Sources:** `DOCUMENTATION_PLAN.md`, `docs`, `scripts/check_docs.py`
-- **Verification:** `scripts/check_docs.py`, `.github/workflows/maintenance.yml`
+- **Sources:** `book.toml`, `docs`, `scripts/build_mdbook_site.py`
+- **Verification:** `scripts/build_mdbook_site.py`, `scripts/check_docs_site.py`
 - **Depends on:** `DOCSITE-ARCH-001`
 
-One documented repository command **MUST** create the same complete static site in
+`make docs-site` **MUST** create the same complete static site in
 local development and CI from locked dependencies. It **MUST** begin from clean
 output, validate the exact mdBook version, reject missing `SUMMARY.md` chapters and
 stale generated references, run supported Rust chapter tests, and avoid depending on
@@ -132,7 +133,7 @@ merge gates.
 - **Verification:** `scripts/check_docs_site.py`, `scripts/docs_renderer_baseline.py`, `tests/docs/test_renderer_migration_baseline.py`
 - **Depends on:** `DOCSITE-ARCH-002`, `DOCSITE-QUALITY-001`
 
-Before replacing the production MkDocs deployment, BTPC **MUST** record the existing
+Before replacing the previous production renderer, BTPC **MUST** record the existing
 public page and important fragment routes. The mdBook artifact **MUST** keep stable
 routes directly or provide project-subpath-safe, loop-free redirects for every
 recorded route. The migration **MUST** preserve the site root, 404 page, generated
