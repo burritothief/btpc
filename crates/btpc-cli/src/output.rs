@@ -50,9 +50,20 @@ pub(crate) struct InspectJson {
     pub(crate) info_hash_v2: Option<String>,
     pub(crate) trackers: Vec<Vec<ByteStringJson>>,
     pub(crate) web_seeds: Vec<ByteStringJson>,
+    pub(crate) nodes: Vec<DhtNodeJson>,
+    pub(crate) source: Option<ByteStringJson>,
+    pub(crate) comment: Option<ByteStringJson>,
+    pub(crate) created_by: Option<ByteStringJson>,
+    pub(crate) creation_date: Option<i64>,
     pub(crate) private: Option<bool>,
     pub(crate) canonical: bool,
     pub(crate) warnings: Vec<String>,
+}
+
+#[derive(Debug, Serialize)]
+pub(crate) struct DhtNodeJson {
+    pub(crate) host: ByteStringJson,
+    pub(crate) port: u16,
 }
 
 #[derive(Debug, Serialize)]

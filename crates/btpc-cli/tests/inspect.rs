@@ -74,6 +74,7 @@ fn inspect_hybrid_summary_orders_metadata_tiers_and_redacts_secrets() {
             vec![b"https://user:password@two.example/announce?passkey=hidden".to_vec()],
         ])
         .web_seeds([b"https://seed.example/payload".to_vec()])
+        .nodes([(vec![0xfe, b'n'], 1), (b"router.example".to_vec(), 65_535)])
         .private(false)
         .source(vec![0xff, b's'])
         .comment(b"comment".to_vec())
@@ -107,6 +108,8 @@ fn inspect_hybrid_summary_orders_metadata_tiers_and_redacts_secrets() {
         "  Comment:       comment\n",
         "  Created by:    btpc-test\n",
         "  Creation date: 1970-01-01 00:00:00 +00:00\n",
+        "  DHT node:      0xfe6e:1\n",
+        "  DHT node:      router.example:65535\n",
         "  Trackers:\n    Tier 1:\n      https://one.example/announce\n    Tier 2:\n      <redacted-url>\n",
         "  Web seeds:\n    https://seed.example/payload\n",
     ] {
@@ -116,6 +119,36 @@ fn inspect_hybrid_summary_orders_metadata_tiers_and_redacts_secrets() {
     assert!(!human.contains("hidden"));
     assert!(!human.contains("password%40"));
     assert!(human.is_ascii());
+
+    let output = btpc()
+        .args(["inspect", torrent.to_str().unwrap(), "--json"])
+        .output()
+        .unwrap();
+    let json: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(json["nodes"][0]["host"]["value"], "fe6e");
+    assert_eq!(json["nodes"][0]["port"], 1);
+    assert_eq!(json["source"]["value"], "ff73");
+    assert_eq!(json["comment"]["value"], "comment");
+    assert_eq!(json["created_by"]["value"], "btpc-test");
+    assert_eq!(json["creation_date"], 0);
+}
+
+#[test]
+fn inspect_and_validate_reject_malformed_recognized_optional_fields() {
+    let temp = TempDir::new().unwrap();
+    let torrent = temp.path().join("invalid.torrent");
+    fs::write(
+        &torrent,
+        b"d7:commenti1e4:infod6:lengthi0e4:name1:x12:piece lengthi16384e6:pieces0:ee",
+    )
+    .unwrap();
+    for command in ["inspect", "validate"] {
+        btpc()
+            .args([command, torrent.to_str().unwrap()])
+            .assert()
+            .code(4)
+            .stderr(predicate::str::contains("comment"));
+    }
 }
 
 #[test]

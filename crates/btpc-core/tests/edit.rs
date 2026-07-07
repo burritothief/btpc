@@ -121,6 +121,44 @@ fn info_edits_canonicalize_and_recompute_every_applicable_hash() {
 }
 
 #[test]
+fn optional_metadata_edits_use_the_parser_validation_policy() {
+    let temp = tempfile::tempdir().unwrap();
+    let payload = temp.path().join("payload");
+    fs::write(&payload, b"data").unwrap();
+    let created = Creator::new(&payload).create(&NoProgress).unwrap();
+    let parsed = Metainfo::from_bytes(created.bytes()).unwrap();
+
+    assert!(
+        MetainfoEditor::from_metainfo(&parsed)
+            .unwrap()
+            .trackers([Vec::new()])
+            .to_metainfo()
+            .is_err()
+    );
+    assert!(
+        MetainfoEditor::from_metainfo(&parsed)
+            .unwrap()
+            .web_seeds([Vec::new()])
+            .to_metainfo()
+            .is_err()
+    );
+    assert!(
+        MetainfoEditor::from_metainfo(&parsed)
+            .unwrap()
+            .nodes([(b"host".to_vec(), 0)])
+            .to_metainfo()
+            .is_err()
+    );
+    assert!(
+        MetainfoEditor::from_metainfo(&parsed)
+            .unwrap()
+            .creation_date(Some(-1))
+            .to_metainfo()
+            .is_err()
+    );
+}
+
+#[test]
 fn hybrid_real_file_attributes_update_v1_and_v2_representations() {
     for multifile in [false, true] {
         let temp = tempfile::tempdir().unwrap();
@@ -384,7 +422,7 @@ fn edit_operation() -> impl proptest::strategy::Strategy<Value = EditOperation> 
             .prop_map(EditOperation::Comment),
         proptest::option::of(proptest::collection::vec(any::<u8>(), 0..16))
             .prop_map(EditOperation::CreatedBy),
-        proptest::option::of(any::<i64>()).prop_map(EditOperation::CreationDate),
+        proptest::option::of(0_i64..=i64::MAX).prop_map(EditOperation::CreationDate),
         proptest::option::of(any::<bool>()).prop_map(EditOperation::Private),
         proptest::option::of(proptest::collection::vec(any::<u8>(), 0..16))
             .prop_map(EditOperation::Source),

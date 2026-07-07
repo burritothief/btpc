@@ -221,3 +221,95 @@ def test_torrent_bytes_and_paths_use_raw_identity() -> None:
 
     torrent = btpc.Metainfo.from_bytes(torrent_bytes())
     assert torrent.files[0].torrent_path.components == (btpc.TorrentBytes(b"empty"),)
+
+
+def _bencode(value: object) -> bytes:
+    if isinstance(value, bytes):
+        return str(len(value)).encode() + b":" + value
+    if isinstance(value, int):
+        return b"i" + str(value).encode() + b"e"
+    if isinstance(value, list):
+        return b"l" + b"".join(_bencode(item) for item in value) + b"e"
+    if isinstance(value, dict):
+        return (
+            b"d"
+            + b"".join(
+                _bencode(key) + _bencode(item) for key, item in sorted(value.items())
+            )
+            + b"e"
+        )
+    raise TypeError(type(value))
+
+
+def test_optional_metadata_properties_are_lossless_and_immutable() -> None:
+    data = _bencode(
+        {
+            b"announce": b"tracker",
+            b"announce-list": [[b"tracker", b"tracker"]],
+            b"comment": b"\xfecomment",
+            b"created by": b"\xfdcreator",
+            b"creation date": 0,
+            b"nodes": [[b"\xfchost", 1], [b"host", 65_535]],
+            b"url-list": [b"seed", b"seed"],
+            b"info": {
+                b"length": 0,
+                b"name": b"x",
+                b"piece length": 16_384,
+                b"pieces": b"",
+                b"source": b"\xfbsource",
+            },
+        }
+    )
+    torrent = btpc.Metainfo.from_bytes(data)
+    assert torrent.trackers == ((b"tracker", b"tracker"),)
+    assert torrent.web_seeds == (b"seed", b"seed")
+    assert torrent.nodes == ((b"\xfchost", 1), (b"host", 65_535))
+    assert torrent.nodes is torrent.nodes
+    assert torrent.source == b"\xfbsource"
+    assert torrent.comment == b"\xfecomment"
+    assert torrent.created_by == b"\xfdcreator"
+    assert torrent.creation_date == 0
+
+
+def test_optional_metadata_warning_and_rejection_policy(tmp_path: Path) -> None:
+    fallback = _bencode(
+        {
+            b"announce": b"primary",
+            b"announce-list": [],
+            b"info": {
+                b"length": 0,
+                b"name": b"x",
+                b"piece length": 16_384,
+                b"pieces": b"",
+            },
+        }
+    )
+    torrent = btpc.Metainfo.from_bytes(fallback)
+    assert torrent.trackers == ((b"primary",),)
+    assert torrent.validate().warnings == (
+        "empty announce-list ignored in favor of announce",
+    )
+
+    malformed = _bencode(
+        {
+            b"comment": 1,
+            b"info": {
+                b"length": 0,
+                b"name": b"x",
+                b"piece length": 16_384,
+                b"pieces": b"",
+            },
+        }
+    )
+    with pytest.raises(btpc.MetainfoError, match="comment"):
+        btpc.Metainfo.from_bytes(malformed)
+
+    payload = tmp_path / "payload"
+    payload.write_bytes(b"data")
+    for options in [
+        btpc.CreateOptions(nodes=(("host", 0),)),
+        btpc.CreateOptions(creation_date=-1),
+        btpc.CreateOptions(trackers=((),)),
+    ]:
+        with pytest.raises(btpc.MetainfoError):
+            btpc.create_bytes(payload, options=options)

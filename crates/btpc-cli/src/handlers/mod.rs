@@ -25,9 +25,9 @@ use crate::command::{
 use crate::config::{Configuration, ResolvedCreate};
 use crate::context::{ExecutionContext, OutputMode};
 use crate::output::{
-    CreateJson, InspectJson, MetricsJson, ValidateJson, VerifyJson, VerifyMismatchJson,
-    byte_string_json, display_bytes, filesystem_path_json, redacted_url_json, stderr_line,
-    stdout_line, stdout_text, write_json, write_json_pretty,
+    CreateJson, DhtNodeJson, InspectJson, MetricsJson, ValidateJson, VerifyJson,
+    VerifyMismatchJson, byte_string_json, display_bytes, filesystem_path_json, redacted_url_json,
+    stderr_line, stdout_line, stdout_text, write_json, write_json_pretty,
 };
 use crate::progress::CliProgress;
 use crate::render::key_values;
@@ -313,6 +313,18 @@ pub(crate) fn inspect(arguments: &InspectArgs, context: &ExecutionContext) -> Re
                 .iter()
                 .map(|seed| redacted_url_json(seed))
                 .collect(),
+            nodes: torrent
+                .nodes()
+                .iter()
+                .map(|node| DhtNodeJson {
+                    host: byte_string_json(node.host()),
+                    port: node.port(),
+                })
+                .collect(),
+            source: torrent.source().map(byte_string_json),
+            comment: torrent.comment().map(byte_string_json),
+            created_by: torrent.created_by().map(byte_string_json),
+            creation_date: torrent.creation_date(),
             private: torrent.private(),
             canonical: torrent.validate().canonicality().is_canonical(),
             warnings: torrent.validate().warnings().to_vec(),
@@ -349,6 +361,18 @@ pub(crate) fn inspect(arguments: &InspectArgs, context: &ExecutionContext) -> Re
                 .iter()
                 .map(|seed| redacted_url_json(seed))
                 .collect(),
+            nodes: torrent
+                .nodes()
+                .iter()
+                .map(|node| DhtNodeJson {
+                    host: byte_string_json(node.host()),
+                    port: node.port(),
+                })
+                .collect(),
+            source: torrent.source().map(byte_string_json),
+            comment: torrent.comment().map(byte_string_json),
+            created_by: torrent.created_by().map(byte_string_json),
+            creation_date: torrent.creation_date(),
             private: torrent.private(),
             canonical: torrent.validate().canonicality().is_canonical(),
             warnings: torrent.validate().warnings().to_vec(),
@@ -458,6 +482,15 @@ fn append_optional_metadata(output: &mut String, torrent: &btpc_core::Metainfo) 
     if let Some(value) = torrent.creation_date() {
         writeln!(output, "  Creation date: {}", format_creation_date(value))
             .expect("writing to String cannot fail");
+    }
+    for node in torrent.nodes() {
+        writeln!(
+            output,
+            "  DHT node: {}:{}",
+            display_bytes(node.host()),
+            node.port()
+        )
+        .expect("writing to String cannot fail");
     }
 }
 
@@ -574,6 +607,12 @@ fn inspect_summary(torrent: &btpc_core::Metainfo) -> String {
     }
     if let Some(value) = torrent.creation_date() {
         rows.push(("Creation date", format_creation_date(value)));
+    }
+    for node in torrent.nodes() {
+        rows.push((
+            "DHT node",
+            format!("{}:{}", display_bytes(node.host()), node.port()),
+        ));
     }
     let width = rows.iter().map(|(label, _)| label.len()).max().unwrap_or(0);
     let mut output = String::from("Torrent info:\n");
@@ -715,11 +754,11 @@ fn inspect_field_value(
         InspectField::Private => torrent.private().map_or(serde_json::Value::Null, serde_json::Value::Bool),
         InspectField::Trackers => serde_json::json!(torrent.trackers().iter().map(|tier| vec![crate::output::REDACTED_URL; tier.len()]).collect::<Vec<_>>()),
         InspectField::WebSeeds => serde_json::json!(vec![crate::output::REDACTED_URL; torrent.web_seeds().len()]),
-        InspectField::Nodes => optional_value(raw.nodes()),
-        InspectField::Comment => optional_value(raw.comment()),
-        InspectField::Creator => optional_value(raw.created_by()),
-        InspectField::CreationDate => optional_value(raw.creation_date()),
-        InspectField::Source => optional_value(info_field(raw, b"source")),
+        InspectField::Nodes => serde_json::json!(torrent.nodes().iter().map(|node| serde_json::json!({"host": display_bytes(node.host()), "port": node.port()})).collect::<Vec<_>>()),
+        InspectField::Comment => torrent.comment().map_or(serde_json::Value::Null, |value| serde_json::json!(display_bytes(value))),
+        InspectField::Creator => torrent.created_by().map_or(serde_json::Value::Null, |value| serde_json::json!(display_bytes(value))),
+        InspectField::CreationDate => torrent.creation_date().map_or(serde_json::Value::Null, |value| serde_json::json!(value)),
+        InspectField::Source => torrent.source().map_or(serde_json::Value::Null, |value| serde_json::json!(display_bytes(value))),
         InspectField::Canonicality => serde_json::json!(torrent.validate().canonicality().is_canonical()),
         InspectField::Warnings => serde_json::json!(torrent.validate().warnings()),
         InspectField::Files => {
@@ -730,12 +769,6 @@ fn inspect_field_value(
             serde_json::Value::Array(files)
         }
         InspectField::UnknownFields => serde_json::json!(raw.unknown_fields().into_iter().map(|(key, value)| serde_json::json!({"key": display_bytes(key.bytes()), "value": value_text(value)})).collect::<Vec<_>>()),
-    })
-}
-
-fn optional_value(value: Option<&Value<'_>>) -> serde_json::Value {
-    value.map_or(serde_json::Value::Null, |value| {
-        serde_json::Value::String(value_text(value))
     })
 }
 
@@ -762,15 +795,6 @@ const fn inspect_field_name(field: InspectField) -> &'static str {
         InspectField::Files => "files",
         InspectField::UnknownFields => "unknown-fields",
     }
-}
-
-fn info_field<'a>(raw: &'a RawMetainfo<'a>, name: &[u8]) -> Option<&'a Value<'a>> {
-    let ValueKind::Dictionary(entries) = raw.info_value().kind() else {
-        return None;
-    };
-    entries
-        .iter()
-        .find_map(|(key, value)| (key.bytes() == name).then_some(value))
 }
 
 fn value_text(value: &Value<'_>) -> String {

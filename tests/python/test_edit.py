@@ -41,7 +41,7 @@ def test_python_editor_three_state_optional_fields(tmp_path: Path) -> None:
     set_values = original.edit(
         trackers=(("https://tracker",),),
         web_seeds=("https://seed",),
-        nodes=(("router.example", 0),),
+        nodes=(("router.example", 1),),
         private=False,
         source="",
         comment="",

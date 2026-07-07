@@ -9,6 +9,10 @@ use sha2::Sha256;
 
 use crate::bencode::{ByteString, Span, Value, ValueKind, parse_with_budget};
 use crate::limits::AllocationBudget;
+use crate::metadata::{
+    DhtNode, OptionalMetadata, validate_creation_date, validate_nodes, validate_tracker_tiers,
+    validate_web_seeds,
+};
 use crate::{Error, ErrorCategory, ParseOptions, Result};
 
 const INFO: &[u8] = b"info";
@@ -1372,13 +1376,8 @@ pub struct Metainfo {
     total_length: u64,
     piece_count: u64,
     files: Vec<TorrentFile>,
-    trackers: Vec<Vec<Vec<u8>>>,
-    web_seeds: Vec<Vec<u8>>,
+    optional_metadata: OptionalMetadata,
     private: Option<bool>,
-    source: Option<Vec<u8>>,
-    comment: Option<Vec<u8>>,
-    created_by: Option<Vec<u8>>,
-    creation_date: Option<i64>,
     info_hash_v1: Option<InfoHashV1>,
     info_hash_v2: Option<InfoHashV2>,
     unknown_fields: Vec<UnknownField>,
@@ -1421,10 +1420,10 @@ impl Metainfo {
         let raw = RawMetainfo::from_parsed(&bytes, root)?;
         let source_canonicality = raw.canonicality();
         let info_entries = dictionary_entries(raw.info_value(), "info")?;
-        let snapshot = inspection_snapshot(&raw, info_entries)?;
+        let mut snapshot = inspection_snapshot(&raw, info_entries)?;
         let canonical_root = value_to_owned(raw.root())?;
-        let trackers = parse_trackers(&raw)?;
-        let web_seeds = parse_web_seeds(&raw)?;
+        let (optional_metadata, optional_warnings) = parse_optional_metadata(&raw, info_entries)?;
+        snapshot.warnings.extend(optional_warnings);
         let private = unique_field(info_entries, b"private", "info.private")?
             .map(|value| {
                 value
@@ -1437,18 +1436,6 @@ impl Metainfo {
                     })
             })
             .transpose()?;
-        let source = unique_field(info_entries, b"source", "info.source")?
-            .and_then(Value::as_bytes)
-            .map(ToOwned::to_owned);
-        let comment = raw
-            .comment()
-            .and_then(Value::as_bytes)
-            .map(ToOwned::to_owned);
-        let created_by = raw
-            .created_by()
-            .and_then(Value::as_bytes)
-            .map(ToOwned::to_owned);
-        let creation_date = raw.creation_date().and_then(Value::as_integer);
         let unknown_fields = raw
             .unknown_fields()
             .into_iter()
@@ -1474,13 +1461,8 @@ impl Metainfo {
             total_length: snapshot.total_length,
             piece_count: snapshot.piece_count,
             files: snapshot.files,
-            trackers,
-            web_seeds,
+            optional_metadata,
             private,
-            source,
-            comment,
-            created_by,
-            creation_date,
             info_hash_v1,
             info_hash_v2,
             unknown_fields,
@@ -1592,13 +1574,25 @@ impl Metainfo {
     /// Returns tracker tiers as raw byte strings.
     #[must_use]
     pub fn trackers(&self) -> &[Vec<Vec<u8>>] {
-        &self.trackers
+        self.optional_metadata.trackers()
     }
 
     /// Returns web seed URLs as raw byte strings.
     #[must_use]
     pub fn web_seeds(&self) -> &[Vec<u8>] {
-        &self.web_seeds
+        self.optional_metadata.web_seeds()
+    }
+
+    /// Returns all validated optional metadata in one lossless owned model.
+    #[must_use]
+    pub const fn optional_metadata(&self) -> &OptionalMetadata {
+        &self.optional_metadata
+    }
+
+    /// Returns validated DHT bootstrap nodes.
+    #[must_use]
+    pub fn nodes(&self) -> &[DhtNode] {
+        self.optional_metadata.nodes()
     }
 
     /// Returns the private flag when explicitly present.
@@ -1610,25 +1604,25 @@ impl Metainfo {
     /// Returns raw source bytes when explicitly present in the info dictionary.
     #[must_use]
     pub fn source(&self) -> Option<&[u8]> {
-        self.source.as_deref()
+        self.optional_metadata.source()
     }
 
     /// Returns raw top-level comment bytes when present.
     #[must_use]
     pub fn comment(&self) -> Option<&[u8]> {
-        self.comment.as_deref()
+        self.optional_metadata.comment()
     }
 
     /// Returns raw top-level creator bytes when present.
     #[must_use]
     pub fn created_by(&self) -> Option<&[u8]> {
-        self.created_by.as_deref()
+        self.optional_metadata.created_by()
     }
 
     /// Returns the top-level creation timestamp when representable as `i64`.
     #[must_use]
     pub const fn creation_date(&self) -> Option<i64> {
-        self.creation_date
+        self.optional_metadata.creation_date()
     }
 
     /// Returns the v1 info hash when applicable.
@@ -1799,34 +1793,118 @@ fn value_to_owned(value: &Value<'_>) -> Result<crate::bencode::OwnedValue> {
     }
 }
 
-fn parse_trackers(raw: &RawMetainfo<'_>) -> Result<Vec<Vec<Vec<u8>>>> {
-    if let Some(value) = raw.announce_list() {
-        return list_values(value, "announce-list")?
-            .iter()
-            .map(|tier| {
-                list_values(tier, "announce-list")?
-                    .iter()
-                    .map(|tracker| Ok(value_bytes(tracker, "announce-list")?.to_vec()))
-                    .collect()
-            })
-            .collect();
+fn parse_optional_metadata(
+    raw: &RawMetainfo<'_>,
+    info: &[(ByteString<'_>, Value<'_>)],
+) -> Result<(OptionalMetadata, Vec<ValidationWarning>)> {
+    let root = dictionary_entries(raw.root(), "<root>")?;
+    let announce = unique_field(root, b"announce", "announce")?
+        .map(|value| value_bytes(value, "announce").map(ToOwned::to_owned))
+        .transpose()?;
+    if announce.as_ref().is_some_and(Vec::is_empty) {
+        return Err(Error::metainfo_field("announce", "tracker URL is empty"));
     }
-    raw.announce()
-        .map(|value| Ok(vec![vec![value_bytes(value, "announce")?.to_vec()]]))
-        .transpose()
-        .map(Option::unwrap_or_default)
+    let announce_list = unique_field(root, b"announce-list", "announce-list")?;
+    let mut warnings = Vec::new();
+    let trackers = if let Some(value) = announce_list {
+        let tiers = list_values(value, "announce-list")?;
+        if tiers.is_empty() {
+            warnings.push(ValidationWarning {
+                message: "empty announce-list ignored in favor of announce".into(),
+                field: Some("announce-list".into()),
+                offset: Some(value.span().start()),
+            });
+            announce.into_iter().map(|url| vec![url]).collect()
+        } else {
+            tiers
+                .iter()
+                .map(|tier| {
+                    list_values(tier, "announce-list")?
+                        .iter()
+                        .map(|tracker| Ok(value_bytes(tracker, "announce-list")?.to_vec()))
+                        .collect()
+                })
+                .collect::<Result<Vec<_>>>()?
+        }
+    } else {
+        announce.into_iter().map(|url| vec![url]).collect()
+    };
+    validate_tracker_tiers(&trackers)?;
+
+    let web_seeds = match unique_field(root, b"url-list", "url-list")? {
+        None => Vec::new(),
+        Some(value) if value.as_bytes().is_some() => {
+            vec![value_bytes(value, "url-list")?.to_vec()]
+        }
+        Some(value) => list_values(value, "url-list")?
+            .iter()
+            .map(|seed| Ok(value_bytes(seed, "url-list")?.to_vec()))
+            .collect::<Result<Vec<_>>>()?,
+    };
+    validate_web_seeds(&web_seeds)?;
+
+    let nodes = parse_nodes(unique_field(root, b"nodes", "nodes")?)?;
+    validate_nodes(&nodes)?;
+
+    let source = unique_field(info, b"source", "info.source")?
+        .map(|value| value_bytes(value, "info.source").map(ToOwned::to_owned))
+        .transpose()?;
+    let comment = unique_field(root, b"comment", "comment")?
+        .map(|value| value_bytes(value, "comment").map(ToOwned::to_owned))
+        .transpose()?;
+    let created_by = unique_field(root, b"created by", "created by")?
+        .map(|value| value_bytes(value, "created by").map(ToOwned::to_owned))
+        .transpose()?;
+    let creation_date = unique_field(root, b"creation date", "creation date")?
+        .map(|value| {
+            value
+                .integer()
+                .and_then(crate::bencode::Integer::to_i64)
+                .ok_or_else(|| Error::metainfo_field("creation date", "must be an i64 integer"))
+        })
+        .transpose()?;
+    validate_creation_date(creation_date)?;
+    Ok((
+        OptionalMetadata::new(
+            trackers,
+            web_seeds,
+            nodes
+                .into_iter()
+                .map(|(host, port)| DhtNode::new(host, port))
+                .collect(),
+            source,
+            comment,
+            created_by,
+            creation_date,
+        ),
+        warnings,
+    ))
 }
 
-fn parse_web_seeds(raw: &RawMetainfo<'_>) -> Result<Vec<Vec<u8>>> {
-    let Some(value) = raw.url_list() else {
+fn parse_nodes(value: Option<&Value<'_>>) -> Result<Vec<(Vec<u8>, u16)>> {
+    let Some(value) = value else {
         return Ok(Vec::new());
     };
-    if let Some(bytes) = value.as_bytes() {
-        return Ok(vec![bytes.to_vec()]);
-    }
-    list_values(value, "url-list")?
+    list_values(value, "nodes")?
         .iter()
-        .map(|seed| Ok(value_bytes(seed, "url-list")?.to_vec()))
+        .map(|node| {
+            let pair = list_values(node, "nodes")?;
+            if pair.len() != 2 {
+                return Err(Error::metainfo_field(
+                    "nodes",
+                    "each node must be [host, port]",
+                ));
+            }
+            let host = value_bytes(&pair[0], "nodes.host")?.to_vec();
+            let port = pair[1]
+                .integer()
+                .and_then(crate::bencode::Integer::to_i64)
+                .and_then(|value| u16::try_from(value).ok())
+                .ok_or_else(|| {
+                    Error::metainfo_field("nodes.port", "must be an integer in 1..=65535")
+                })?;
+            Ok((host, port))
+        })
         .collect()
 }
 

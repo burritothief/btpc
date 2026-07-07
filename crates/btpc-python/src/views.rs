@@ -119,6 +119,7 @@ pub(crate) struct NativeMetainfo {
     files: PyOnceLock<Py<PyAny>>,
     trackers: PyOnceLock<Py<PyAny>>,
     web_seeds: PyOnceLock<Py<PyAny>>,
+    nodes: PyOnceLock<Py<PyAny>>,
     unknown_fields: PyOnceLock<Py<PyAny>>,
     validation: PyOnceLock<Py<NativeValidationReport>>,
     original_bytes: PyOnceLock<Py<PyAny>>,
@@ -275,6 +276,7 @@ impl NativeMetainfo {
             files: PyOnceLock::new(),
             trackers: PyOnceLock::new(),
             web_seeds: PyOnceLock::new(),
+            nodes: PyOnceLock::new(),
             unknown_fields: PyOnceLock::new(),
             validation: PyOnceLock::new(),
             original_bytes: PyOnceLock::new(),
@@ -463,6 +465,55 @@ impl NativeMetainfo {
                 .unbind())
             })
             .map(|seeds| seeds.clone_ref(py))
+    }
+
+    #[getter]
+    fn nodes(&self, py: Python<'_>) -> PyResult<Py<PyAny>> {
+        self.nodes
+            .get_or_try_init(py, || {
+                let nodes = self
+                    .inner
+                    .nodes()
+                    .iter()
+                    .map(|node| {
+                        PyTuple::new(
+                            py,
+                            [
+                                PyBytes::new(py, node.host()).into_any(),
+                                node.port().into_pyobject(py)?.into_any(),
+                            ],
+                        )
+                    })
+                    .collect::<PyResult<Vec<_>>>()?;
+                Ok(PyTuple::new(py, nodes)?.into_any().unbind())
+            })
+            .map(|nodes| nodes.clone_ref(py))
+    }
+
+    #[getter]
+    fn source(&self, py: Python<'_>) -> Option<Py<PyAny>> {
+        self.inner
+            .source()
+            .map(|value| PyBytes::new(py, value).into_any().unbind())
+    }
+
+    #[getter]
+    fn comment(&self, py: Python<'_>) -> Option<Py<PyAny>> {
+        self.inner
+            .comment()
+            .map(|value| PyBytes::new(py, value).into_any().unbind())
+    }
+
+    #[getter]
+    fn created_by(&self, py: Python<'_>) -> Option<Py<PyAny>> {
+        self.inner
+            .created_by()
+            .map(|value| PyBytes::new(py, value).into_any().unbind())
+    }
+
+    #[getter]
+    fn creation_date(&self) -> Option<i64> {
+        self.inner.creation_date()
     }
 
     #[getter]

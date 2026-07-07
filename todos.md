@@ -5247,8 +5247,8 @@ remain adapters over `btpc-core` throughout.
      `pre-push-gate` skip rather than mixing an unrelated dependency update into
      this editor-correctness todo.
 
-108. [ ] [Review] Validate and expose all recognized optional metainfo fields consistently
-   Claimed by:
+108. [x] [Review] Validate and expose all recognized optional metainfo fields consistently
+   Claimed by: Codex implementer (2026-07-06 16:25 PDT)
    Context:
    The validated owned `Metainfo` parses trackers and web seeds but does not retain
    or expose DHT `nodes`; Python also omits `source`, `comment`, `created_by`,
@@ -5275,7 +5275,34 @@ remain adapters over `btpc-core` throughout.
    return identical values/warnings/errors and creation never emits a form the
    parser would reject or warn about unexpectedly.
    Evidence:
+   - Added the byte-lossless `OptionalMetadata`/`DhtNode` core model and shared
+     tracker, web-seed, node, and creation-date validators. Parsing, creation, and
+     editing now reject the same malformed domains; empty `announce-list` falls
+     back to `announce` with a warning, while empty `url-list` remains a clean
+     no-web-seed value.
+   - `cargo test -p btpc-core --test optional_metadata --test edit` passed 17/17,
+     including non-UTF-8 values, duplicates, empty lists/tiers/URLs, conflicting
+     announce fields, malformed node pairs, ports 0/1/65535/out of range,
+     negative/arbitrary-precision dates, warning behavior, and edit parity.
+   - `cargo test -p btpc-cli --test inspect` passed 14/14; human, JSON, and field
+     projection inspection consume the typed model and agree on nodes and scalar
+     optional metadata. `uv run pytest tests/python/test_metainfo.py
+     tests/python/test_edit.py` passed 21/21 for immutable lossless properties,
+     warnings, errors, and creation/edit domains.
+   - `scripts/check_native_stub.py`, `scripts/check_python_types.sh`, and an
+     installed release wheel checked from a temporary directory with Pyright and
+     the external consumer all passed; the wheel consumer also executed against
+     the installed package. The wheel/sdist typing artifact test passed 1/1.
+   - Full gates passed: formatting and strict workspace Clippy; `cargo nextest`
+     238/238; workspace doctests; rustdoc; Ruff check/format; Python typing;
+     `uv run pytest tests/python` 75/75; `make docs-check` 43 tests plus a validated
+     403-file site within size budgets; and the spec registry (16 specs, 120
+     requirements).
    Notes:
+   - `cargo deny check` remains blocked only by the previously documented
+     Criterion-only `RUSTSEC-2026-0204` advisory for `crossbeam-epoch 0.9.18`;
+     licenses, sources, and bans pass. This unrelated dependency update is not
+     mixed into the optional-metadata change.
 
 109. [ ] [Review] Expose unknown bencode values, not only their keys, in Python
    Claimed by:

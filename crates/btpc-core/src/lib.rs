@@ -14,6 +14,7 @@ pub mod verify;
 
 pub use error::{Error, ErrorCategory, Result};
 pub use limits::{ParseLimits, ParseOptions};
+pub use metadata::{DhtNode, OptionalMetadata};
 pub use metainfo::{
     Canonicality, InfoHashV1, InfoHashV2, Metainfo, TorrentBytes, TorrentFile, TorrentMode,
     TorrentPath, UnknownField, ValidationReport, ValidationWarning,

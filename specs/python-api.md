@@ -65,9 +65,11 @@ Python exposes immutable `Metainfo`, `TorrentMode`, `HashValue`, `TorrentFile`,
 and `ValidationReport` wrappers. Parsing accepts bytes, bytearray, and contiguous
 buffer objects; path loading accepts string path-like objects. Native inspection
 functions remain private and return owned immutable PyO3 objects consumed by the
-typed wrapper. Large byte strings, file lists, trackers, web seeds, unknown fields,
-validation reports, and creation results **MUST** be converted lazily and cached on
+typed wrapper. Large byte strings, file lists, trackers, web seeds, DHT nodes,
+optional text metadata, unknown fields, validation reports, and creation results **MUST** be converted lazily and cached on
 first access; ordinary inspection **MUST NOT** request canonical serialization.
+Parsed trackers, web seeds, node hosts, source, comment, and creator values **MUST**
+remain lossless bytes; node ports and creation dates **MUST** remain integers.
 Native and public owner objects are non-subclassable and intentionally
 non-picklable until a stable serialized-object policy is specified.
 `ValidationReport` exposes protocol validity, canonicality, canonical issue

@@ -60,3 +60,17 @@ the [benchmark documentation][benchmark-docs].
 [benchmark-docs]: https://github.com/burritothief/btpc/blob/main/benches/README.md
 [interop-fixtures]: https://github.com/burritothief/btpc/blob/main/tests/fixtures/interoperability/README.md
 [release-spec]: https://github.com/burritothief/btpc/blob/main/specs/release.md
+
+## Optional metadata validation
+
+BTPC preserves optional metadata as raw bytes while applying one domain policy in
+parse, create, edit, CLI, and Python surfaces. Empty tracker or web-seed URLs,
+empty tracker tiers, empty DHT hosts, DHT port `0`, ports above `65535`, malformed
+node pairs, non-integer or negative creation dates, and wrong bencode types for
+recognized text fields are errors. Ports `1` and `65535`, duplicate non-empty
+values, empty text values, and non-UTF-8 text bytes are valid and lossless.
+
+For compatibility, an explicitly empty `announce-list` is ignored in favor of a
+valid `announce` value and produces a validation warning. Creation never emits
+that warned form. An empty `url-list` means no web seeds and is accepted without a
+warning.

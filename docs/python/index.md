@@ -228,3 +228,10 @@ All public failures derive from `BtpcError` and may expose `offset`, `field`, or
 A normal verification mismatch is returned in `PayloadVerificationReport` rather
 than raised. Inspect `mismatches`, each containing a stable `MismatchKind`, path,
 and optional piece index.
+
+## Optional metadata inspection
+
+Validated inspection exposes `trackers`, `web_seeds`, `nodes`, `source`,
+`comment`, `created_by`, and `creation_date` from the same native optional-metadata
+model used by Rust and the CLI. Hosts and textual metadata remain `bytes`; node
+ports and creation dates are integers.

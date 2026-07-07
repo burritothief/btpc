@@ -122,6 +122,7 @@ class Metainfo:
         "_info_hash_v1_cache",
         "_info_hash_v2_cache",
         "_native",
+        "_nodes_cache",
         "_original_bytes_cache",
         "_trackers_cache",
         "_unknown_fields_cache",
@@ -129,6 +130,7 @@ class Metainfo:
         "_web_seeds_cache",
     )
     _native: _NativeMetainfoType
+    _nodes_cache: tuple[tuple[bytes, int], ...] | None
     _canonical_bytes_cache: bytes | None
     _files_cache: tuple[TorrentFile, ...] | None
     _info_hash_v1_cache: HashValue | bool | None
@@ -510,6 +512,35 @@ class Metainfo:
     def private(self) -> bool | None:
         """Return the explicit private flag."""
         return self._native.private
+
+    @property
+    def nodes(self) -> tuple[tuple[bytes, int], ...]:
+        """Return cached immutable DHT bootstrap nodes as raw hosts and ports."""
+        cached = self._nodes_cache
+        if cached is None:
+            cached = self._native.nodes
+            object.__setattr__(self, "_nodes_cache", cached)
+        return cached
+
+    @property
+    def source(self) -> bytes | None:
+        """Return raw source bytes from the info dictionary."""
+        return self._native.source
+
+    @property
+    def comment(self) -> bytes | None:
+        """Return raw top-level comment bytes."""
+        return self._native.comment
+
+    @property
+    def created_by(self) -> bytes | None:
+        """Return raw top-level creator bytes."""
+        return self._native.created_by
+
+    @property
+    def creation_date(self) -> int | None:
+        """Return the non-negative Unix creation timestamp."""
+        return self._native.creation_date
 
     @property
     def info_hash_v1(self) -> HashValue | None:

@@ -19,7 +19,10 @@ use std::time::SystemTime;
 use globset::{Glob, GlobSet, GlobSetBuilder};
 use sha1::Digest as _;
 
-use crate::metadata::{MetadataText, NodeHost, TrackerTier, WebSeed};
+use crate::metadata::{
+    MetadataText, NodeHost, TrackerTier, WebSeed, validate_creation_date, validate_nodes,
+    validate_tracker_tiers, validate_web_seeds,
+};
 use crate::{Error, Result};
 
 const HASH_READ_BUFFER_LENGTH: usize = 64 * 1024;
@@ -1941,15 +1944,10 @@ impl CreateOptionsBuilder {
         if self.hash_threads == HashThreads::Exact(0) {
             return Err(Error::metainfo_field("threads", "must be positive"));
         }
-        if self.trackers.iter().flatten().any(std::vec::Vec::is_empty) {
-            return Err(Error::metainfo_field("announce", "tracker URL is empty"));
-        }
-        if self.web_seeds.iter().any(std::vec::Vec::is_empty) {
-            return Err(Error::metainfo_field("url-list", "web seed URL is empty"));
-        }
-        if self.nodes.iter().any(|(host, _)| host.is_empty()) {
-            return Err(Error::metainfo_field("nodes", "node host is empty"));
-        }
+        validate_tracker_tiers(&self.trackers)?;
+        validate_web_seeds(&self.web_seeds)?;
+        validate_nodes(&self.nodes)?;
+        validate_creation_date(self.creation_date)?;
         Ok(CreateOptions {
             manifest: self.manifest,
             mode: self.mode,

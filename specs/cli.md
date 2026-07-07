@@ -249,14 +249,14 @@ versioned schema.
 Default human inspect output **MUST** use a titled, indented, aligned summary rather
 than raw lowercase `key: value` lines. The stable field order is: name, mode,
 applicable info hashes, total size, piece length, piece count, magnet, tracker
-tiers, web seeds, private state when explicitly present, source/comment/creator/
-creation date when present, and file count for multi-file torrents. Sizes **MUST**
+tiers, web seeds, DHT nodes, private state when explicitly present,
+source/comment/creator/creation date when present, and file count for multi-file torrents. Sizes **MUST**
 use IEC units with one decimal place while verbose or pretty output **MUST** also
 show exact byte counts. Creation dates **MUST** use a readable local timestamp with
 an unambiguous zone; machine output retains numeric values.
 
-Tracker tiers and web seeds **MUST** render as grouped indented lists using redacted
-URLs, not only counts. V1 and v2 hashes **MUST** have distinct labels for hybrid
+Tracker tiers, web seeds, and DHT nodes **MUST** render as grouped indented lists;
+URLs are redacted and node hosts remain byte-lossless in machine output. V1 and v2 hashes **MUST** have distinct labels for hybrid
 torrents. The generated magnet **MUST** use the same redaction policy as standalone
 magnet output and **MUST NOT** expose configured credentials that normal CLI output
 would redact. Single-file torrents **SHOULD NOT** print a redundant `Files: 1`
