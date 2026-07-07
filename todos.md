@@ -5686,8 +5686,8 @@ remain adapters over `btpc-core` throughout.
      191-route MkDocs baseline comparison, rustdoc, links, and artifact budgets.
    Notes:
 
-115. [ ] Replace mkdocstrings with a Griffe-backed mdBook Python API preprocessor
-   Claimed by:
+115. [-] Replace mkdocstrings with a Griffe-backed mdBook Python API preprocessor
+   Claimed by: Codex implementer (2026-07-06 22:54 PDT)
    Requirements:
    `DOCSITE-PYTHON-001`, `DOCSITE-ARCH-002`, `DOCSITE-QUALITY-001`,
    `PYAPI-DOCSTRING-001`, `PYAPI-MODULES-001`, `TEST-TDD-001`.
