@@ -1,8 +1,7 @@
 # BTPC Documentation
 
-!!! warning "Development documentation"
-
-    This site documents the current `main` branch before the first stable release.
+> **Development documentation:** This site documents the current `main` branch
+> before the first stable release.
 
 BTPC is a high-performance BitTorrent metainfo toolkit with a Rust core, a native
 `btpc` command-line interface, and typed Python bindings. It reads, validates,

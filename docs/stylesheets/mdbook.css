@@ -2,9 +2,40 @@
   --sidebar-width: 300px;
 }
 
+.btpc-development-notice {
+  margin: 0 0 1.5rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--quote-border);
+  border-left: 0.35rem solid var(--links);
+  border-radius: 0.25rem;
+  background: var(--quote-bg);
+}
+
+blockquote {
+  border-left-width: 0.35rem;
+  border-radius: 0.2rem;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
 :focus-visible {
   outline: 3px solid var(--links);
   outline-offset: 2px;
+}
+
+@media (max-width: 700px) {
+  .btpc-development-notice {
+    margin-inline: 0;
+  }
+}
+
+@media print {
+  .btpc-development-notice {
+    border: 1px solid #666;
+    background: transparent;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

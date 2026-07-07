@@ -4,9 +4,30 @@ import argparse
 import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).parents[1]
+
+
+def _strip_frontmatter(path: Path) -> None:
+    text = path.read_text()
+    if not text.startswith("---\n"):
+        return
+    end = text.find("\n---\n", 4)
+    if end < 0:
+        raise RuntimeError(f"unterminated Markdown front matter: {path}")
+    path.write_text(text[end + 5 :])
+
+
+def _prepare_book_root(parent: Path) -> Path:
+    book_root = parent / "book"
+    book_root.mkdir()
+    shutil.copy2(ROOT / "book.toml", book_root / "book.toml")
+    shutil.copytree(ROOT / "docs", book_root / "docs")
+    for path in book_root.joinpath("docs").rglob("*.md"):
+        _strip_frontmatter(path)
+    return book_root
 
 
 def main() -> int:
@@ -18,8 +39,24 @@ def main() -> int:
     )
     destination = (ROOT / arguments.site_dir).resolve()
     shutil.rmtree(destination, ignore_errors=True)
+    temporary_parent = ROOT / ".tmp"
+    temporary_parent.mkdir(exist_ok=True)
+    with tempfile.TemporaryDirectory(
+        prefix="mdbook-source-", dir=temporary_parent
+    ) as temporary:
+        book_root = _prepare_book_root(Path(temporary))
+        subprocess.run(
+            ["mdbook", "build", str(book_root), "--dest-dir", str(destination)],
+            cwd=ROOT,
+            check=True,
+        )
     subprocess.run(
-        ["mdbook", "build", str(ROOT), "--dest-dir", str(destination)],
+        [
+            sys.executable,
+            ROOT / "scripts/postprocess_mdbook.py",
+            "--site-dir",
+            destination,
+        ],
         cwd=ROOT,
         check=True,
     )

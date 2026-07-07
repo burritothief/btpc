@@ -12,6 +12,5 @@ same Rust protocol core and produce compatible canonical metainfo.
 - Follow the [Python quick start](python.md) for typed application code.
 - Follow the [Rust quick start](rust.md) to embed `btpc-core`.
 
-!!! warning "Development documentation"
-
-    Commands and APIs describe the current `main` branch and may change before 1.0.
+> **Development documentation:** Commands and APIs describe the current `main`
+> branch and may change before 1.0.

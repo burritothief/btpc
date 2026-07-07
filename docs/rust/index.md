@@ -8,13 +8,11 @@ title: Rust API guide
 bytes, exposes structured errors, and uses per-operation configurable concurrency
 rather than an ambient global thread pool. The workspace MSRV is Rust 1.85.
 
-!!! note "Development documentation"
-
-    The <a href="btpc_core/index.html">embedded <code>btpc-core</code>
-    rustdoc</a> is generated from the current `main` branch and may change before
-    a stable release. The crate is prepared and validated for crates.io, but the
-    owner has not performed the first publish, so no live docs.rs release page is
-    claimed yet.
+> **Development documentation:** The <a href="btpc_core/index.html">embedded
+> <code>btpc-core</code> rustdoc</a> is generated from the current `main` branch
+> and may change before a stable release. The crate is prepared and validated for
+> crates.io, but the owner has not performed the first publish, so no live docs.rs
+> release page is claimed yet.
 
 Use the [crate source](https://github.com/burritothief/btpc/tree/main/crates/btpc-core)
 for implementation context and the

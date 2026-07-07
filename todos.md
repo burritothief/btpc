@@ -5609,7 +5609,7 @@ remain adapters over `btpc-core` throughout.
      comparison, links, codespell, rustdoc, and artifact budgets.
    Notes:
 
-114. [-] Port all handwritten content, navigation, theme behavior, and public routes
+114. [x] Port all handwritten content, navigation, theme behavior, and public routes
    Claimed by: Codex implementer (2026-07-06 22:46 PDT)
    Requirements:
    `DOCSITE-ARCH-002`, `DOCSITE-UX-001`, `DOCSITE-MIGRATE-001`,
@@ -5652,6 +5652,38 @@ remain adapters over `btpc-core` throughout.
    validation, focused docs tests, Ruff, spec validation, and the unchanged MkDocs
    production gate.
    Evidence:
+   - Added failing content-port tests first; they exposed literal Material
+     admonitions, leaked YAML titles, absent development-banner markup, and missing
+     MkDocs directory routes. The completed focused suite passes 4/4 for
+     renderer-neutral Markdown, feature markers, source/rendered links, stable
+     fragments, canonicals, and loop-free one-hop redirects.
+   - Converted the three Material-only admonitions to semantic blockquotes while
+     preserving all substantive installation, CLI, Python, Rust, protocol,
+     performance, compatibility, security, and contributor text. The temporary
+     mdBook source-copy step strips MkDocs title front matter without changing the
+     production source or generated CLI reference contract.
+   - Added a surgical mdBook postprocessor and local CSS. Every rendered chapter
+     receives the development-documentation notice and canonical metadata;
+     responsive/focus/reduced-motion/table/admonition/print styling remains local,
+     and built-in keyboard navigation, search, light/dark themes, code-copy, and
+     print markers are present in generated HTML.
+   - The route generator consumes Todo 112's baseline and produced 55 unique,
+     `/btpc/`-rooted redirect pages. All non-rust baseline routes are direct or
+     redirect once to an existing non-redirect target; root and custom 404 remain
+     direct, canonicals match the baseline, no redirect escapes or loops, and key
+     CLI fragment IDs survive at the target.
+   - The side-by-side artifact contains 191 files and 121 HTML pages. All
+     handwritten and CLI rendered links/anchors resolve; Python API fragment
+     generation and embedded rustdoc are intentionally deferred to Todos 115 and
+     116 and are excluded only from this migration-stage assertion.
+   - Local `/btpc/` HTTP smoke returned 200 for the homepage, search index, local
+     CSS, and 404 page. The in-app browser surface reported no available browser,
+     so responsive/interactive inspection was verified through generated ARIA,
+     keyboard, theme, search, copy, print, viewport, and CSS media-query markers.
+   - Ruff check/format, codespell, source link validation for 93 Markdown files,
+     spec validation (16 specs, 121 requirements), CLI reference tests 3/3, and the
+     unchanged production `make docs-check` passed 53 documentation tests, the
+     191-route MkDocs baseline comparison, rustdoc, links, and artifact budgets.
    Notes:
 
 115. [ ] Replace mkdocstrings with a Griffe-backed mdBook Python API preprocessor
