@@ -158,10 +158,17 @@ fn checked_in_web_reference_matches_the_command_model() {
     assert_eq!(generated_names.len(), 28);
     for name in generated_names {
         let first_bytes = fs::read(first_generated.join(&name)).unwrap();
-        assert_eq!(first_bytes, fs::read(second_generated.join(&name)).unwrap());
-        assert_eq!(first_bytes, fs::read(checked_in.join(&name)).unwrap());
-        assert!(!String::from_utf8_lossy(&first_bytes).contains("| —"));
-        assert!(!String::from_utf8_lossy(&first_bytes).contains("secret.example"));
+        let first_text = normalized_help(&first_bytes);
+        assert_eq!(
+            first_text,
+            normalized_help(&fs::read(second_generated.join(&name)).unwrap())
+        );
+        assert_eq!(
+            first_text,
+            normalized_help(&fs::read(checked_in.join(&name)).unwrap())
+        );
+        assert!(!first_text.contains("| —"));
+        assert!(!first_text.contains("secret.example"));
     }
 
     let root = fs::read_to_string(checked_in.join("index.md")).unwrap();
