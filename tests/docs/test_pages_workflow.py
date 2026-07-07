@@ -7,6 +7,8 @@ import yaml
 
 ROOT = Path(__file__).parents[2]
 WORKFLOW = ROOT / ".github/workflows/docs.yml"
+MDBOOK_VERSION = (ROOT / ".mdbook-version").read_text().strip()
+INSTALL_ACTION = "taiki-e/install-action@16b05812d776ae1dfaabc8277e421fb6d2506419"
 SHA_ACTION = re.compile(r"^[^@]+@[0-9a-f]{40}$")
 CONCURRENCY_GROUP = (
     "docs-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}"
@@ -49,6 +51,9 @@ def test_pages_build_is_read_only_locked_and_uploads_only_site() -> None:
     assert build["timeout-minutes"] == BUILD_TIMEOUT_MINUTES
     assert "permissions" not in build
     steps = build["steps"]
+    mdbook = next(step for step in steps if step["name"] == "Install mdBook")
+    assert mdbook["uses"] == INSTALL_ACTION
+    assert mdbook["with"] == {"tool": f"mdbook@{MDBOOK_VERSION}"}
     assert any(step.get("run") == "uv sync --all-groups --locked" for step in steps)
     assert any(step.get("run") == "make docs-check" for step in steps)
     checkout = next(
@@ -70,6 +75,11 @@ def test_pages_build_is_read_only_locked_and_uploads_only_site() -> None:
     for step in steps:
         if action := step.get("uses"):
             assert SHA_ACTION.match(action), action
+
+    workflow_text = WORKFLOW.read_text().lower()
+    assert "mkdocs" not in workflow_text
+    assert "curl" not in workflow_text
+    assert "gh-pages" not in workflow_text
 
 
 def test_pages_deploy_has_only_deployment_permissions_and_trust_condition() -> None:

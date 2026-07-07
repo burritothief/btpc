@@ -15,6 +15,8 @@ if TYPE_CHECKING:
 
 ROOT = Path(__file__).parents[2]
 WORKFLOW = ROOT / ".github/workflows/maintenance.yml"
+MDBOOK_VERSION = (ROOT / ".mdbook-version").read_text().strip()
+INSTALL_ACTION = "taiki-e/install-action@16b05812d776ae1dfaabc8277e421fb6d2506419"
 CONFIG = ROOT / ".lychee.toml"
 MANIFEST = ROOT / ".github/docs-health.json"
 CHECKER = ROOT / "scripts/check_docs_health.py"
@@ -72,6 +74,9 @@ def test_weekly_health_workflow_is_read_only_pinned_and_bounded() -> None:
         if action := step.get("uses"):
             assert SHA_ACTION.fullmatch(action), action
     install = next(step["run"] for step in steps if step["name"] == "Install Lychee")
+    mdbook = next(step for step in steps if step["name"] == "Install mdBook")
+    assert mdbook["uses"] == INSTALL_ACTION
+    assert mdbook["with"] == {"tool": f"mdbook@{MDBOOK_VERSION}"}
     rust = next(step for step in steps if step["name"] == "Install Rust")
     assert rust["with"] == {"toolchain": "1.94.1"}
     assert "lychee-v${LYCHEE_VERSION}" in install

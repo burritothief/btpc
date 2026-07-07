@@ -142,8 +142,8 @@ CLI and Python entry points, and embedded rustdoc location.
 ### DOCSITE-DEPLOY-001 — Deploy main through least-privilege GitHub Actions
 
 - **Status:** Accepted
-- **Sources:** `DOCUMENTATION_PLAN.md`, `.github/workflows/ci.yml`
-- **Verification:** `.github/workflows/maintenance.yml`
+- **Sources:** `DOCUMENTATION_PLAN.md`, `.github/workflows/docs.yml`
+- **Verification:** `tests/docs/test_pages_workflow.py`, `.github/workflows/maintenance.yml`
 - **Depends on:** `DOCSITE-QUALITY-001`, `SEC-DEPS-001`
 
 Every successful push to `main` **MUST** rebuild and deploy the site through a
