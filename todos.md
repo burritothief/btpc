@@ -5757,8 +5757,8 @@ remain adapters over `btpc-core` throughout.
      `allow_inspection=False`; generated output rejects private/native paths and
      never imports the compiled extension.
 
-116. [ ] Integrate CLI reference, Rust chapter tests, and rustdoc into the mdBook artifact
-   Claimed by:
+116. [-] Integrate CLI reference, Rust chapter tests, and rustdoc into the mdBook artifact
+   Claimed by: Codex implementer (2026-07-06 23:06 PDT)
    Requirements:
    `DOCSITE-CLI-001`, `DOCSITE-RUST-001`, `DOCSITE-BUILD-001`,
    `DOCSITE-MIGRATE-001`, `TEST-TDD-001`.
