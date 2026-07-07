@@ -5609,8 +5609,8 @@ remain adapters over `btpc-core` throughout.
      comparison, links, codespell, rustdoc, and artifact budgets.
    Notes:
 
-114. [ ] Port all handwritten content, navigation, theme behavior, and public routes
-   Claimed by:
+114. [-] Port all handwritten content, navigation, theme behavior, and public routes
+   Claimed by: Codex implementer (2026-07-06 22:46 PDT)
    Requirements:
    `DOCSITE-ARCH-002`, `DOCSITE-UX-001`, `DOCSITE-MIGRATE-001`,
    `DOCSITE-BUILD-001`, `TEST-TDD-001`.
