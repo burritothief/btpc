@@ -5541,8 +5541,8 @@ remain adapters over `btpc-core` throughout.
      was committed.
    Notes:
 
-113. [ ] Bootstrap pinned mdBook beside the working MkDocs build
-   Claimed by:
+113. [-] Bootstrap pinned mdBook beside the working MkDocs build
+   Claimed by: Codex implementer (2026-07-06 20:56 PDT)
    Requirements:
    `DOCSITE-ARCH-002`, `DOCSITE-BUILD-001`, `DOCSITE-UX-001`,
    `TEST-TDD-001`.
