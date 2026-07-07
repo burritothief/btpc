@@ -1,0 +1,28 @@
+[book]
+authors = ["BTPC contributors"]
+language = "en"
+src = "docs"
+title = "BTPC Documentation"
+
+[build]
+build-dir = ".tmp/mdbook-site"
+create-missing = false
+extra-watch-dirs = ["python/btpc", "crates/btpc-cli/src", "crates/btpc-core/src"]
+
+[rust]
+edition = "2024"
+
+[output.html]
+additional-css = ["docs/stylesheets/mdbook.css"]
+default-theme = "light"
+preferred-dark-theme = "navy"
+git-repository-url = "https://github.com/burritothief/btpc"
+edit-url-template = "https://github.com/burritothief/btpc/edit/main/{path}"
+input-404 = "404.md"
+site-url = "/btpc/"
+
+[output.html.search]
+enable = true
+limit-results = 30
+heading-split-level = 3
+use-boolean-and = true

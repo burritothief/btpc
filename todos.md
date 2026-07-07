@@ -5541,7 +5541,7 @@ remain adapters over `btpc-core` throughout.
      was committed.
    Notes:
 
-113. [-] Bootstrap pinned mdBook beside the working MkDocs build
+113. [x] Bootstrap pinned mdBook beside the working MkDocs build
    Claimed by: Codex implementer (2026-07-06 20:56 PDT)
    Requirements:
    `DOCSITE-ARCH-002`, `DOCSITE-BUILD-001`, `DOCSITE-UX-001`,
@@ -5580,6 +5580,33 @@ remain adapters over `btpc-core` throughout.
    MSRV checks do not include mdBook. Run focused docs tests, Ruff, spec validation,
    and the unchanged MkDocs `make docs-check` to prove side-by-side safety.
    Evidence:
+   - Added failing bootstrap tests first; all four initially failed for the absent
+     config, summary, version checker, and Make target. The completed focused suite
+     passes 4/4 and checks exact version/checksum metadata, strict config, complete
+     chapter coverage, actionable missing/wrong-tool errors, and temporary output.
+   - Added `book.toml` with `docs` as the source, `create-missing = false`, Rust
+     edition 2024, `/btpc/` site URL, local search with heading split level 3,
+     repository/edit links, custom `404.md`, local CSS, light/dark themes, and watch
+     paths for Python, CLI, and Rust documentation sources. `docs/SUMMARY.md` lists
+     all 62 public handwritten and generated CLI/Python chapters exactly once.
+   - Pinned mdBook 0.5.3 outside the workspace. The locked crates.io source archive
+     SHA-256 is
+     `742264af649df2323b283a4c1a8abc21b6f6880cf030d642500ef85c2ce81598`,
+     recorded with contributor installation guidance for
+     `cargo install mdbook --version 0.5.3 --locked`; the checker reports that exact
+     remediation for missing or mismatched binaries.
+   - `make docs-mdbook-site` invokes mdBook directly and writes only to
+     `.tmp/mdbook-site`. Builds succeeded from the repository root and from `/tmp`;
+     a summary containing a missing chapter failed with exit 101 and did not create
+     the referenced file.
+   - Serving the generated book from a local `/btpc/` mount returned 200 for the
+     homepage, hashed search index, `stylesheets/mdbook.css`, and `404.html`.
+     Inspection found no remote script or stylesheet runtime URLs.
+   - `cargo tree -p btpc-core` contains no mdBook dependency, Rust 1.85
+     `cargo check -p btpc-core --locked` passed, and Cargo/uv locks, Rust toolchain,
+     `mkdocs.yml`, and the Pages workflow are unchanged. Ruff, spec validation, and
+     the canonical MkDocs `make docs-check` passed 49 docs tests, route-baseline
+     comparison, links, codespell, rustdoc, and artifact budgets.
    Notes:
 
 114. [ ] Port all handwritten content, navigation, theme behavior, and public routes

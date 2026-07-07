@@ -1,4 +1,4 @@
-.PHONY: check gate-summary specs spec-sync docs docs-fast docs-check docs-health docs-generate docs-site docs-serve version test-rust test-python lint build-wheel benchmark-iso hooks-manual hooks-push install-hooks uninstall-hooks
+.PHONY: check gate-summary specs spec-sync docs docs-fast docs-check docs-health docs-generate docs-mdbook-site docs-site docs-serve version test-rust test-python lint build-wheel benchmark-iso hooks-manual hooks-push install-hooks uninstall-hooks
 
 check: specs docs lint test-rust test-python
 
@@ -41,6 +41,9 @@ docs-generate:
 
 docs-site:
 	uv run --group docs python scripts/build_docs_site.py --site-dir site
+
+docs-mdbook-site:
+	uv run python scripts/build_mdbook_site.py --site-dir .tmp/mdbook-site
 
 docs-serve:
 	uv run --group docs mkdocs serve --strict --config-file mkdocs.yml

@@ -72,6 +72,18 @@ doctests/rustdoc, strict rendering, generated-site links and anchors, canonical
 metadata, private-name leakage, and size budgets. `make docs-fast` is the
 pre-commit subset.
 
+The side-by-side mdBook migration build requires exactly mdBook 0.5.3. Install the
+reviewed crates.io release with:
+
+```console
+cargo install mdbook --version 0.5.3 --locked
+```
+
+The downloaded `mdbook-0.5.3.crate` SHA-256 is recorded in `.mdbook-sha256` as
+`742264af649df2323b283a4c1a8abc21b6f6880cf030d642500ef85c2ce81598`.
+`make docs-mdbook-site` validates the exact binary version and writes only to
+`.tmp/mdbook-site`; MkDocs remains the canonical build until migration cutover.
+
 Handwritten pages live under `docs/`; Python API text comes from public docstrings,
 Rust API text comes from rustdoc comments, and CLI reference pages, raw help,
 manpages, and completions come from the Clap model through
