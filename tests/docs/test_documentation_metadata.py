@@ -80,6 +80,12 @@ def test_readme_site_navigation_and_runbooks_are_discoverable() -> None:
         "404",
         "rollback",
         "known-good commit",
+        "preprocessor protocol",
+        "SUMMARY.md",
+        "migration-route",
+        "searchindex-",
+        "mdBook upgrades",
+        "last known-good source commit",
     ):
         assert topic.lower() in contributing.lower()
     release = (ROOT / "docs/release-checklist.md").read_text()

@@ -20,6 +20,7 @@ INSTALL_ACTION = "taiki-e/install-action@16b05812d776ae1dfaabc8277e421fb6d250641
 CONFIG = ROOT / ".lychee.toml"
 MANIFEST = ROOT / ".github/docs-health.json"
 CHECKER = ROOT / "scripts/check_docs_health.py"
+LIVE_CHECKER = ROOT / "scripts/check_docs_live.py"
 COLLECTOR = ROOT / "scripts/collect_docs_external_links.py"
 FIXTURES = ROOT / "tests/docs/fixtures/health"
 SHA_ACTION = re.compile(r"^[^@]+@[0-9a-f]{40}$")
@@ -86,6 +87,9 @@ def test_weekly_health_workflow_is_read_only_pinned_and_bounded() -> None:
     commands = [step.get("run") for step in steps]
     assert "make docs-check" in commands
     assert "make docs-health" in commands
+    assert (
+        "scripts/check_docs_live.py --site-dir site" in (ROOT / "Makefile").read_text()
+    )
     summary = steps[-1]
     assert summary["name"] == "Publish documentation health summary"
     assert summary["if"] == "always()"
@@ -129,12 +133,17 @@ def test_live_manifest_names_every_required_production_entry() -> None:
         "rust",
         "search-index",
         "sitemap",
+        "theme",
         "custom-404",
     ]
     assert checks[-1]["status"] == NOT_FOUND
     assert checks[-1]["url"].endswith("/health-check/missing/nested/")
     assert all(check["url"].startswith("https://") for check in checks)
     assert all(check["marker"] for check in checks)
+    assert "searchindex-" in checks[5]["url"]
+    assert checks[5]["content_type"] == "application/javascript"
+    assert checks[7]["url"].endswith("/stylesheets/mdbook.css")
+    assert "GITHUB_STEP_SUMMARY" in LIVE_CHECKER.read_text()
 
 
 def test_live_validator_rejects_broken_generic_missing_and_mixed_content() -> None:

@@ -4,28 +4,28 @@
     "url": "https://burritothief.github.io/btpc/",
     "status": 200,
     "content_type": "text/html",
-    "marker": "<h1 id=\"btpc-documentation\">BTPC Documentation"
+    "marker": "<h1 id=\"btpc-documentation\"><a class=\"header\" href=\"#btpc-documentation\">BTPC Documentation"
   },
   {
     "name": "getting-started",
     "url": "https://burritothief.github.io/btpc/getting-started/",
     "status": 200,
     "content_type": "text/html",
-    "marker": "<h1 id=\"getting-started\">Getting started"
+    "marker": "<h1 id=\"getting-started\"><a class=\"header\" href=\"#getting-started\">Getting started"
   },
   {
     "name": "cli",
     "url": "https://burritothief.github.io/btpc/cli/",
     "status": 200,
     "content_type": "text/html",
-    "marker": "<h1 id=\"cli-guide\">CLI Guide"
+    "marker": "<title>CLI - BTPC Documentation</title>"
   },
   {
     "name": "python",
     "url": "https://burritothief.github.io/btpc/python/",
     "status": 200,
     "content_type": "text/html",
-    "marker": "<h1 id=\"python-api-guide\">Python API Guide"
+    "marker": "<title>Python - BTPC Documentation</title>"
   },
   {
     "name": "rust",
@@ -36,10 +36,10 @@
   },
   {
     "name": "search-index",
-    "url": "https://burritothief.github.io/btpc/search/search_index.json",
+    "url": "https://burritothief.github.io/btpc/searchindex-916064b3.js",
     "status": 200,
-    "content_type": "application/json",
-    "marker": "\"title\":\"BTPC Documentation\""
+    "content_type": "application/javascript",
+    "marker": "window.search = Object.assign"
   },
   {
     "name": "sitemap",
@@ -49,10 +49,17 @@
     "marker": "<loc>https://burritothief.github.io/btpc/</loc>"
   },
   {
+    "name": "theme",
+    "url": "https://burritothief.github.io/btpc/stylesheets/mdbook.css",
+    "status": 200,
+    "content_type": "text/css",
+    "marker": ".btpc-development-notice"
+  },
+  {
     "name": "custom-404",
     "url": "https://burritothief.github.io/btpc/health-check/missing/nested/",
     "status": 404,
     "content_type": "text/html",
-    "marker": "The requested BTPC documentation page does not exist."
+    "marker": "<title>Page not found - BTPC Documentation</title>"
   }
 ]

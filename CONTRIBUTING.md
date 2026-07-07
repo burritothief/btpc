@@ -106,12 +106,33 @@ make docs-check
 make docs-serve
 ```
 
+Install the exact mdBook release shown above before previewing. A missing binary or
+version mismatch is reported by `scripts/check_mdbook.py`; do not update
+`.mdbook-version` without completing the upgrade checklist below.
+
 The preview is served under the `/btpc/` project subpath. A root-relative asset,
 incorrect canonical URL, or copied `404.html` that resolves above that project
 subpath will fail generated-site QA. Inspect `site/` after `make docs-site` when a
 page, asset, search index, sitemap, or custom 404 behaves differently in preview.
 Generated HTML is disposable; fix handwritten Markdown, Python docstrings, Rust
 rustdoc, the Clap command model, or the builder instead.
+
+For build failures, start with the named pipeline stage from
+`scripts/build_mdbook_site.py --list-stages`:
+
+- A Python preprocessor protocol error means `scripts/mdbook_python_api.py` did not
+  receive or return valid mdBook JSON. Run
+  `uv run pytest tests/docs/test_mdbook_python_api.py -q` before changing docstrings.
+- A missing chapter error means a maintained Markdown page is absent from
+  `docs/SUMMARY.md`, or a summary entry names a file that does not exist. Keep the
+  navigation explicit; do not hide a page from validation.
+- A migration-route failure means a baseline route is missing or its
+  `btpc-redirect` shim points outside `/btpc/`, loops, or takes more than one hop.
+  Compare `site/` with `tests/docs/fixtures/renderer_migration_baseline.json` and
+  fix `scripts/postprocess_mdbook.py` rather than hand-editing generated HTML.
+- A search failure should first confirm that the hashed `searchindex-*.js` named by
+  the generated page exists, contains the expected chapters, and loads under
+  `/btpc/`. Rebuild from clean output before changing mdBook configuration.
 
 One-time repository administration uses **Settings → Pages → Source: GitHub
 Actions**. The `github-pages` environment must permit deployments only from the
@@ -147,9 +168,20 @@ timeout, rate limit, or server error from a deliberate URL migration. Update a l
 at its authoritative source; add an exclusion only for an intentional non-routable
 example or a URL covered by a more specific validator. The live validator also
 rejects generic GitHub Pages error HTML, missing page-specific markers, insecure
-final URLs, and mixed-content assets. When a production route intentionally
-changes, update `.github/docs-health.json` in the same reviewed change and verify
-the replacement URL over HTTPS.
+final URLs, mixed-content assets, live HTML that differs from the locally built
+artifact, missing baseline anchors, and compatibility redirects that loop or exceed
+one document hop. When a production route intentionally changes, update
+`.github/docs-health.json` and the renderer migration baseline in the same reviewed
+change and verify the replacement URL over HTTPS.
+
+**mdBook upgrades:** update `.mdbook-version` and `.mdbook-sha256`, the pinned CI
+installer arguments, and contributor commands together. Then rerun preprocessor
+protocol tests, all theme/navigation/search checks, the complete route and anchor
+baseline, custom-404 checks, and both artifact-size budgets. Inspect the uploaded
+Pages artifact before deployment, deploy through the normal Documentation workflow,
+and run the live maintenance workflow. Never retain the previous renderer or a
+second documentation branch as a rollback mechanism; recovery is always a
+redeployment of the last known-good source commit.
 
 The release checklist is maintained in
 [`docs/release-checklist.md`](docs/release-checklist.md).

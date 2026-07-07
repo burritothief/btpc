@@ -34,7 +34,8 @@ docs-health:
 	@set +e; \
 	lychee --config .lychee.toml --format markdown --output .tmp/docs-link-health.md .tmp/docs-external-links.md; link_status=$$?; \
 	uv run python scripts/check_docs_health.py; live_status=$$?; \
-	test $$link_status -eq 0 -a $$live_status -eq 0
+	uv run python scripts/check_docs_live.py --site-dir site; baseline_status=$$?; \
+	test $$link_status -eq 0 -a $$live_status -eq 0 -a $$baseline_status -eq 0
 
 docs-generate:
 	./scripts/generate-cli-reference.sh
