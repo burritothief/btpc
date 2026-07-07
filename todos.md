@@ -5828,8 +5828,8 @@ remain adapters over `btpc-core` throughout.
      `debug`/`debug/deps` library paths. Normal `cargo test -p btpc-core --doc`
      remains an independent required layer.
 
-117. [ ] Port the production docs gate and remove all MkDocs-specific code and dependencies
-   Claimed by:
+117. [-] Port the production docs gate and remove all MkDocs-specific code and dependencies
+   Claimed by: Codex implementer (2026-07-06 23:16 PDT)
    Requirements:
    `DOCSITE-ARCH-002`, `DOCSITE-BUILD-001`, `DOCSITE-QUALITY-001`,
    `DOCSITE-MIGRATE-001`, `TEST-TDD-001`.
