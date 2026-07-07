@@ -5908,7 +5908,7 @@ remain adapters over `btpc-core` throughout.
      switches all local commands, tests, hooks, dependencies, and contributor
      guidance atomically to the shared mdBook builder.
 
-118. [-] Switch GitHub Actions and GitHub Pages deployment from MkDocs to mdBook
+118. [x] Switch GitHub Actions and GitHub Pages deployment from MkDocs to mdBook
    Claimed by: Codex implementation agent, 2026-07-06 23:35:41 PDT
    Requirements:
    `DOCSITE-DEPLOY-001`, `DOCSITE-ARCH-002`, `DOCSITE-BUILD-001`,
@@ -5945,7 +5945,51 @@ remain adapters over `btpc-core` throughout.
    normal merge, record the successful trusted Pages deployment run URL and deployed
    SHA. Run the complete docs gate and spec validation.
    Evidence:
+   - TDD retained the initial focused failure: after adding exact mdBook installer
+     assertions, `uv run pytest tests/docs/test_pages_workflow.py
+     tests/docs/test_documentation_health.py -q` failed in
+     `test_pages_build_is_read_only_locked_and_uploads_only_site` and
+     `test_weekly_health_workflow_is_read_only_pinned_and_bounded` because neither
+     workflow yet contained an `Install mdBook` step. After implementation the same
+     command passed all 9 tests.
+   - `.github/workflows/docs.yml` and `.github/workflows/maintenance.yml` install
+     `mdbook@0.5.3` through the repository's existing immutable
+     `taiki-e/install-action@16b05812d776ae1dfaabc8277e421fb6d2506419` pin while
+     retaining Rust 1.94.1, locked `uv sync`, canonical `make docs-check`, existing
+     timeouts/concurrency, read-only build permissions, official Pages actions,
+     trusted-main deploy condition, and the `github-pages` environment. Structural
+     tests also reject MkDocs, curl installers, `gh-pages`, mutable action refs, and
+     any artifact path other than `site`.
+   - The exact local CI toolchain reported `rustc 1.94.1`, `mdbook v0.5.3`,
+     `uv 0.11.23`; `uv sync --all-groups --locked`, actionlint, offline zizmor
+     1.26.1, `uv run python scripts/check_specs.py`, and `make hooks-manual` passed.
+     Zizmor reported no findings, and specification validation covered 16 specs and
+     121 requirements.
+   - `make docs-check` passed all 62 documentation tests, exact mdBook validation,
+     generated-reference drift checks, Rust chapter tests and rustdoc, link checks,
+     codespell, all 191 renderer-migration routes, and artifact validation at 446
+     files, 247 HTML pages, 9,909,057 uncompressed bytes, and 3,017,100 normalized
+     gzip bytes.
+   - Trusted push run https://github.com/burritothief/btpc/actions/runs/28846899682
+     completed both `Documentation / build` and `Documentation / deploy`
+     successfully for deployed SHA `bc3eab588ddd10c01bba26106e641ac13e7fe97e`.
+     The build installed mdBook through the pinned action, ran the canonical gate,
+     and uploaded the `github-pages` artifact (artifact ID 8130006631, 3,090,108
+     bytes).
+   - The downloaded Pages artifact passed `scripts/check_docs_site.py` (445 visible
+     files plus the hidden Pages control file, 247 HTML pages, 9,908,985 bytes,
+     3,017,068 normalized gzip bytes) and `scripts/docs_renderer_baseline.py compare`
+     for all 191 routes. Targeted inspection confirmed the homepage, Getting Started
+     navigation, CLI, Python landing page and generated Creation API, Rust landing
+     page and embedded `btpc_core` rustdoc, local mdBook stylesheet, populated search
+     index, custom 404, and a project-subpath-safe CLI redirect shim.
    Notes:
+   - This repository session pushes directly to protected `main` under the user's
+     explicit per-todo push instruction, so the exact uploaded trusted-main artifact
+     was inspected rather than a separate pull-request artifact. GitHub emitted an
+     unrelated Node.js 20 deprecation annotation for the currently pinned checkout
+     and setup-uv actions; actionlint and zizmor still passed and no action pins were
+     changed outside this todo's renderer installation scope.
 
 119. [ ] Verify the live mdBook cutover and update documentation operations monitoring
    Claimed by:
