@@ -12,6 +12,7 @@ source_paths:
   - "docs/compatibility.md"
   - ".github/workflows/release.yml"
   - "scripts/package_source.py"
+  - "scripts/check_crate_package.sh"
   - "scripts/verify_artifacts.py"
   - "CHANGELOG.md"
 test_paths:
@@ -63,7 +64,27 @@ sdist and full project source archive. It validates metadata, license inclusion,
 and checksums in dry-run mode. Publication remains disabled unless the operator
 explicitly selects it; publishing requires the protected `pypi` environment and
 an existing version-matching tag, creates a draft GitHub release, uses PyPI
-Trusted Publishing, and emits GitHub build provenance.
+Trusted Publishing, emits GitHub build provenance, and publishes `btpc-core` only
+through the protected `crates-io` environment with a narrowly scoped token.
+
+### RELEASE-RUST-CRATE-001 — Publish only the protocol crate
+
+- **Status:** Implemented
+- **Sources:** `crates/btpc-core/Cargo.toml`, `crates/btpc-core/README.md`, `.github/workflows/release.yml`, `scripts/check_crate_package.sh`
+- **Verification:** `crates/btpc-core/tests/public_api.rs`, `tests/python/test_release.py`, `.github/workflows/release.yml`
+- **Depends on:** `RELEASE-VERSION-001`, `RELEASE-ARTIFACT-001`, `RUSTAPI-COMPAT-001`
+
+`btpc-core` **MUST** be the only crates.io-publishable workspace member. Its
+package **MUST** declare the project license, MSRV, repository, docs.rs metadata,
+README, and a compiling public example. Adapter crates **MUST** remain private.
+The packaged crate **MUST** build and test offline at the MSRV and current stable,
+and an external consumer **MUST** compile against the extracted archive.
+
+Crates.io publication **MUST** be a protected manual release action for an
+existing version-matching tag, after artifact and public-API validation. Ordinary
+pushes **MUST NOT** publish. The first registry publication remains an explicit
+owner action and documentation **MUST NOT** claim a live registry or docs.rs page
+before that action succeeds.
 
 ### RELEASE-GATE-001 — Gate claims on correctness and benchmarks
 

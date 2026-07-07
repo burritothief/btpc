@@ -113,6 +113,16 @@ fn from_path_and_writer_api_work_without_borrowing_the_source() {
 }
 
 #[test]
+fn owned_bytes_have_supported_parsing_entry_points() {
+    let bytes = v1_bytes();
+    let torrent = Metainfo::from_vec(bytes.clone()).unwrap();
+    assert_eq!(torrent.original_bytes(), bytes);
+
+    let torrent = Metainfo::from_vec_with_options(bytes.clone(), ParseOptions::default()).unwrap();
+    assert_eq!(torrent.original_bytes(), bytes);
+}
+
+#[test]
 fn load_options_enforce_input_and_owned_boundaries_for_bytes_and_paths() {
     let bytes = v1_bytes();
     let input_limit = ParseLimits::new(128, 1_000_000, bytes.len(), bytes.len(), usize::MAX);

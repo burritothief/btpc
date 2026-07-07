@@ -18,3 +18,14 @@ Before publishing a release or announcing documentation:
   for the release commit.
 - Smoke-test the custom 404, search index, local assets, and embedded rustdoc over
   HTTPS before publishing release notes.
+- Run `scripts/check_crate_package.sh 1.85.0` and
+  `scripts/check_crate_package.sh 1.94.1`, then inspect
+  `target/package/btpc-core-<version>.crate` for `README.md`, `LICENSE`, sources,
+  and `examples/inspect.rs`.
+- Run `cargo publish -p btpc-core --locked --dry-run` and the Rust API compatibility
+  check against the previous release tag when one exists.
+- Protect the `crates-io` GitHub environment, configure its narrowly scoped
+  `CRATES_IO_TOKEN`, and approve the manual release job only for an existing
+  version-matching tag. Ordinary pushes never publish the crate.
+- For the first publish, confirm crate ownership and the resulting crates.io and
+  docs.rs pages manually before adding links that describe either page as live.

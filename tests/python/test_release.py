@@ -64,6 +64,34 @@ def test_cargo_packages_include_license() -> None:
         assert "LICENSE" in result.stdout.splitlines()
 
 
+# Spec: RELEASE-RUST-CRATE-001
+def test_btpc_core_is_the_only_publishable_crate() -> None:
+    core = tomllib.loads((ROOT / "crates/btpc-core/Cargo.toml").read_text())
+    cli = tomllib.loads((ROOT / "crates/btpc-cli/Cargo.toml").read_text())
+    python = tomllib.loads((ROOT / "crates/btpc-python/Cargo.toml").read_text())
+
+    assert core["package"]["publish"] == ["crates-io"]
+    assert cli["package"]["publish"]["workspace"] is True
+    assert python["package"]["publish"]["workspace"] is True
+    assert core["package"]["documentation"]["workspace"] is True
+    assert core["package"]["readme"] == "README.md"
+    assert core["package"]["metadata"]["docs"]["rs"]["all-features"] is True
+
+
+def test_btpc_core_package_contains_publication_assets() -> None:
+    cargo = shutil.which("cargo")
+    assert cargo is not None
+    result = subprocess.run(  # noqa: S603
+        [cargo, "package", "-p", "btpc-core", "--allow-dirty", "--list"],
+        cwd=ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    names = set(result.stdout.splitlines())
+    assert {"LICENSE", "README.md", "examples/inspect.rs"} <= names
+
+
 # Spec: RELEASE-ARTIFACT-001
 def test_release_automation_and_changelog_are_present() -> None:
     assert (ROOT / "CHANGELOG.md").is_file()
@@ -73,6 +101,20 @@ def test_release_automation_and_changelog_are_present() -> None:
     assert "gh-action-pypi-publish" in workflow
     assert "publish: true" not in workflow
     assert "publishing requires an existing vX.Y.Z tag" in workflow
+    assert "name: Publish btpc-core to crates.io" in workflow
+    assert "environment: crates-io" in workflow
+    assert "cargo publish -p btpc-core --locked" in workflow
+    assert "CARGO_REGISTRY_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}" in workflow
+    assert "needs: [version, rust-api, validate, attest]" in workflow
+    assert "ref: ${{ inputs.tag }}" in workflow
+    tagged_build_checkout_count = 7
+    assert (
+        workflow.count("ref: ${{ inputs.tag || github.sha }}")
+        == tagged_build_checkout_count
+    )
+    assert 'test "$(git describe --tags --exact-match)" = "$RELEASE_TAG"' in workflow
+    assert 'toolchain: ["1.85.0", "1.94.1"]' in workflow
+    assert "scripts/check_crate_package.sh" in workflow
     assert (ROOT / "scripts" / "check_version.py").is_file()
     assert (ROOT / "scripts" / "set_version.py").is_file()
     assert (ROOT / "scripts" / "package_cli.py").is_file()

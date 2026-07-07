@@ -72,7 +72,7 @@ fn inspect_bytes(
             "data must support the contiguous byte buffer protocol",
         )
     })?;
-    let result = py.detach(move || Metainfo::from_owned_bytes_with_options(data, options));
+    let result = py.detach(move || Metainfo::from_vec_with_options(data, options));
     result
         .map_err(|error| to_python_error(py, &error))
         .and_then(|metainfo| Py::new(py, NativeMetainfo::new(metainfo)))

@@ -12,8 +12,9 @@ rather than an ambient global thread pool. The workspace MSRV is Rust 1.85.
 
     The <a href="btpc_core/index.html">embedded <code>btpc-core</code>
     rustdoc</a> is generated from the current `main` branch and may change before
-    a stable release. The crate is not published yet, so no docs.rs release page
-    exists.
+    a stable release. The crate is prepared and validated for crates.io, but the
+    owner has not performed the first publish, so no live docs.rs release page is
+    claimed yet.
 
 Use the [crate source](https://github.com/burritothief/btpc/tree/main/crates/btpc-core)
 for implementation context and the
@@ -51,6 +52,11 @@ and owned-snapshot limits. Advanced callers can pass `ParseOptions` to
 `Metainfo::from_bytes_with_options` or `Metainfo::from_path_with_options`. Path
 loading preflights regular-file length and also caps the actual read, so growth
 races and non-regular streams cannot bypass `max_total_input`.
+
+Callers that already own the input buffer can use `Metainfo::from_vec` or
+`Metainfo::from_vec_with_options` to transfer it into the parsed object without an
+additional input copy. The object retains those exact source bytes for original
+serialization and source info hashes.
 
 The low-level `bencode::Integer` borrows the complete signed decimal bytes and
 supports fallible `to_i64()`/`to_u64()` conversion. `OwnedValue::integer_bytes`

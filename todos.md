@@ -5410,7 +5410,7 @@ remain adapters over `btpc-core` throughout.
      `RUSTSEC-2026-0204` advisory for `crossbeam-epoch 0.9.18`; bans, licenses, and
      sources pass, so that unrelated dependency update remains separate.
 
-111. [-] [Review] Prepare btpc-core for actual crates.io publication
+111. [x] [Review] Prepare btpc-core for actual crates.io publication
    Claimed by: Codex implementer (2026-07-06 20:45 PDT)
    Context:
    BTPC is intended to be a publicly embedded Rust library, but workspace metadata
@@ -5436,7 +5436,41 @@ remain adapters over `btpc-core` throughout.
    run `cargo publish`. Verify docs.rs metadata/features and README links without
    claiming a live registry page until the owner performs the first publish.
    Evidence:
+   - `btpc-core` is now the only publishable workspace member, restricted to the
+     `crates-io` registry with MIT, Rust 1.85, repository/homepage/documentation,
+     crate-specific README, docs.rs all-features metadata, and a compiling
+     `examples/inspect.rs`; `btpc-cli` and `btpc-python` continue to inherit
+     `publish = false`.
+   - Replaced the hidden cross-workspace constructor with documented
+     `Metainfo::from_vec` and `Metainfo::from_vec_with_options` APIs. Borrowed-byte
+     and path loaders delegate to the supported owned-buffer path, and the PyO3
+     adapter transfers its `Vec<u8>` through that API. Public API tests passed
+     12/12, including exact original-byte retention for both new entry points.
+   - Added `scripts/check_crate_package.sh`; extracted packages passed offline
+     library, doctest, example, and external-consumer builds on Rust 1.85.0 and
+     1.94.1. The final archive contained 54 files and included normalized metadata,
+     lockfile, MIT license, README, sources, and the public example; the external
+     consumer compiled against the extracted path and called `from_vec`.
+   - `cargo publish -p btpc-core --locked --dry-run --allow-dirty` completed all
+     packaging, verification, and upload-preflight steps and aborted only because
+     it was a dry run. `cargo-semver-checks 0.42.0` is pinned in the release job;
+     this repository has no previous release tag, so the existing initial-release
+     policy correctly records and skips the unavailable baseline comparison.
+   - The manual release workflow validates the packaged crate on MSRV and stable,
+     pins every build to the supplied tag (or dispatch SHA for non-publishing dry
+     runs), verifies the exact tag/version, and publishes only after Rust API,
+     artifact, and provenance jobs through the protected `crates-io` environment
+     with `CRATES_IO_TOKEN`. Ordinary pushes cannot invoke publication.
+   - Full gates passed: formatting and strict workspace Clippy; `cargo nextest`
+     245/245; workspace doctests and rustdoc; Ruff check/format; Pyrefly, Pyright,
+     and native stub parity; `uv run pytest tests/python` 79 passed and 1
+     Windows-only skip; `make docs-check` 43 tests plus a validated 404-file site;
+     pre-commit, actionlint, and zizmor; and 16 specs with 121 requirements.
    Notes:
+   - `cargo deny check` remains blocked only by the existing Criterion-only
+     `RUSTSEC-2026-0204` advisory for `crossbeam-epoch 0.9.18`; bans, licenses, and
+     sources pass. The first crates.io publication remains an explicit owner action,
+     and documentation does not claim that a registry or docs.rs release is live.
 
 112. [ ] Freeze the current MkDocs site as the mdBook migration baseline
    Claimed by:

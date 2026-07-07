@@ -8,7 +8,7 @@ on:
         required: false
         type: string
       publish:
-        description: Publish a draft GitHub release and PyPI artifacts
+        description: Publish the draft release, PyPI artifacts, and btpc-core
         required: true
         default: false
         type: boolean
@@ -30,6 +30,8 @@ jobs:
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
+          ref: ${{ inputs.tag || github.sha }}
+          fetch-depth: 0
           persist-credentials: false
       - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6
         with:
@@ -44,7 +46,10 @@ jobs:
             echo "publishing requires an existing vX.Y.Z tag" >&2
             exit 2
           fi
-          if [[ -n "$RELEASE_TAG" ]]; then arguments+=(--tag "$RELEASE_TAG"); fi
+          if [[ -n "$RELEASE_TAG" ]]; then
+            test "$(git describe --tags --exact-match)" = "$RELEASE_TAG"
+            arguments+=(--tag "$RELEASE_TAG")
+          fi
           version=$(uv run python scripts/check_version.py "${arguments[@]}")
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
@@ -56,6 +61,7 @@ jobs:
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
+          ref: ${{ inputs.tag || github.sha }}
           fetch-depth: 0
           persist-credentials: false
       - uses: dtolnay/rust-toolchain@fa04a1451ff1842e2626ccb99004d0195b455a88 # master
@@ -76,6 +82,29 @@ jobs:
           else
             scripts/check_rust_api.sh "$baseline"
           fi
+
+  rust-package:
+    name: Packaged Rust crate / ${{ matrix.toolchain }}
+    needs: version
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        toolchain: ["1.85.0", "1.94.1"]
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          ref: ${{ inputs.tag || github.sha }}
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@fa04a1451ff1842e2626ccb99004d0195b455a88 # master
+        with:
+          toolchain: ${{ matrix.toolchain }}
+      - name: Build and test the packaged crate offline
+        run: scripts/check_crate_package.sh "${{ matrix.toolchain }}"
+      - name: Dry-run crates.io publication
+        if: matrix.toolchain == '1.94.1'
+        run: cargo +1.94.1 publish -p btpc-core --locked --dry-run
 
   wheels:
     name: Wheel ${{ matrix.platform.name }} CPython ${{ matrix.python }}
@@ -110,6 +139,7 @@ jobs:
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
+          ref: ${{ inputs.tag || github.sha }}
           persist-credentials: false
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
@@ -146,6 +176,7 @@ jobs:
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
+          ref: ${{ inputs.tag || github.sha }}
           persist-credentials: false
       - uses: dtolnay/rust-toolchain@fa04a1451ff1842e2626ccb99004d0195b455a88 # master
         with:
@@ -205,6 +236,7 @@ jobs:
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
+          ref: ${{ inputs.tag || github.sha }}
           persist-credentials: false
       - uses: dtolnay/rust-toolchain@fa04a1451ff1842e2626ccb99004d0195b455a88 # master
         with:
@@ -232,12 +264,13 @@ jobs:
 
   validate:
     name: Validate assembled artifacts
-    needs: [version, wheels, source-distribution, cli]
+    needs: [version, rust-package, wheels, source-distribution, cli]
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
+          ref: ${{ inputs.tag || github.sha }}
           persist-credentials: false
       - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6
         with:
@@ -331,3 +364,35 @@ jobs:
       - uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b # v1.14.0
         with:
           packages-dir: dist
+
+  crates-io:
+    name: Publish btpc-core to crates.io
+    if: inputs.publish == true
+    needs: [version, rust-api, validate, attest]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: crates-io
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          ref: ${{ inputs.tag }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@fa04a1451ff1842e2626ccb99004d0195b455a88 # master
+        with:
+          toolchain: 1.94.1
+      - name: Verify the tagged crate version
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
+          RELEASE_VERSION: ${{ needs.version.outputs.version }}
+        shell: bash
+        run: |
+          test "$(git describe --tags --exact-match)" = "$RELEASE_TAG"
+          actual=$(cargo metadata --no-deps --format-version 1 | jq -r '.packages[] | select(.name == "btpc-core") | .version')
+          test "$actual" = "$RELEASE_VERSION"
+      - name: Publish btpc-core
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
+        run: cargo publish -p btpc-core --locked

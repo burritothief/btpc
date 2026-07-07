@@ -1414,11 +1414,27 @@ impl Metainfo {
     ///
     /// Returns a bencode, resource-limit, or protocol validation error.
     pub fn from_bytes_with_options(bytes: &[u8], options: ParseOptions) -> Result<Self> {
-        Self::from_owned_bytes_with_options(bytes.to_vec(), options)
+        Self::from_vec_with_options(bytes.to_vec(), options)
     }
 
-    #[doc(hidden)]
-    pub fn from_owned_bytes_with_options(bytes: Vec<u8>, options: ParseOptions) -> Result<Self> {
+    /// Parses and validates owned metainfo bytes without copying the input buffer.
+    ///
+    /// # Errors
+    ///
+    /// Returns a bencode, resource-limit, or protocol validation error.
+    pub fn from_vec(bytes: Vec<u8>) -> Result<Self> {
+        Self::from_vec_with_options(bytes, ParseOptions::default())
+    }
+
+    /// Parses and validates owned metainfo bytes using caller-provided limits.
+    ///
+    /// The returned object retains the supplied buffer as its exact original
+    /// representation, including the raw bencoded `info` slice used for hashes.
+    ///
+    /// # Errors
+    ///
+    /// Returns a bencode, resource-limit, or protocol validation error.
+    pub fn from_vec_with_options(bytes: Vec<u8>, options: ParseOptions) -> Result<Self> {
         let limits = options.limits();
         limits.check_total_input(bytes.len())?;
         let mut budget = AllocationBudget::new(limits);
@@ -1528,7 +1544,7 @@ impl Metainfo {
             .read_to_end(&mut bytes)
             .map_err(|source| Error::io(path, source))?;
         limits.check_total_input(bytes.len())?;
-        Self::from_owned_bytes_with_options(bytes, options)
+        Self::from_vec_with_options(bytes, options)
     }
 
     /// Returns the resource limits used to load this object.

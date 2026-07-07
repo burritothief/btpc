@@ -11,8 +11,9 @@ metainfo. It is not a downloader, peer, tracker, DHT node, or payload editor.
 
 ## Installation
 
-BTPC is pre-1.0 and is not published yet. Build the CLI from a checkout with the
-Rust toolchain declared in `rust-toolchain.toml`:
+BTPC is pre-1.0. The CLI and Python packages are not published yet, and the owner
+has not performed the first `btpc-core` crates.io publish. Build the CLI from a
+checkout with the Rust toolchain declared in `rust-toolchain.toml`:
 
 ```console
 cargo build --release -p btpc-cli
@@ -130,7 +131,9 @@ println!("{} bytes", result.bytes().len());
 ```
 
 `btpc-core` keeps protocol logic, hashing, traversal, canonical serialization,
-and verification in safe Rust. Generate crate documentation with `cargo doc`.
+and verification in safe Rust. It is packaged and release-gated for crates.io,
+but use a checkout or Git dependency until the owner performs the first publish.
+Generate crate documentation with `cargo doc`.
 
 ## Protocol Modes
 
