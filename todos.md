@@ -5472,8 +5472,8 @@ remain adapters over `btpc-core` throughout.
      sources pass. The first crates.io publication remains an explicit owner action,
      and documentation does not claim that a registry or docs.rs release is live.
 
-112. [ ] Freeze the current MkDocs site as the mdBook migration baseline
-   Claimed by:
+112. [-] Freeze the current MkDocs site as the mdBook migration baseline
+   Claimed by: Codex implementer (2026-07-06 20:52 PDT)
    Requirements:
    `DOCSITE-MIGRATE-001`, `DOCSITE-QUALITY-001`, `DOCSITE-OPS-001`,
    `TEST-TDD-001`.
