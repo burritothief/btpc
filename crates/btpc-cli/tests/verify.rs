@@ -2,6 +2,7 @@ use std::fs;
 
 use assert_cmd::Command;
 use btpc_core::create::{CreateMode, CreateOptions, Creator, NoProgress};
+#[cfg(unix)]
 use predicates::prelude::*;
 
 fn btpc() -> Command {

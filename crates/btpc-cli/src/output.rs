@@ -271,13 +271,13 @@ pub(crate) fn redact_secrets(value: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::{
-        display_width, filesystem_path_json, redact_secrets, safe_path_display, windows_path_json,
-        windows_plain_path,
+        display_width, redact_secrets, safe_path_display, windows_path_json, windows_plain_path,
     };
 
     #[cfg(unix)]
     #[test]
     fn filesystem_path_json_preserves_non_utf8_unix_bytes() {
+        use super::filesystem_path_json;
         use std::os::unix::ffi::OsStrExt as _;
 
         let path = std::path::Path::new(std::ffi::OsStr::from_bytes(b"out-\xff"));

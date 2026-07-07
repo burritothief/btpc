@@ -23,7 +23,7 @@ fn path_init_refusal_force_check_and_permissions() {
         .args(["config", "path"])
         .assert()
         .success()
-        .stdout(format!("{}\n", path.display()));
+        .stdout(expected_plain_path(&path));
 
     let (mut init, _) = configured_command(&temp);
     init.args(["config", "init"])
@@ -60,6 +60,37 @@ fn path_init_refusal_force_check_and_permissions() {
             0o600
         );
     }
+}
+
+#[cfg(not(windows))]
+fn expected_plain_path(path: &std::path::Path) -> Vec<u8> {
+    #[cfg(unix)]
+    {
+        use std::os::unix::ffi::OsStrExt as _;
+        let mut output = path.as_os_str().as_bytes().to_vec();
+        output.push(b'\n');
+        output
+    }
+    #[cfg(not(unix))]
+    {
+        format!("{}\n", path.display()).into_bytes()
+    }
+}
+
+#[cfg(windows)]
+fn expected_plain_path(path: &std::path::Path) -> Vec<u8> {
+    use std::fmt::Write as _;
+    use std::os::windows::ffi::OsStrExt as _;
+
+    let mut output = "windows-utf16:".to_owned();
+    for (index, unit) in path.as_os_str().encode_wide().enumerate() {
+        if index > 0 {
+            output.push(',');
+        }
+        write!(output, "{unit:04x}").unwrap();
+    }
+    output.push('\n');
+    output.into_bytes()
 }
 
 #[test]

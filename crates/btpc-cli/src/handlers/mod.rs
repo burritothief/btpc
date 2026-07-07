@@ -1360,11 +1360,10 @@ fn filename_with_suffix(name: Option<&std::ffi::OsStr>, suffix: &str) -> std::ff
 
 #[cfg(test)]
 mod tests {
-    use super::filename_with_suffix;
-
     #[cfg(unix)]
     #[test]
     fn inferred_names_preserve_colliding_non_utf8_bytes() {
+        use super::filename_with_suffix;
         use std::os::unix::ffi::{OsStrExt as _, OsStringExt as _};
 
         let first =
