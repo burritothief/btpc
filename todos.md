@@ -5908,8 +5908,8 @@ remain adapters over `btpc-core` throughout.
      switches all local commands, tests, hooks, dependencies, and contributor
      guidance atomically to the shared mdBook builder.
 
-118. [ ] Switch GitHub Actions and GitHub Pages deployment from MkDocs to mdBook
-   Claimed by:
+118. [-] Switch GitHub Actions and GitHub Pages deployment from MkDocs to mdBook
+   Claimed by: Codex implementation agent, 2026-07-06 23:35:41 PDT
    Requirements:
    `DOCSITE-DEPLOY-001`, `DOCSITE-ARCH-002`, `DOCSITE-BUILD-001`,
    `DOCSITE-QUALITY-001`, `SEC-DEPS-001`.
