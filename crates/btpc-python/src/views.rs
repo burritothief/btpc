@@ -2,7 +2,7 @@ use btpc_core::Metainfo;
 use pyo3::class::basic::CompareOp;
 use pyo3::prelude::*;
 use pyo3::sync::PyOnceLock;
-use pyo3::types::{PyAny, PyBytes, PyTuple};
+use pyo3::types::{PyAny, PyBytes, PyDict, PyInt, PyList, PyTuple};
 
 use crate::create_mode_name;
 use crate::errors::to_python_error;
@@ -567,15 +567,24 @@ impl NativeMetainfo {
     fn unknown_fields(&self, py: Python<'_>) -> PyResult<Py<PyAny>> {
         self.unknown_fields
             .get_or_try_init(py, || {
-                Ok(PyTuple::new(
-                    py,
-                    self.inner
-                        .unknown_fields()
-                        .iter()
-                        .map(|field| PyBytes::new(py, field.key())),
-                )?
-                .into_any()
-                .unbind())
+                let fields = self
+                    .inner
+                    .unknown_fields()
+                    .iter()
+                    .map(|field| {
+                        PyTuple::new(
+                            py,
+                            [
+                                PyBytes::new(py, field.key()).into_any(),
+                                owned_value_to_python(py, field.value())?.bind(py).clone(),
+                                PyBytes::new(py, self.inner.unknown_field_bytes(field)).into_any(),
+                                PyTuple::new(py, [field.span().start(), field.span().end()])?
+                                    .into_any(),
+                            ],
+                        )
+                    })
+                    .collect::<PyResult<Vec<_>>>()?;
+                Ok(PyTuple::new(py, fields)?.into_any().unbind())
             })
             .map(|fields| fields.clone_ref(py))
     }
@@ -606,6 +615,76 @@ impl NativeMetainfo {
             self.inner.files().len()
         )
     }
+}
+
+pub(crate) fn owned_value_to_python(
+    py: Python<'_>,
+    value: &btpc_core::bencode::OwnedValue,
+) -> PyResult<Py<PyAny>> {
+    use btpc_core::bencode::OwnedValue;
+    match value {
+        OwnedValue::Integer(value) => Ok(value.into_pyobject(py)?.into_any().unbind()),
+        OwnedValue::IntegerBytes(value) => {
+            let builtins = py.import("builtins")?;
+            Ok(builtins
+                .getattr("int")?
+                .call1((std::str::from_utf8(value).map_err(|_| {
+                    pyo3::exceptions::PyValueError::new_err("invalid bencode integer")
+                })?,))?
+                .unbind())
+        }
+        OwnedValue::Bytes(value) => Ok(PyBytes::new(py, value).into_any().unbind()),
+        OwnedValue::List(values) => {
+            let values = values
+                .iter()
+                .map(|value| owned_value_to_python(py, value))
+                .collect::<PyResult<Vec<_>>>()?;
+            Ok(PyList::new(py, values)?.into_any().unbind())
+        }
+        OwnedValue::Dictionary(entries) => {
+            let dictionary = PyDict::new(py);
+            for (key, value) in entries {
+                dictionary.set_item(PyBytes::new(py, key), owned_value_to_python(py, value)?)?;
+            }
+            Ok(dictionary.into_any().unbind())
+        }
+    }
+}
+
+pub(crate) fn python_to_owned_value(
+    py: Python<'_>,
+    value: &Bound<'_, PyAny>,
+) -> PyResult<btpc_core::bencode::OwnedValue> {
+    use btpc_core::bencode::OwnedValue;
+    if value.is_exact_instance_of::<PyInt>() {
+        let encoded = value.str()?.to_str()?.as_bytes().to_vec();
+        return OwnedValue::integer_bytes(encoded).map_err(|error| to_python_error(py, &error));
+    }
+    if let Ok(value) = value.cast::<PyBytes>() {
+        return Ok(OwnedValue::bytes(value.as_bytes().to_vec()));
+    }
+    if let Ok(values) = value.cast::<PyList>() {
+        return values
+            .iter()
+            .map(|value| python_to_owned_value(py, &value))
+            .collect::<PyResult<Vec<_>>>()
+            .map(OwnedValue::list);
+    }
+    if let Ok(entries) = value.cast::<PyDict>() {
+        let mut converted = Vec::with_capacity(entries.len());
+        for (key, value) in entries.iter() {
+            let key = key.extract::<Vec<u8>>().map_err(|_| {
+                pyo3::exceptions::PyTypeError::new_err(
+                    "raw extension dictionary keys must be bytes",
+                )
+            })?;
+            converted.push((key, python_to_owned_value(py, &value)?));
+        }
+        return OwnedValue::dictionary(converted).map_err(|error| to_python_error(py, &error));
+    }
+    Err(pyo3::exceptions::PyTypeError::new_err(
+        "raw extension values must be int, bytes, list, or dict",
+    ))
 }
 
 pub(crate) const fn mode_name(mode: btpc_core::TorrentMode) -> &'static str {

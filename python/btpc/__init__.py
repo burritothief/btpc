@@ -22,7 +22,15 @@ from .errors import (
     UnsupportedError,
     VerificationError,
 )
-from .metainfo import Metainfo, TorrentFile, ValidationReport
+from .metainfo import (
+    BencodeDictionary,
+    BencodeList,
+    BencodeValue,
+    Metainfo,
+    TorrentFile,
+    UnknownField,
+    ValidationReport,
+)
 from .types import (
     UNCHANGED,
     HashValue,
@@ -42,7 +50,10 @@ __version__: Final[str] = _native_version
 
 __all__ = [
     "UNCHANGED",
+    "BencodeDictionary",
     "BencodeError",
+    "BencodeList",
+    "BencodeValue",
     "BtpcError",
     "CancellationToken",
     "CancelledError",
@@ -62,6 +73,7 @@ __all__ = [
     "TorrentFile",
     "TorrentMode",
     "TorrentPath",
+    "UnknownField",
     "UnsupportedError",
     "ValidationReport",
     "VerificationError",

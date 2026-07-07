@@ -49,8 +49,12 @@ once on its defining-module page.
   [`CreateResult`](reference/creation.md#btpc.creation.CreateResult),
   [`create`](reference/creation.md#btpc.creation.create), and
   [`create_bytes`](reference/creation.md#btpc.creation.create_bytes).
-- **Metainfo:** [`Metainfo`](reference/metainfo.md#btpc.metainfo.Metainfo),
-  [`TorrentFile`](reference/metainfo.md#btpc.metainfo.TorrentFile), and
+- **Metainfo:** [`BencodeDictionary`](reference/metainfo.md#btpc.metainfo.BencodeDictionary),
+  [`BencodeList`](reference/metainfo.md#btpc.metainfo.BencodeList),
+  [`BencodeValue`](reference/metainfo.md#btpc.metainfo.BencodeValue),
+  [`Metainfo`](reference/metainfo.md#btpc.metainfo.Metainfo),
+  [`TorrentFile`](reference/metainfo.md#btpc.metainfo.TorrentFile),
+  [`UnknownField`](reference/metainfo.md#btpc.metainfo.UnknownField), and
   [`ValidationReport`](reference/metainfo.md#btpc.metainfo.ValidationReport).
 - **Verification:** [`MismatchKind`](reference/verification.md#btpc.verification.MismatchKind),
   [`PayloadMismatch`](reference/verification.md#btpc.verification.PayloadMismatch),
@@ -235,3 +239,16 @@ Validated inspection exposes `trackers`, `web_seeds`, `nodes`, `source`,
 `comment`, `created_by`, and `creation_date` from the same native optional-metadata
 model used by Rust and the CLI. Hosts and textual metadata remain `bytes`; node
 ports and creation dates are integers.
+
+## Unknown extension values
+
+`Metainfo.unknown_fields` returns immutable `UnknownField` objects rather than
+keys alone. Each object includes its raw byte key, a recursive value made from
+Python integers and bytes plus `BencodeList`/`BencodeDictionary`, the exact encoded
+source bytes for the key/value entry, and its half-open span in `original_bytes`.
+Arbitrary-size integers and non-UTF-8 dictionary keys remain lossless.
+
+Pass the same recursive values to `Metainfo.edit(raw_top_level=...)` to preserve
+or replace extension dictionaries and lists. Reserved protocol keys remain
+rejected, and `BencodeDictionary` rejects duplicate keys while sorting unique raw
+keys canonically.

@@ -87,7 +87,9 @@ class _NativeMetainfo:
     @property
     def canonical_cached(self) -> bool: ...
     @property
-    def unknown_fields(self) -> tuple[bytes, ...]: ...
+    def unknown_fields(
+        self,
+    ) -> tuple[tuple[bytes, object, bytes, tuple[int, int]], ...]: ...
     @property
     def validation(self) -> _NativeValidationReport: ...
     def magnet(self, display_name: bool, trackers: bool, web_seeds: bool) -> str: ...
@@ -106,7 +108,7 @@ class _NativeMetainfo:
         set_created_by: bool = ...,
         creation_date: int | None = ...,
         set_creation_date: bool = ...,
-        raw_top_level: list[tuple[bytes, int | bytes]] = ...,
+        raw_top_level: list[tuple[bytes, object]] = ...,
         file_attributes: list[tuple[list[bytes], bytes]] = ...,
     ) -> _NativeMetainfo: ...
     def verify(

@@ -70,6 +70,10 @@ optional text metadata, unknown fields, validation reports, and creation results
 first access; ordinary inspection **MUST NOT** request canonical serialization.
 Parsed trackers, web seeds, node hosts, source, comment, and creator values **MUST**
 remain lossless bytes; node ports and creation dates **MUST** remain integers.
+Unknown fields **MUST** expose raw keys, recursive immutable values, exact encoded
+entry bytes, and source spans. Recursive values **MUST** preserve arbitrary-size
+integers, byte strings, ordered lists, and unique raw-key dictionaries, and the
+same model **MUST** be accepted by raw extension editing.
 Native and public owner objects are non-subclassable and intentionally
 non-picklable until a stable serialized-object policy is specified.
 `ValidationReport` exposes protocol validity, canonicality, canonical issue

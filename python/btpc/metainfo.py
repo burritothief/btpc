@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Never, Protocol, SupportsIndex, cast
+from typing import TYPE_CHECKING, Never, Protocol, SupportsIndex, TypeAlias, cast
 
 from . import _native
 from ._conversion import (
@@ -27,7 +27,7 @@ from .types import (
 from .verification import PayloadVerificationReport, verify
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Sequence
+    from collections.abc import Callable, Mapping, Sequence
     from os import PathLike
 
     from ._native import _NativeMetainfo as _NativeMetainfoType
@@ -36,6 +36,110 @@ if TYPE_CHECKING:
 
 class _Buffer(Protocol):
     def __buffer__(self, flags: int, /) -> memoryview: ...
+
+
+@dataclass(frozen=True, slots=True)
+class BencodeList:
+    """Store an immutable ordered bencode list.
+
+    Attributes:
+        values: Recursive values in source order.
+    """
+
+    values: tuple[BencodeValue, ...]
+
+    def __post_init__(self) -> None:
+        """Validate and freeze recursive values."""
+        object.__setattr__(
+            self,
+            "values",
+            tuple(_normalize_bencode_value(value) for value in self.values),
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class BencodeDictionary:
+    """Store an immutable bencode dictionary in canonical raw-key order.
+
+    Attributes:
+        items: Unique raw-byte keys and recursive values.
+    """
+
+    items: tuple[tuple[bytes, BencodeValue], ...]
+
+    def __post_init__(self) -> None:
+        """Validate keys, reject duplicates, and sort canonically."""
+        normalized: list[tuple[bytes, BencodeValue]] = []
+        seen: set[bytes] = set()
+        for key, value in self.items:
+            if not isinstance(key, bytes):
+                message = "bencode dictionary keys must be bytes"
+                raise TypeError(message)
+            if key in seen:
+                message = f"duplicate bencode dictionary key: {key!r}"
+                raise ValueError(message)
+            seen.add(key)
+            normalized.append((key, _normalize_bencode_value(value)))
+        object.__setattr__(self, "items", tuple(sorted(normalized)))
+
+
+@dataclass(frozen=True, slots=True)
+class UnknownField:
+    """Describe one unknown top-level field and its exact source encoding.
+
+    Attributes:
+        key: Raw top-level dictionary key.
+        value: Recursive semantic bencode value.
+        encoded: Exact source bytes covering the encoded key and value.
+        span: Half-open offsets for ``encoded`` within ``original_bytes``.
+    """
+
+    key: bytes
+    value: BencodeValue
+    encoded: bytes
+    span: tuple[int, int]
+
+
+BencodeValue: TypeAlias = int | bytes | BencodeList | BencodeDictionary
+
+
+def _normalize_bencode_value(value: BencodeValue) -> BencodeValue:
+    if isinstance(value, bool):
+        message = "bencode values do not accept bool; use an integer"
+        raise TypeError(message)
+    if isinstance(value, (int, bytes)):
+        return value
+    if isinstance(value, BencodeList):
+        return value
+    if isinstance(value, BencodeDictionary):
+        return value
+    message = "bencode values must be int, bytes, BencodeList, or BencodeDictionary"
+    raise TypeError(message)
+
+
+def _public_bencode_value(value: object) -> BencodeValue:
+    if isinstance(value, bool):
+        message = "native bencode integer unexpectedly returned bool"
+        raise TypeError(message)
+    if isinstance(value, (int, bytes)):
+        return value
+    if isinstance(value, list):
+        return BencodeList(tuple(_public_bencode_value(item) for item in value))
+    if isinstance(value, dict):
+        return BencodeDictionary(
+            tuple((key, _public_bencode_value(item)) for key, item in value.items())
+        )
+    message = f"unexpected native bencode value: {type(value).__name__}"
+    raise TypeError(message)
+
+
+def _native_bencode_value(value: BencodeValue) -> object:
+    value = _normalize_bencode_value(value)
+    if isinstance(value, BencodeList):
+        return [_native_bencode_value(item) for item in value.values]
+    if isinstance(value, BencodeDictionary):
+        return {key: _native_bencode_value(item) for key, item in value.items}
+    return value
 
 
 @dataclass(frozen=True, slots=True)
@@ -137,7 +241,7 @@ class Metainfo:
     _info_hash_v2_cache: HashValue | bool | None
     _original_bytes_cache: bytes | None
     _trackers_cache: tuple[tuple[bytes, ...], ...] | None
-    _unknown_fields_cache: tuple[bytes, ...] | None
+    _unknown_fields_cache: tuple[UnknownField, ...] | None
     _validation_cache: ValidationReport | None
     _web_seeds_cache: tuple[bytes, ...] | None
 
@@ -362,7 +466,7 @@ class Metainfo:
         comment: str | None | UnchangedType = UNCHANGED,
         created_by: str | None | UnchangedType = UNCHANGED,
         creation_date: int | None | UnchangedType = UNCHANGED,
-        raw_top_level: dict[bytes, int | bytes] | None = None,
+        raw_top_level: Mapping[bytes, BencodeValue] | None = None,
         file_attributes: dict[tuple[bytes, ...], bytes] | None = None,
     ) -> Metainfo:
         """Return a validated copy with explicit preserve, remove, or set edits.
@@ -385,7 +489,7 @@ class Metainfo:
             comment: Comment, ``None`` to remove, or ``UNCHANGED``.
             created_by: Creator text, ``None`` to remove, or ``UNCHANGED``.
             creation_date: Unix timestamp, ``None`` to remove, or ``UNCHANGED``.
-            raw_top_level: Raw top-level integer or byte-string replacements.
+            raw_top_level: Raw recursive bencode extension replacements.
             file_attributes: Raw attributes keyed by raw torrent path components.
 
         Returns:
@@ -433,7 +537,10 @@ class Metainfo:
                 created_by is not UNCHANGED,
                 None if creation_date is UNCHANGED else creation_date,
                 creation_date is not UNCHANGED,
-                list((raw_top_level or {}).items()),
+                [
+                    (key, _native_bencode_value(item))
+                    for key, item in (raw_top_level or {}).items()
+                ],
                 [
                     (list(path), attributes)
                     for path, attributes in (file_attributes or {}).items()
@@ -572,11 +679,14 @@ class Metainfo:
         return cached
 
     @property
-    def unknown_fields(self) -> tuple[bytes, ...]:
-        """Return cached unknown top-level field keys."""
+    def unknown_fields(self) -> tuple[UnknownField, ...]:
+        """Return cached unknown fields with values and exact source encodings."""
         cached = self._unknown_fields_cache
         if cached is None:
-            cached = self._native.unknown_fields
+            cached = tuple(
+                UnknownField(key, _public_bencode_value(value), encoded, span)
+                for key, value, encoded, span in self._native.unknown_fields
+            )
             object.__setattr__(self, "_unknown_fields_cache", cached)
         return cached
 
@@ -647,4 +757,12 @@ class Metainfo:
         )
 
 
-__all__ = ["Metainfo", "TorrentFile", "ValidationReport"]
+__all__ = [
+    "BencodeDictionary",
+    "BencodeList",
+    "BencodeValue",
+    "Metainfo",
+    "TorrentFile",
+    "UnknownField",
+    "ValidationReport",
+]

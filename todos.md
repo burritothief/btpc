@@ -5304,8 +5304,8 @@ remain adapters over `btpc-core` throughout.
      licenses, sources, and bans pass. This unrelated dependency update is not
      mixed into the optional-metadata change.
 
-109. [ ] [Review] Expose unknown bencode values, not only their keys, in Python
-   Claimed by:
+109. [x] [Review] Expose unknown bencode values, not only their keys, in Python
+   Claimed by: Codex implementer (2026-07-06 19:02 PDT)
    Context:
    Rust `UnknownField` retains both key and owned bencode value, but Python
    `Metainfo.unknown_fields` returns only `tuple[bytes, ...]`. Python callers cannot
@@ -5329,7 +5329,31 @@ remain adapters over `btpc-core` throughout.
    semantic loss, and that Rust/Python canonical bytes agree. Run Pyrefly, Pyright,
    stub checks, pytest, and installed-wheel API tests.
    Evidence:
+   - Added frozen public `BencodeList`, `BencodeDictionary`, and `UnknownField`
+     values plus the recursive `BencodeValue` type. Unknown fields now expose raw
+     keys, nested values, exact encoded key/value bytes, and half-open source spans;
+     native and public results are lazily cached.
+   - PyO3 conversion preserves arbitrary-size Python integers, non-UTF-8 bytes and
+     dictionary keys, empty/nested lists and dictionaries, and canonical raw-key
+     ordering. Raw extension editing accepts the same recursive model, rejects
+     booleans/non-byte dictionary keys, and still delegates reserved-key rejection
+     to the core editor.
+   - `uv run pytest tests/python` passed 77/77, including equality/repr, cache
+     identity, nested and empty containers, arbitrary integers, exact spans/bytes,
+     read-edit-write semantic preservation, and Rust/Python canonical byte parity.
+     `cargo test -p btpc-core --test public_api` passed 11/11 for the new exact
+     unknown-field source-byte accessor.
+   - Pyrefly, Pyright, Ruff, strict workspace Clippy, native stub/runtime parity,
+     rustdoc, workspace doctests, and `cargo nextest run --workspace --all-features`
+     (238/238) passed. The spec registry validated 16 specs and 120 requirements.
+   - A release wheel installed into a temporary environment outside the checkout
+     passed the external typed consumer, recursive unknown-value runtime round trip,
+     and the wheel/sdist typing-artifact test. `make docs-check` passed 43 tests and
+     validated the 404-file generated site within size budgets.
    Notes:
+   - `cargo deny check` remains blocked only by the existing Criterion-only
+     `RUSTSEC-2026-0204` advisory for `crossbeam-epoch 0.9.18`; bans, licenses, and
+     sources pass, so the unrelated dependency update remains separate.
 
 110. [ ] [Review] Complete lossless filesystem-path schemas on every supported platform
    Claimed by:

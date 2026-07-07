@@ -87,6 +87,9 @@ fn public_v1_api_preserves_originals_and_exposes_owned_values() {
     assert!(torrent.info_hash_v2().is_none());
     assert_eq!(torrent.original_bytes(), bytes);
     assert_eq!(torrent.unknown_fields().len(), 1);
+    let unknown = &torrent.unknown_fields()[0];
+    assert_eq!(torrent.unknown_field_bytes(unknown), b"11:x-extensioni7e");
+    assert_eq!(unknown.span().end() - unknown.span().start(), 17);
     assert!(torrent.validate().is_valid());
 
     let mut original = Vec::new();

@@ -1212,6 +1212,7 @@ impl TorrentFile {
 pub struct UnknownField {
     key: Vec<u8>,
     value: crate::bencode::OwnedValue,
+    span: Span,
 }
 
 impl UnknownField {
@@ -1225,6 +1226,12 @@ impl UnknownField {
     #[must_use]
     pub const fn value(&self) -> &crate::bencode::OwnedValue {
         &self.value
+    }
+
+    /// Returns the exact source span covering the encoded key and value.
+    #[must_use]
+    pub const fn span(&self) -> Span {
+        self.span
     }
 }
 
@@ -1443,6 +1450,7 @@ impl Metainfo {
                 Ok(UnknownField {
                     key: key.bytes().to_vec(),
                     value: value_to_owned(value)?,
+                    span: Span::new(key.span().start(), value.span().end()),
                 })
             })
             .collect::<Result<Vec<_>>>()?;
@@ -1647,6 +1655,12 @@ impl Metainfo {
     #[must_use]
     pub fn unknown_fields(&self) -> &[UnknownField] {
         &self.unknown_fields
+    }
+
+    /// Returns the exact source bytes for an unknown top-level field.
+    #[must_use]
+    pub fn unknown_field_bytes(&self, field: &UnknownField) -> &[u8] {
+        &self.original[field.span().range()]
     }
 
     /// Returns the successful validation report retained at construction.

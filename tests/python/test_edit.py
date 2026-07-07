@@ -5,6 +5,25 @@ from typing import TYPE_CHECKING
 import btpc
 import pytest
 
+
+def _bencode(value: object) -> bytes:
+    if isinstance(value, bytes):
+        return str(len(value)).encode() + b":" + value
+    if isinstance(value, int):
+        return b"i" + str(value).encode() + b"e"
+    if isinstance(value, list):
+        return b"l" + b"".join(_bencode(item) for item in value) + b"e"
+    if isinstance(value, dict):
+        return (
+            b"d"
+            + b"".join(
+                _bencode(key) + _bencode(item) for key, item in sorted(value.items())
+            )
+            + b"e"
+        )
+    raise TypeError(type(value))
+
+
 if TYPE_CHECKING:
     from pathlib import Path
 
@@ -82,10 +101,51 @@ def test_python_editor_raw_fields_and_attributes(tmp_path: Path) -> None:
         raw_top_level={b"x-custom": 7},
         file_attributes={(b"payload",): b"x"},
     )
-    assert b"x-custom" in edited.unknown_fields
+    assert [field.key for field in edited.unknown_fields] == [b"x-custom"]
     assert edited.files[0].attributes == b"x"
     with pytest.raises(btpc.MetainfoError, match="reserved"):
         original.edit(raw_top_level={b"announce": b"bad"})
+
+
+def test_python_raw_editor_round_trips_recursive_unknown_values() -> None:
+    huge = 10**100
+    value = btpc.BencodeDictionary(
+        (
+            (b"\xffnested", btpc.BencodeList((huge, b"\xfe", btpc.BencodeList(())))),
+            (b"empty", btpc.BencodeDictionary(())),
+        )
+    )
+    original = btpc.Metainfo.from_bytes(
+        b"d4:infod6:lengthi0e4:name1:x12:piece lengthi16384e6:pieces0:ee"
+    )
+
+    edited = original.edit(raw_top_level={b"\xf0extension": value})
+    field = edited.unknown_fields[0]
+    unchanged = edited.edit(raw_top_level={field.key: field.value})
+
+    assert field.value == value
+    assert unchanged.unknown_fields == edited.unknown_fields
+    assert unchanged.to_bytes() == edited.to_bytes()
+    assert unchanged.original_bytes == edited.original_bytes
+    assert edited.to_bytes() == _bencode(
+        {
+            b"\xf0extension": {
+                b"\xffnested": [huge, b"\xfe", []],
+                b"empty": {},
+            },
+            b"info": {
+                b"length": 0,
+                b"name": b"x",
+                b"piece length": 16_384,
+                b"pieces": b"",
+            },
+        }
+    )
+
+    with pytest.raises(TypeError, match="bool"):
+        original.edit(raw_top_level={b"bad": True})  # type: ignore[dict-item]
+    with pytest.raises(TypeError, match="keys must be bytes"):
+        btpc.BencodeDictionary((("bad", 1),))  # type: ignore[arg-type]
 
 
 def test_python_top_level_edit_preserves_noncanonical_info_bytes() -> None:
@@ -98,7 +158,7 @@ def test_python_top_level_edit_preserves_noncanonical_info_bytes() -> None:
     assert edited.info_hash_v1 == original.info_hash_v1
     assert original_info in edited.original_bytes
     assert edited.to_bytes() != edited.original_bytes
-    assert b"x-custom" in edited.unknown_fields
+    assert [field.key for field in edited.unknown_fields] == [b"x-custom"]
 
 
 def test_python_hybrid_attributes_update_both_representations(

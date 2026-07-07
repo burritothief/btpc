@@ -313,3 +313,61 @@ def test_optional_metadata_warning_and_rejection_policy(tmp_path: Path) -> None:
     ]:
         with pytest.raises(btpc.MetainfoError):
             btpc.create_bytes(payload, options=options)
+
+
+def test_unknown_fields_expose_recursive_lossless_values_and_source_identity() -> None:
+    huge = 10**100
+    nested = [huge, b"\xfevalue", [], {b"\xffkey": b"\xfdnested"}, {}]
+    data = _bencode(
+        {
+            b"\xf0extension": nested,
+            b"empty-extension": {},
+            b"info": {
+                b"length": 0,
+                b"name": b"x",
+                b"piece length": 16_384,
+                b"pieces": b"",
+            },
+        }
+    )
+    torrent = btpc.Metainfo.from_bytes(data)
+    empty_encoded = _bencode(b"empty-extension") + _bencode({})
+    nested_encoded = _bencode(b"\xf0extension") + _bencode(nested)
+    empty_start = data.index(empty_encoded)
+    nested_start = data.index(nested_encoded)
+
+    assert torrent.unknown_fields is torrent.unknown_fields
+    assert torrent._native.unknown_fields is torrent._native.unknown_fields  # noqa: SLF001
+    assert torrent.unknown_fields == (
+        btpc.UnknownField(
+            key=b"empty-extension",
+            value=btpc.BencodeDictionary(()),
+            encoded=empty_encoded,
+            span=(empty_start, empty_start + len(empty_encoded)),
+        ),
+        btpc.UnknownField(
+            key=b"\xf0extension",
+            value=btpc.BencodeList(
+                (
+                    huge,
+                    b"\xfevalue",
+                    btpc.BencodeList(()),
+                    btpc.BencodeDictionary(((b"\xffkey", b"\xfdnested"),)),
+                    btpc.BencodeDictionary(()),
+                )
+            ),
+            encoded=nested_encoded,
+            span=(nested_start, nested_start + len(nested_encoded)),
+        ),
+    )
+    for field in torrent.unknown_fields:
+        assert data[slice(*field.span)] == field.encoded
+    assert "empty-extension" in repr(torrent.unknown_fields[0])
+    assert btpc.BencodeDictionary(((b"b", 2), (b"a", 1))).items == (
+        (b"a", 1),
+        (b"b", 2),
+    )
+    assert btpc.BencodeList((1, b"x")) == btpc.BencodeList((1, b"x"))
+    assert "values=(1, b'x')" in repr(btpc.BencodeList((1, b"x")))
+    with pytest.raises(ValueError, match="duplicate"):
+        btpc.BencodeDictionary(((b"same", 1), (b"same", 2)))

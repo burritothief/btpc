@@ -13,7 +13,7 @@ pub struct Span {
 }
 
 impl Span {
-    const fn new(start: usize, end: usize) -> Self {
+    pub(crate) const fn new(start: usize, end: usize) -> Self {
         Self { start, end }
     }
 

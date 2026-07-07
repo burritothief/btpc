@@ -20,7 +20,10 @@ use pyo3::buffer::PyBuffer;
 use pyo3::prelude::*;
 use pyo3::sync::PyOnceLock;
 use pyo3::types::{PyAny, PyTuple};
-use views::{NativeCreateResult, NativeMetainfo, NativePayloadMismatch, NativeVerificationReport};
+use views::{
+    NativeCreateResult, NativeMetainfo, NativePayloadMismatch, NativeVerificationReport,
+    python_to_owned_value,
+};
 
 fn parse_options(
     max_total_input: Option<usize>,
@@ -154,17 +157,9 @@ pub(crate) fn edit_metainfo(
     }
     for (key, value) in raw_top_level {
         let value = value.bind(py);
-        let value = if let Ok(value) = value.extract::<i64>() {
-            btpc_core::bencode::OwnedValue::integer(value)
-        } else if let Ok(value) = value.extract::<Vec<u8>>() {
-            btpc_core::bencode::OwnedValue::bytes(value)
-        } else {
-            return Err(pyo3::exceptions::PyTypeError::new_err(
-                "raw extension values must be int or bytes",
-            ));
-        };
+        let value = python_to_owned_value(py, value);
         editor = editor
-            .raw_top_level(key, value)
+            .raw_top_level(key, value?)
             .map_err(|error| to_python_error(py, &error))?;
     }
     for (path, attributes) in file_attributes {

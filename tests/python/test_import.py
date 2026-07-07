@@ -49,7 +49,14 @@ def test_public_domain_modules_are_canonical_and_root_reexports_preserve_identit
             "TorrentPath",
             "UNCHANGED",
         ],
-        btpc.metainfo: ["Metainfo", "TorrentFile", "ValidationReport"],
+        btpc.metainfo: [
+            "BencodeDictionary",
+            "BencodeList",
+            "Metainfo",
+            "TorrentFile",
+            "UnknownField",
+            "ValidationReport",
+        ],
         btpc.creation: [
             "CancellationToken",
             "CreateMetrics",
