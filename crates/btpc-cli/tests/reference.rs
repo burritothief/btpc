@@ -136,8 +136,10 @@ fn checked_in_help_reference_matches_the_binary() {
 fn checked_in_web_reference_matches_the_command_model() {
     let first = tempdir().unwrap();
     let second = tempdir().unwrap();
+    let first_generated = first.path().join("generated");
+    let second_generated = second.path().join("generated");
     btpc()
-        .args(["__generate-markdown", first.path().to_str().unwrap()])
+        .args(["__generate-markdown", first_generated.to_str().unwrap()])
         .assert()
         .success();
     btpc()
@@ -145,18 +147,18 @@ fn checked_in_web_reference_matches_the_command_model() {
         .env("HOME", second.path())
         .env("LC_ALL", "C")
         .env("BTPC_CONFIG", "https://secret.example/announce")
-        .args(["__generate-markdown", second.path().to_str().unwrap()])
+        .args(["__generate-markdown", second_generated.to_str().unwrap()])
         .assert()
         .success();
 
     let checked_in = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../docs/cli/reference");
-    let generated_names = markdown_names(first.path());
-    assert_eq!(generated_names, markdown_names(second.path()));
+    let generated_names = markdown_names(&first_generated);
+    assert_eq!(generated_names, markdown_names(&second_generated));
     assert_eq!(generated_names, markdown_names(&checked_in));
     assert_eq!(generated_names.len(), 28);
     for name in generated_names {
-        let first_bytes = fs::read(first.path().join(&name)).unwrap();
-        assert_eq!(first_bytes, fs::read(second.path().join(&name)).unwrap());
+        let first_bytes = fs::read(first_generated.join(&name)).unwrap();
+        assert_eq!(first_bytes, fs::read(second_generated.join(&name)).unwrap());
         assert_eq!(first_bytes, fs::read(checked_in.join(&name)).unwrap());
         assert!(!String::from_utf8_lossy(&first_bytes).contains("| —"));
         assert!(!String::from_utf8_lossy(&first_bytes).contains("secret.example"));
