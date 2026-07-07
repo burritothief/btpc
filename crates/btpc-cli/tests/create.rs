@@ -305,7 +305,19 @@ fn ergonomic_piece_lengths_target_policy_and_print_order_work() {
         .assert()
         .success();
     let lines = String::from_utf8(assertion.get_output().stdout.clone()).unwrap();
-    assert!(lines.lines().next().unwrap().ends_with("out.torrent"));
+    let path_line = lines.lines().next().unwrap();
+    #[cfg(not(windows))]
+    assert!(path_line.ends_with("out.torrent"));
+    #[cfg(windows)]
+    {
+        let units = path_line
+            .strip_prefix("windows-utf16:")
+            .unwrap()
+            .split(',')
+            .map(|unit| u16::from_str_radix(unit, 16).unwrap())
+            .collect::<Vec<_>>();
+        assert!(String::from_utf16(&units).unwrap().ends_with("out.torrent"));
+    }
     assert_eq!(lines.lines().nth(1).unwrap().len(), 40);
     fs::remove_file(&output).unwrap();
     btpc()
