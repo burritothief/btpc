@@ -5355,7 +5355,7 @@ remain adapters over `btpc-core` throughout.
      `RUSTSEC-2026-0204` advisory for `crossbeam-epoch 0.9.18`; bans, licenses, and
      sources pass, so the unrelated dependency update remains separate.
 
-110. [-] [Review] Complete lossless filesystem-path schemas on every supported platform
+110. [x] [Review] Complete lossless filesystem-path schemas on every supported platform
    Claimed by: Codex implementer (2026-07-06 19:35 PDT)
    Context:
    Todo 78 added exact Unix path objects but explicitly left Windows using a lossy
@@ -5380,7 +5380,35 @@ remain adapters over `btpc-core` throughout.
    unreviewed `to_string_lossy` uses and require each remaining use to be display-
    only with a targeted test.
    Evidence:
+   - Added `btpc.filesystem-path.v2`: Unix paths use exact hexadecimal native
+     bytes, Windows paths use exact UTF-16 code units, and both carry a safely
+     escaped display value. Create, edit, verify, batch, config, completion, error,
+     and benchmark surfaces now use the exact object as canonical data; schema-v1
+     benchmark parsing remains supported and lossy aliases are documented as
+     deprecated for removal in v3.
+   - Plain path output preserves Unix native bytes and emits self-describing Windows
+     UTF-16 units. Inferred output names append to `OsString`, human output escapes
+     control characters, and remaining `to_string_lossy` calls are display-only.
+     Python native errors construct platform-native `Path` values directly from
+     `PathBuf` without a UTF-8 byte round trip.
+   - Focused CLI path tests, benchmark tests, and Python verification tests passed,
+     including Unix colliding lossy names, control-character display escaping,
+     schema compatibility, and exact Python `PathError.path` identity. The generated
+     CLI reference test passed 3/3 after making its temporary output and line-ending
+     comparisons portable on Windows.
+   - Full local gates passed: strict workspace Clippy; `cargo nextest` 244/244;
+     workspace doctests and rustdoc; Ruff check/format; Pyrefly, Pyright, and native
+     stub parity; `uv run pytest tests/python tests/benchmarks` 117 passed and 1
+     Windows-only skip; `make docs-check` 43 tests plus a validated 404-file site;
+     and spec validation for 16 specs and 120 requirements.
+   - A release wheel installed outside the checkout preserved a non-UTF-8 Unix
+     `PathError.path` and passed the installed typing-artifact checks. GitHub Actions
+     run 28839807889 passed both `Python / Windows path identity` and the complete
+     `Rust / stable / windows-latest` workspace test job.
    Notes:
+   - `cargo deny check` remains blocked only by the existing Criterion-only
+     `RUSTSEC-2026-0204` advisory for `crossbeam-epoch 0.9.18`; bans, licenses, and
+     sources pass, so that unrelated dependency update remains separate.
 
 111. [ ] [Review] Prepare btpc-core for actual crates.io publication
    Claimed by:
