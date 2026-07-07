@@ -23,7 +23,8 @@ for independently compiled facade usage.
 
 ## Parse and Inspect
 
-```rust
+```rust,no_run
+# extern crate btpc_core;
 use btpc_core::{Metainfo, TorrentMode};
 
 let bytes = b"d4:infod6:lengthi0e4:name5:empty12:piece lengthi16e6:pieces0:ee";
@@ -65,7 +66,8 @@ digit runs independently of numeric conversion.
 
 ## Create
 
-```rust
+```rust,no_run
+# extern crate btpc_core;
 use btpc_core::create::{
     CreateMode, CreateOptions, Creator, HashThreads, NoProgress, PieceLength,
 };
@@ -113,7 +115,8 @@ parallel modes remain bounded to the operation.
 
 ## Verify
 
-```rust
+```rust,no_run
+# extern crate btpc_core;
 use btpc_core::Metainfo;
 use btpc_core::create::NoProgress;
 use btpc_core::verify::Verifier;

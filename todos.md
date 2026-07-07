@@ -5757,7 +5757,7 @@ remain adapters over `btpc-core` throughout.
      `allow_inspection=False`; generated output rejects private/native paths and
      never imports the compiled extension.
 
-116. [-] Integrate CLI reference, Rust chapter tests, and rustdoc into the mdBook artifact
+116. [x] Integrate CLI reference, Rust chapter tests, and rustdoc into the mdBook artifact
    Claimed by: Codex implementer (2026-07-06 23:06 PDT)
    Requirements:
    `DOCSITE-CLI-001`, `DOCSITE-RUST-001`, `DOCSITE-BUILD-001`,
@@ -5795,7 +5795,38 @@ remain adapters over `btpc-core` throughout.
    strict affected clippy, Ruff, docs tests, spec validation, and the unchanged
    MkDocs production gate.
    Evidence:
+   - Initial `tests/docs/test_mdbook_artifact.py` run retained 3 failures: the
+     builder lacked the required stages, stale rustdoc survived, and a failed
+     mdBook invocation deleted the published destination. The first `mdbook test`
+     also retained failures for unresolved `btpc_core` linkage before isolated
+     library paths and renderer-compatible `no_run` snippets were added.
+   - Two direct `btpc __generate-markdown` runs were byte-identical to each other
+     and to all committed `docs/cli/reference/*.md` files. `cargo test -p btpc-cli
+     --test reference` passed all 3 raw-help, website-reference, manpage, and
+     completion generator tests.
+   - `uv run pytest tests/docs/test_mdbook_artifact.py
+     tests/docs/test_mdbook_content_port.py tests/docs/test_cli_reference.py
+     tests/docs/test_rustdoc_site.py -q` passed all 12 focused tests. These cover
+     every CLI chapter in `SUMMARY.md`, stable anchors, builds from two working
+     directories, byte-reproducible artifacts, stale mdBook/rustdoc removal,
+     idempotent post-processing, same-origin rustdoc assets, and atomic failure.
+   - `make docs-mdbook-site` passed the exact mdBook 0.5.3 check, deterministic CLI
+     drift check, Python preprocessor handshake, clean build, all Rust chapter
+     snippet tests, fresh warning-denied rustdoc, route/canonical/sitemap
+     post-processing, offline validation, and atomic publication. The artifact had
+     447 files, 247 HTML pages, 55 compatibility redirects, and embedded
+     `rust/btpc_core/index.html`.
+   - `cargo test -p btpc-core --doc` passed the existing crate doctest. `cargo fmt
+     --all --check` and strict Clippy for `btpc-core` and `btpc-cli` passed. Focused
+     Ruff check/format, spec validation (16 specs and 121 requirements), and
+     `git diff --check` passed.
+   - `make docs-check` passed all 62 docs tests and preserved the production MkDocs
+     artifact gate: 406 files, 192 HTML pages, all 191 baseline routes, rustdoc,
+     links, budgets, and codespell validated.
    Notes:
+   - `mdbook test` uses a clean isolated Cargo target and exposes only its
+     `debug`/`debug/deps` library paths. Normal `cargo test -p btpc-core --doc`
+     remains an independent required layer.
 
 117. [ ] Port the production docs gate and remove all MkDocs-specific code and dependencies
    Claimed by:

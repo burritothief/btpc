@@ -1,6 +1,7 @@
 # Rust quick start
 
-```rust
+```rust,no_run
+# extern crate btpc_core;
 use btpc_core::create::{CreateMode, CreateOptions, Creator, NoProgress, PieceLength};
 
 let options = CreateOptions::builder()

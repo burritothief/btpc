@@ -8,6 +8,7 @@ from pathlib import Path, PurePosixPath
 ROOT = Path(__file__).parents[1]
 BASELINE = ROOT / "tests/docs/fixtures/renderer_migration_baseline.json"
 PAGES_ROOT = "/btpc/"
+SITE_BASE = "https://burritothief.github.io/btpc/"
 NOTICE = (
     '<aside class="btpc-development-notice" role="note">'
     "<strong>Development documentation:</strong> this site describes the current "
@@ -21,6 +22,10 @@ def _inject_head(source: str, markup: str) -> str:
 
 def _canonical_markup(url: str) -> str:
     return f'<link rel="canonical" href="{html.escape(url, quote=True)}">'
+
+
+def _canonical_for(relative: str) -> str:
+    return f"{SITE_BASE}{relative.removesuffix('index.html')}"
 
 
 def _redirect_page(*, canonical: str, route: str, target: str) -> str:
@@ -61,7 +66,8 @@ def postprocess(site: Path) -> tuple[int, int]:
         relative = route["path"]
         if relative.startswith("rust/") and relative != "rust/index.html":
             continue
-        if (site / relative).is_file():
+        existing = site / relative
+        if existing.is_file() and 'name="btpc-redirect"' not in existing.read_text():
             if canonical := canonicals.get(relative):
                 target_canonicals[relative] = canonical
             continue
@@ -75,15 +81,25 @@ def postprocess(site: Path) -> tuple[int, int]:
         target_canonicals.setdefault(candidate, canonical)
 
     processed = 0
+    sitemap_urls: set[str] = set()
     for path in sorted(site.rglob("*.html")):
         relative = path.relative_to(site).as_posix()
         source = path.read_text()
+        is_rustdoc = relative.startswith("rust/") and relative != "rust/index.html"
         if "<main>" in source and "btpc-development-notice" not in source:
             source = source.replace("<main>", f"<main>\n{NOTICE}", 1)
-        if (
-            canonical := target_canonicals.get(relative)
-        ) and 'rel="canonical"' not in source:
+        if relative == "toc.html" and "<title>" not in source:
+            source = _inject_head(source, "<title>BTPC Documentation Contents</title>")
+        canonical = target_canonicals.get(relative, _canonical_for(relative))
+        if not is_rustdoc and 'rel="canonical"' not in source:
             source = _inject_head(source, _canonical_markup(canonical))
+        is_redirect = 'name="btpc-redirect"' in source
+        if (
+            not is_rustdoc
+            and not is_redirect
+            and relative not in {"404.html", "print.html", "toc.html"}
+        ):
+            sitemap_urls.add(canonical)
         path.write_text(source)
         processed += 1
 
@@ -97,6 +113,15 @@ def postprocess(site: Path) -> tuple[int, int]:
                 target=f"{PAGES_ROOT}{target}",
             )
         )
+    sitemap = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+    ]
+    sitemap.extend(
+        f"  <url><loc>{html.escape(url)}</loc></url>" for url in sorted(sitemap_urls)
+    )
+    sitemap.extend(["</urlset>", ""])
+    (site / "sitemap.xml").write_text("\n".join(sitemap))
     return processed, len(redirects)
 
 

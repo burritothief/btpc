@@ -72,6 +72,11 @@ def _stage_cli() -> None:
 def _stage_mkdocs(output: Path) -> None:
     source = STAGING_DIR / "mkdocs-source"
     shutil.copytree(ROOT / "docs", source)
+    for markdown in source.rglob("*.md"):
+        content = markdown.read_text()
+        content = content.replace("```rust,no_run\n", "```rust\n")
+        content = content.replace("# extern crate btpc_core;\n", "")
+        markdown.write_text(content)
     for page in source.joinpath("python/reference").glob("*.md"):
         module = page.stem
         tree = ast.parse((PYTHON_PACKAGE_DIR / f"{module}.py").read_text())

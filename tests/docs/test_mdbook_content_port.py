@@ -8,6 +8,8 @@ from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import unquote, urlparse
 
+import pytest
+
 ROOT = Path(__file__).parents[2]
 BASELINE = ROOT / "tests/docs/fixtures/renderer_migration_baseline.json"
 BUILDER = ROOT / "scripts/build_mdbook_site.py"
@@ -41,6 +43,17 @@ def _inspect(path: Path) -> _PageInspector:
     return inspector
 
 
+@pytest.fixture(scope="module")
+def mdbook_site(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    site = tmp_path_factory.mktemp("mdbook-content") / "site"
+    subprocess.run(  # noqa: S603
+        [sys.executable, BUILDER, "--site-dir", site],
+        cwd=site.parent,
+        check=True,
+    )
+    return site
+
+
 def test_handwritten_markdown_is_renderer_neutral() -> None:
     for path in (ROOT / "docs").rglob("*.md"):
         text = path.read_text()
@@ -60,13 +73,10 @@ def test_handwritten_markdown_is_renderer_neutral() -> None:
             assert len(headings) == 1, path
 
 
-def test_mdbook_port_preserves_features_and_non_rust_routes(tmp_path: Path) -> None:
-    site = tmp_path / "site"
-    subprocess.run(  # noqa: S603
-        [sys.executable, BUILDER, "--site-dir", site],
-        cwd=tmp_path,
-        check=True,
-    )
+def test_mdbook_port_preserves_features_and_non_rust_routes(
+    mdbook_site: Path,
+) -> None:
+    site = mdbook_site
     homepage = (site / "index.html").read_text()
     assert 'class="btpc-development-notice"' in homepage
     assert "current <code>main</code> branch" in homepage
@@ -101,13 +111,8 @@ def test_mdbook_port_preserves_features_and_non_rust_routes(tmp_path: Path) -> N
             assert inspected.canonical == expected_canonical, relative
 
 
-def test_important_fragments_resolve_after_one_redirect(tmp_path: Path) -> None:
-    site = tmp_path / "site"
-    subprocess.run(  # noqa: S603
-        [sys.executable, BUILDER, "--site-dir", site],
-        cwd=tmp_path,
-        check=True,
-    )
+def test_important_fragments_resolve_after_one_redirect(mdbook_site: Path) -> None:
+    site = mdbook_site
     baseline = json.loads(BASELINE.read_text())
     for route, anchors in baseline["anchors"].items():
         if route.startswith("rust/"):
@@ -122,16 +127,13 @@ def test_important_fragments_resolve_after_one_redirect(tmp_path: Path) -> None:
         assert set(anchors) <= ids, route
 
 
-def test_handwritten_and_cli_rendered_links_resolve(tmp_path: Path) -> None:
-    site = tmp_path / "site"
-    subprocess.run(  # noqa: S603
-        [sys.executable, BUILDER, "--site-dir", site],
-        cwd=tmp_path,
-        check=True,
-    )
+def test_handwritten_and_cli_rendered_links_resolve(mdbook_site: Path) -> None:
+    site = mdbook_site
     for page in site.rglob("*.html"):
         relative = page.relative_to(site).as_posix()
         if relative == "print.html" or "/index.html" in relative:
+            continue
+        if relative.startswith("rust/") and relative != "rust/index.html":
             continue
         inspector = _inspect(page)
         for link in inspector.links:
