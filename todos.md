@@ -5991,8 +5991,8 @@ remain adapters over `btpc-core` throughout.
      and setup-uv actions; actionlint and zizmor still passed and no action pins were
      changed outside this todo's renderer installation scope.
 
-119. [ ] Verify the live mdBook cutover and update documentation operations monitoring
-   Claimed by:
+119. [-] Verify the live mdBook cutover and update documentation operations monitoring
+   Claimed by: Codex implementation agent, 2026-07-06 23:47:10 PDT
    Requirements:
    `DOCSITE-MIGRATE-001`, `DOCSITE-OPS-001`, `DOCSITE-DEPLOY-001`,
    `DOCSITE-QUALITY-001`.
