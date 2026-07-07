@@ -5410,8 +5410,8 @@ remain adapters over `btpc-core` throughout.
      `RUSTSEC-2026-0204` advisory for `crossbeam-epoch 0.9.18`; bans, licenses, and
      sources pass, so that unrelated dependency update remains separate.
 
-111. [ ] [Review] Prepare btpc-core for actual crates.io publication
-   Claimed by:
+111. [-] [Review] Prepare btpc-core for actual crates.io publication
+   Claimed by: Codex implementer (2026-07-06 20:45 PDT)
    Context:
    BTPC is intended to be a publicly embedded Rust library, but workspace metadata
    sets `publish = false` for every crate and the release workflow publishes only
