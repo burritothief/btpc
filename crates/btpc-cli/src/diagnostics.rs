@@ -32,7 +32,7 @@ pub(crate) fn report(error: &Error, requested_color: Option<CliColorPolicy>) -> 
             eprintln!("error [{}]: {}", diagnostic.category, diagnostic.message);
         }
         if let Some(path) = diagnostic.path {
-            eprintln!("  path: {}", path.display());
+            eprintln!("  path: {}", crate::output::safe_path_display(path));
         }
         if let Some(field) = diagnostic.field {
             eprintln!("  field: {field}");

@@ -110,4 +110,13 @@ def test_mismatch_paths_round_trip_non_utf8_bytes(tmp_path: Path) -> None:
     with pytest.raises(btpc.PathError) as raised:
         btpc.Metainfo.read(missing)
     assert raised.value.path is not None
+    assert isinstance(raised.value.path, type(tmp_path))
     assert os.fsencode(raised.value.path.name) == raw_name
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="Windows UTF-16 path semantics")
+def test_error_paths_round_trip_unpaired_utf16_surrogates(tmp_path: Path) -> None:
+    missing = tmp_path / "bad-\ud800"
+    with pytest.raises(btpc.PathError) as raised:
+        btpc.Metainfo.read(missing)
+    assert raised.value.path == missing

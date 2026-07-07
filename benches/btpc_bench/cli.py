@@ -6,12 +6,11 @@ import argparse
 import json
 import sys
 import time
-from dataclasses import asdict
 from pathlib import Path
 
 from .adapters import adapter_registry
 from .dataset import fingerprint_payload, generate_dataset, validate_canonical_iso
-from .models import BenchmarkResult, ToolStatus
+from .models import BenchmarkResult, ToolStatus, dataset_fingerprint_document
 from .report import render_summary
 from .runner import BenchmarkConfig, run_benchmark
 
@@ -51,9 +50,9 @@ def main(arguments: list[str] | None = None) -> int:
             )
             validate_canonical_iso(fingerprint)
             document = {
-                "schema_version": 1,
+                "schema_version": 2,
                 "elapsed_seconds": time.perf_counter() - started,
-                "dataset": asdict(fingerprint),
+                "dataset": dataset_fingerprint_document(fingerprint),
             }
             options.output.parent.mkdir(parents=True, exist_ok=True)
             options.output.write_text(

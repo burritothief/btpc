@@ -68,6 +68,9 @@ metadata while retaining a second snapshot check for mutation detection.
 Performance claims **MUST** record tool versions, hardware, dataset, cache state,
 commands, distributions, throughput, and peak RSS. Invalid torrent output **MUST**
 count as a failed run, not a performance result.
+Versioned benchmark JSON **MUST** encode dataset filesystem paths with the same
+lossless `btpc.filesystem-path.v2` representation as CLI JSON. Readers **MUST**
+continue accepting schema-v1 string paths for existing result archives.
 
 ### PERF-PY-BOUNDARY-001 — Measure Python binding overhead independently
 

@@ -37,6 +37,48 @@ fn multiple_inputs_use_output_dir_and_report_in_input_order() {
 }
 
 #[test]
+fn batch_json_uses_exact_v2_paths_in_input_order() {
+    let temp = TempDir::new().unwrap();
+    let output = temp.path().join("out");
+    fs::create_dir(&output).unwrap();
+    let a = temp.path().join("a");
+    let b = temp.path().join("b");
+    fs::write(&a, b"a").unwrap();
+    fs::write(&b, b"b").unwrap();
+    let assertion = btpc()
+        .arg("create")
+        .arg(&a)
+        .arg(&b)
+        .arg("--output-dir")
+        .arg(&output)
+        .arg("--json")
+        .assert()
+        .success();
+    let documents = assertion
+        .get_output()
+        .stdout
+        .split(|byte| *byte == b'\n')
+        .filter(|line| !line.is_empty())
+        .map(|line| serde_json::from_slice::<serde_json::Value>(line).unwrap())
+        .collect::<Vec<_>>();
+    assert_eq!(documents.len(), 2);
+    assert_eq!(documents[0]["schema"], "btpc.create.v2");
+    assert_eq!(documents[0]["output"]["schema"], "btpc.filesystem-path.v2");
+    assert!(
+        documents[0]["output_display"]
+            .as_str()
+            .unwrap()
+            .ends_with("a.torrent")
+    );
+    assert!(
+        documents[1]["output_display"]
+            .as_str()
+            .unwrap()
+            .ends_with("b.torrent")
+    );
+}
+
+#[test]
 fn batch_schema_dry_run_and_cli_overrides_are_deterministic() {
     let temp = TempDir::new().unwrap();
     let a = temp.path().join("a");

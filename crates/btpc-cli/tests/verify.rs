@@ -50,9 +50,11 @@ fn verify_human_and_json_cover_valid_and_mismatch_results() {
             .stderr("");
         let value: serde_json::Value =
             serde_json::from_slice(&assertion.get_output().stdout).unwrap();
-        assert_eq!(value["schema"], "btpc.verify.v1");
+        assert_eq!(value["schema"], "btpc.verify.v2");
         assert_eq!(value["valid"], false);
-        assert!(!value["mismatches"].as_array().unwrap().is_empty());
+        let mismatch = &value["mismatches"][0];
+        assert_eq!(mismatch["path"]["schema"], "btpc.filesystem-path.v2");
+        assert!(mismatch["path_display"].is_string());
     }
 }
 

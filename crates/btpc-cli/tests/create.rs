@@ -60,9 +60,30 @@ fn json_output_is_versioned_and_only_uses_stdout() {
         .success()
         .stderr("");
     let value: serde_json::Value = serde_json::from_slice(&assertion.get_output().stdout).unwrap();
-    assert_eq!(value["schema"], "btpc.create.v1");
+    assert_eq!(value["schema"], "btpc.create.v2");
     assert_eq!(value["mode"], "v1");
-    assert_eq!(value["output"], output.to_string_lossy().as_ref());
+    assert_eq!(value["output"]["schema"], "btpc.filesystem-path.v2");
+    assert_eq!(
+        value["output"]["display"],
+        output.to_string_lossy().as_ref()
+    );
+    assert_eq!(value["output_display"], output.to_string_lossy().as_ref());
+    #[cfg(unix)]
+    {
+        use std::fmt::Write as _;
+        use std::os::unix::ffi::OsStrExt as _;
+        let expected =
+            output
+                .as_os_str()
+                .as_bytes()
+                .iter()
+                .fold(String::new(), |mut encoded, byte| {
+                    write!(encoded, "{byte:02x}").unwrap();
+                    encoded
+                });
+        assert_eq!(value["output"]["encoding"], "unix-bytes-hex");
+        assert_eq!(value["output"]["value"], expected);
+    }
     assert_eq!(value["file_count"], 1);
     assert!(value["info_hash_v1"].as_str().unwrap().len() == 40);
 }

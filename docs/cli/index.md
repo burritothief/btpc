@@ -15,11 +15,11 @@ are outputs of the same Clap command definition used by the executable.
 
 | Command | Purpose | Machine output |
 | --- | --- | --- |
-| `create INPUT` | Scan and hash a file/directory, then atomically write canonical metainfo | `--json`: `btpc.create.v1` |
+| `create INPUT` | Scan and hash a file/directory, then atomically write canonical metainfo | `--json`: `btpc.create.v2` |
 | `inspect TORRENT` | Display validated metadata without reading payload files | `--json`: `btpc.inspect.v1` |
 | `validate TORRENT` | Validate bencode and protocol fields only | `--json`: `btpc.validate.v1` |
-| `verify TORRENT PAYLOAD` | Check structure and every applicable hash domain | `--json`: `btpc.verify.v1` |
-| `edit TORRENT` | Safely edit typed metainfo fields without reading payloads | `--json`: `btpc.edit.v1` |
+| `verify TORRENT PAYLOAD` | Check structure and every applicable hash domain | `--json`: `btpc.verify.v2` |
+| `edit TORRENT` | Safely edit typed metainfo fields without reading payloads | `--json`: `btpc.edit.v2` |
 | `magnet TORRENT` | Print a deterministic magnet URI | URI only |
 | `config ...` | Locate, validate, explain, and safely update TOML configuration | selected subcommands support JSON |
 | `completion ...` | Generate, install, or uninstall shell completion source | completion source |
@@ -29,6 +29,13 @@ Every metainfo-reading command accepts `--max-input-bytes` and
 `--max-owned-bytes`; `--max-integer-digits` independently bounds decimal digit
 runs. Defaults are the same conservative limits as `btpc-core`; violations use
 invalid-data exit code `4`.
+
+Path-bearing v2 JSON uses `btpc.filesystem-path.v2`: Unix paths carry exact bytes
+as hexadecimal and Windows paths carry exact UTF-16 code units. `display` is safe
+for presentation and escapes control characters. Deprecated `output_display` and
+`path_display` aliases remain through v2 and are removed in v3; consumers should
+read the exact object now. Batch creation emits one v2 create object per input in
+input order.
 
 ## Configuration
 

@@ -194,7 +194,9 @@ fn json_summary_and_config_tracker_aliases_are_supported() {
         .success()
         .stderr("");
     let value: serde_json::Value = serde_json::from_slice(&assertion.get_output().stdout).unwrap();
-    assert_eq!(value["schema"], "btpc.edit.v1");
+    assert_eq!(value["schema"], "btpc.edit.v2");
+    assert_eq!(value["output"]["schema"], "btpc.filesystem-path.v2");
+    assert_eq!(value["output_display"], output.to_string_lossy().as_ref());
     assert_eq!(value["info_hash_v1_changed"], false);
     assert_eq!(
         btpc_core::Metainfo::from_path(output)

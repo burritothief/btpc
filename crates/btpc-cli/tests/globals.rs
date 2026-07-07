@@ -166,6 +166,6 @@ fn existing_json_aliases_keep_schemas_and_exit_codes() {
         .unwrap();
     assert_eq!(output.status.code(), Some(6));
     let value: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
-    assert_eq!(value["schema"], "btpc.verify.v1");
+    assert_eq!(value["schema"], "btpc.verify.v2");
     assert!(output.stderr.is_empty());
 }

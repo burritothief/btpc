@@ -12,8 +12,9 @@ pub(crate) const REDACTED_URL: &str = "<redacted-url>";
 pub(crate) struct CreateJson<'a> {
     pub(crate) schema: &'static str,
     pub(crate) mode: &'static str,
-    pub(crate) output: String,
-    pub(crate) output_path: FilesystemPathJson,
+    pub(crate) output: FilesystemPathJson,
+    #[serde(rename = "output_display")]
+    pub(crate) deprecated_output_display: String,
     pub(crate) info_hash_v1: Option<String>,
     pub(crate) info_hash_v2: Option<String>,
     pub(crate) file_count: usize,
@@ -84,16 +85,18 @@ pub(crate) struct VerifyJson {
 #[derive(Debug, Serialize)]
 pub(crate) struct VerifyMismatchJson {
     pub(crate) kind: &'static str,
-    pub(crate) path: String,
-    pub(crate) path_exact: FilesystemPathJson,
+    pub(crate) path: FilesystemPathJson,
+    #[serde(rename = "path_display")]
+    pub(crate) deprecated_path_display: String,
     pub(crate) piece: Option<u64>,
 }
 
 #[derive(Debug, Serialize)]
 pub(crate) struct FilesystemPathJson {
+    pub(crate) schema: &'static str,
     pub(crate) display: String,
     pub(crate) encoding: &'static str,
-    pub(crate) value: String,
+    pub(crate) value: serde_json::Value,
 }
 
 pub(crate) fn filesystem_path_json(path: &std::path::Path) -> FilesystemPathJson {
@@ -101,18 +104,42 @@ pub(crate) fn filesystem_path_json(path: &std::path::Path) -> FilesystemPathJson
     {
         use std::os::unix::ffi::OsStrExt as _;
         FilesystemPathJson {
-            display: path.to_string_lossy().into_owned(),
+            schema: "btpc.filesystem-path.v2",
+            display: safe_path_display(path),
             encoding: "unix-bytes-hex",
-            value: encode_hex(path.as_os_str().as_bytes()),
+            value: serde_json::json!(encode_hex(path.as_os_str().as_bytes())),
         }
     }
-    #[cfg(not(unix))]
+    #[cfg(windows)]
     {
-        FilesystemPathJson {
-            display: path.to_string_lossy().into_owned(),
-            encoding: "utf-8",
-            value: path.to_string_lossy().into_owned(),
-        }
+        use std::os::windows::ffi::OsStrExt as _;
+        windows_path_json(
+            safe_path_display(path),
+            &path.as_os_str().encode_wide().collect::<Vec<_>>(),
+        )
+    }
+}
+
+pub(crate) fn safe_path_display(path: &std::path::Path) -> String {
+    path.to_string_lossy()
+        .chars()
+        .flat_map(|character| {
+            if character.is_control() {
+                character.escape_default().collect::<Vec<_>>()
+            } else {
+                vec![character]
+            }
+        })
+        .collect()
+}
+
+#[cfg(any(windows, test))]
+fn windows_path_json(display: String, units: &[u16]) -> FilesystemPathJson {
+    FilesystemPathJson {
+        schema: "btpc.filesystem-path.v2",
+        display,
+        encoding: "windows-utf16",
+        value: serde_json::json!(units),
     }
 }
 
@@ -138,6 +165,42 @@ pub(crate) fn stdout_line(value: impl Display) {
 
 pub(crate) fn stdout_text(value: impl Display) {
     print!("{value}");
+}
+
+pub(crate) fn stdout_path(path: &std::path::Path) -> Result<(), Error> {
+    use std::io::Write as _;
+
+    #[cfg(unix)]
+    let bytes = {
+        use std::os::unix::ffi::OsStrExt as _;
+        let mut bytes = path.as_os_str().as_bytes().to_vec();
+        bytes.push(b'\n');
+        bytes
+    };
+    #[cfg(windows)]
+    let bytes = {
+        use std::os::windows::ffi::OsStrExt as _;
+        windows_plain_path(path.as_os_str().encode_wide())
+    };
+    #[cfg(not(any(unix, windows)))]
+    let bytes = format!("{}\n", safe_path_display(path)).into_bytes();
+
+    std::io::stdout()
+        .write_all(&bytes)
+        .map_err(|source| Error::io("<stdout>", source))
+}
+
+#[cfg(any(windows, test))]
+fn windows_plain_path(units: impl IntoIterator<Item = u16>) -> Vec<u8> {
+    let mut output = b"windows-utf16:".to_vec();
+    for (index, unit) in units.into_iter().enumerate() {
+        if index > 0 {
+            output.push(b',');
+        }
+        output.extend_from_slice(format!("{unit:04x}").as_bytes());
+    }
+    output.push(b'\n');
+    output
 }
 
 pub(crate) fn stderr_line(value: impl Display) {
@@ -207,7 +270,54 @@ pub(crate) fn redact_secrets(value: &str) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::{display_width, redact_secrets};
+    use super::{
+        display_width, filesystem_path_json, redact_secrets, safe_path_display, windows_path_json,
+        windows_plain_path,
+    };
+
+    #[cfg(unix)]
+    #[test]
+    fn filesystem_path_json_preserves_non_utf8_unix_bytes() {
+        use std::os::unix::ffi::OsStrExt as _;
+
+        let path = std::path::Path::new(std::ffi::OsStr::from_bytes(b"out-\xff"));
+        let encoded = filesystem_path_json(path);
+        assert_eq!(encoded.schema, "btpc.filesystem-path.v2");
+        assert_eq!(encoded.encoding, "unix-bytes-hex");
+        assert_eq!(encoded.value, serde_json::json!("6f75742dff"));
+        assert!(encoded.display.contains('\u{fffd}'));
+
+        let other = filesystem_path_json(std::path::Path::new(std::ffi::OsStr::from_bytes(
+            b"out-\xfe",
+        )));
+        assert_eq!(encoded.display, other.display);
+        assert_ne!(encoded.value, other.value);
+    }
+
+    #[test]
+    fn filesystem_path_json_preserves_windows_utf16_code_units() {
+        let encoded = windows_path_json("bad-�".to_owned(), &[98, 97, 100, 45, 0xd800]);
+        assert_eq!(encoded.schema, "btpc.filesystem-path.v2");
+        assert_eq!(encoded.encoding, "windows-utf16");
+        assert_eq!(encoded.value, serde_json::json!([98, 97, 100, 45, 55_296]));
+        assert_eq!(encoded.display, "bad-�");
+    }
+
+    #[test]
+    fn path_display_escapes_terminal_control_characters() {
+        assert_eq!(
+            safe_path_display(std::path::Path::new("line\nbreak\tname")),
+            "line\\nbreak\\tname"
+        );
+    }
+
+    #[test]
+    fn windows_plain_path_is_lossless_and_self_describing() {
+        assert_eq!(
+            windows_plain_path([98, 97, 100, 45, 0xd800]),
+            b"windows-utf16:0062,0061,0064,002d,d800\n"
+        );
+    }
 
     #[test]
     fn widths_and_url_redaction_handle_unicode_and_punctuation() {

@@ -72,10 +72,17 @@ mismatch `6`, and cancellation/interrupt `130`.
 - **Depends on:** `CLI-IO-001`
 
 `btpc create --json` **MUST** emit one JSON object with schema identifier
-`btpc.create.v1` on stdout and no progress output on stdout. The object contains
-output path, mode, optional v1 and v2 info hashes as applicable,
+`btpc.create.v2` on stdout and no progress output on stdout. The object contains
+an exact versioned output-path object, mode, optional v1 and v2 info hashes as applicable,
 file/payload/piece counts, selected piece length, optional policy identifier, and
 per-phase millisecond metrics.
+
+Filesystem path objects use schema `btpc.filesystem-path.v2`, a control-escaped
+`display` string, and either `unix-bytes-hex` with a hexadecimal string or
+`windows-utf16` with an array of UTF-16 code units. Exact objects are canonical in
+`btpc.create.v2`, `btpc.edit.v2`, and `btpc.verify.v2`. The sibling
+`output_display` and `path_display` strings are deprecated presentation aliases
+retained for one schema generation and scheduled for removal in v3.
 
 `btpc inspect --json` uses schema `btpc.inspect.v1`; raw byte strings are objects
 with `encoding` equal to `utf-8` or `hex` and a corresponding `value`. `btpc
@@ -84,9 +91,13 @@ metainfo file and never infer or access a payload path. Their additive `canonica
 boolean distinguishes valid non-canonical source bytes from canonical input;
 protocol-invalid input still exits with invalid-metainfo code `4`.
 
-`btpc verify --json` uses schema `btpc.verify.v1`, emits a boolean `valid` field
+`btpc verify --json` uses schema `btpc.verify.v2`, emits a boolean `valid` field
 and deterministic mismatch objects, and exits with the frozen verification code
 `6` when any mismatch is reported.
+
+Plain path-only output writes native Unix path bytes. On Windows it uses the
+self-describing `windows-utf16:XXXX,...` form so unpaired path code units remain
+recoverable. Human prose uses only the escaped display representation.
 
 ### CLI-WRITE-001 — Protect output files
 

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import os
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
@@ -125,7 +124,7 @@ def verify(  # noqa: PLR0913
         mismatches=tuple(
             PayloadMismatch(
                 kind=MismatchKind(item.kind),
-                path=Path(os.fsdecode(item.path)),
+                path=Path(item.path),
                 piece=item.piece,
             )
             for item in value.mismatches

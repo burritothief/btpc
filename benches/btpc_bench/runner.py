@@ -396,7 +396,7 @@ def run_benchmark(
             "operating-system caches"
         )
     result = BenchmarkResult(
-        schema_version=1,
+        schema_version=2,
         harness_version=HARNESS_VERSION,
         started_at=started.isoformat().replace("+00:00", "Z"),
         seed=config.seed,

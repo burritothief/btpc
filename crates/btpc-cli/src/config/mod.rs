@@ -17,7 +17,9 @@ use crate::command::{
     PresetSaveArgs,
 };
 use crate::diagnostics::suggestion;
-use crate::output::{REDACTED_URL, stderr_line, stdout_line, stdout_text, write_json};
+use crate::output::{
+    REDACTED_URL, safe_path_display, stderr_line, stdout_line, stdout_path, stdout_text, write_json,
+};
 
 const CONFIG_VERSION: u32 = 1;
 
@@ -599,10 +601,7 @@ impl Configuration {
 pub(crate) fn run_command(cli: &Cli, arguments: &ConfigArgs) -> Result<(), Error> {
     let path = command_path(cli)?;
     match &arguments.command {
-        ConfigCommand::Path => {
-            stdout_line(path.display());
-            Ok(())
-        }
+        ConfigCommand::Path => stdout_path(&path),
         ConfigCommand::Init { force } => init(&path, *force),
         ConfigCommand::Show {
             resolved,
@@ -644,7 +643,7 @@ fn init(path: &Path, force: bool) -> Result<(), Error> {
         ..ConfigFile::default()
     };
     write_file(path, &file)?;
-    stderr_line(format_args!("initialized {}", path.display()));
+    stderr_line(format_args!("initialized {}", safe_path_display(path)));
     Ok(())
 }
 

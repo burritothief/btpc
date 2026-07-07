@@ -73,16 +73,5 @@ fn attach_context(py: Python<'_>, value: &PyErr, error: &Error) -> PyResult<()> 
         });
     instance.setattr("actual", actual)?;
     instance.setattr("maximum", maximum)?;
-    instance.setattr("path", error.path().map(filesystem_path_bytes))
-}
-
-#[cfg(unix)]
-pub(crate) fn filesystem_path_bytes(path: &std::path::Path) -> Vec<u8> {
-    use std::os::unix::ffi::OsStrExt as _;
-    path.as_os_str().as_bytes().to_vec()
-}
-
-#[cfg(not(unix))]
-pub(crate) fn filesystem_path_bytes(path: &std::path::Path) -> Vec<u8> {
-    path.to_string_lossy().as_bytes().to_vec()
+    instance.setattr("path", error.path())
 }

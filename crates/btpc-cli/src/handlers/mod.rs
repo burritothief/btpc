@@ -27,7 +27,8 @@ use crate::context::{ExecutionContext, OutputMode};
 use crate::output::{
     CreateJson, DhtNodeJson, InspectJson, MetricsJson, ValidateJson, VerifyJson,
     VerifyMismatchJson, byte_string_json, display_bytes, filesystem_path_json, redacted_url_json,
-    stderr_line, stdout_line, stdout_text, write_json, write_json_pretty,
+    safe_path_display, stderr_line, stdout_line, stdout_path, stdout_text, write_json,
+    write_json_pretty,
 };
 use crate::progress::CliProgress;
 use crate::render::key_values;
@@ -138,9 +139,10 @@ pub(crate) fn edit(
     }
     if arguments.json {
         write_json(&serde_json::json!({
-            "schema": "btpc.edit.v1",
+            "schema": "btpc.edit.v2",
             "dry_run": arguments.dry_run,
-            "output": destination.to_string_lossy(),
+            "output": filesystem_path_json(&destination),
+            "output_display": safe_path_display(&destination),
             "info_hash_v1_changed": v1_changed,
             "info_hash_v2_changed": v2_changed,
             "info_hash_v1_before": original.info_hash_v1().map(|hash| hash.hex()),
@@ -156,7 +158,7 @@ pub(crate) fn edit(
             } else {
                 "wrote"
             },
-            destination.display()
+            safe_path_display(&destination)
         ));
         stdout_line(format_args!(
             "info hashes: v1 {} / v2 {}",
@@ -184,13 +186,10 @@ fn edit_destination(arguments: &EditArgs) -> PathBuf {
         return arguments.input.clone();
     }
     arguments.output.clone().unwrap_or_else(|| {
-        let stem = arguments
-            .input
-            .file_stem()
-            .map_or_else(|| "output".into(), |stem| stem.to_string_lossy());
-        arguments
-            .input
-            .with_file_name(format!("{stem}.edited.torrent"))
+        arguments.input.with_file_name(filename_with_suffix(
+            arguments.input.file_stem(),
+            ".edited.torrent",
+        ))
     })
 }
 
@@ -226,15 +225,15 @@ pub(crate) fn verify(arguments: &VerifyArgs, context: &ExecutionContext) -> Resu
         .verify(&progress)?;
     if context.output_mode() == OutputMode::Json {
         write_json(&VerifyJson {
-            schema: "btpc.verify.v1",
+            schema: "btpc.verify.v2",
             valid: report.is_valid(),
             mismatches: report
                 .mismatches()
                 .iter()
                 .map(|mismatch| VerifyMismatchJson {
                     kind: mismatch_kind_name(mismatch.kind()),
-                    path: mismatch.path().to_string_lossy().into_owned(),
-                    path_exact: filesystem_path_json(mismatch.path()),
+                    path: filesystem_path_json(mismatch.path()),
+                    deprecated_path_display: safe_path_display(mismatch.path()),
                     piece: mismatch.piece(),
                 })
                 .collect(),
@@ -247,7 +246,7 @@ pub(crate) fn verify(arguments: &VerifyArgs, context: &ExecutionContext) -> Resu
             stdout_line(format_args!(
                 "{}\t{}{}",
                 mismatch_kind_name(mismatch.kind()),
-                mismatch.path().display(),
+                safe_path_display(mismatch.path()),
                 mismatch
                     .piece()
                     .map_or_else(String::new, |piece| format!("\tpiece {piece}"))
@@ -397,8 +396,12 @@ fn inspect_human(
             .filter(|file| file.is_padding())
             .count();
         output.push_str("\nDetails:\n");
-        writeln!(output, "  Source path: {}", arguments.input.display())
-            .expect("writing to String cannot fail");
+        writeln!(
+            output,
+            "  Source path: {}",
+            safe_path_display(&arguments.input)
+        )
+        .expect("writing to String cannot fail");
         writeln!(
             output,
             "  Canonical: {}",
@@ -940,7 +943,10 @@ pub(crate) fn create(
         if !destinations.insert(destination.clone()) {
             return Err(Error::metainfo_field(
                 "output",
-                format!("duplicate output destination {}", destination.display()),
+                format!(
+                    "duplicate output destination {}",
+                    safe_path_display(&destination)
+                ),
             ));
         }
         if destination.exists() && !job.force {
@@ -1002,7 +1008,7 @@ fn create_one(
                 scanned.entries().len(),
                 scanned.total_length(),
                 selected,
-                destination.display()
+                safe_path_display(&destination)
             ));
         }
         return Ok(());
@@ -1026,7 +1032,7 @@ fn create_one(
         creator.create_to_path_with_durability(&destination, overwrite, durability, &progress)?;
     for value in &arguments.print {
         match value {
-            CreatePrint::Path => stdout_line(destination.display()),
+            CreatePrint::Path => stdout_path(&destination)?,
             CreatePrint::InfoHashV1 => stdout_line(
                 result
                     .info_hash_v1()
@@ -1046,10 +1052,10 @@ fn create_one(
     if context.output_mode() == OutputMode::Json {
         let metrics = result.metrics();
         write_json(&CreateJson {
-            schema: "btpc.create.v1",
+            schema: "btpc.create.v2",
             mode: create_mode_name(result.mode()),
-            output: destination.to_string_lossy().into_owned(),
-            output_path: filesystem_path_json(&destination),
+            output: filesystem_path_json(&destination),
+            deprecated_output_display: safe_path_display(&destination),
             info_hash_v1: result.info_hash_v1().map(|hash| hash.hex()),
             info_hash_v2: result.info_hash_v2().map(|hash| hash.hex()),
             file_count: result.file_count(),
@@ -1077,7 +1083,7 @@ fn create_one(
         };
         stderr_line(format_args!(
             "{prefix} {} ({} mode, {} files, {} bytes, {} pieces, {})",
-            destination.display(),
+            safe_path_display(&destination),
             create_mode_name(result.mode()),
             result.file_count(),
             result.payload_bytes(),
@@ -1164,10 +1170,7 @@ fn create_jobs(arguments: &CreateArgs) -> Result<Vec<CreateArgs>, Error> {
     if let Some(directory) = &arguments.output_dir {
         for job in &mut jobs {
             let input = job.inputs.first().expect("job input");
-            let name = input
-                .file_name()
-                .map_or_else(|| "output".into(), |name| name.to_string_lossy());
-            job.output = Some(directory.join(format!("{name}.torrent")));
+            job.output = Some(directory.join(filename_with_suffix(input.file_name(), ".torrent")));
         }
     }
     Ok(jobs)
@@ -1344,8 +1347,31 @@ const fn create_mode_name(mode: CreateMode) -> &'static str {
 }
 
 fn infer_output(input: &Path) -> PathBuf {
-    let name = input
-        .file_name()
-        .map_or_else(|| "output".into(), |name| name.to_string_lossy());
-    input.with_file_name(format!("{name}.torrent"))
+    input.with_file_name(filename_with_suffix(input.file_name(), ".torrent"))
+}
+
+fn filename_with_suffix(name: Option<&std::ffi::OsStr>, suffix: &str) -> std::ffi::OsString {
+    let mut output = name
+        .unwrap_or_else(|| std::ffi::OsStr::new("output"))
+        .to_os_string();
+    output.push(suffix);
+    output
+}
+
+#[cfg(test)]
+mod tests {
+    use super::filename_with_suffix;
+
+    #[cfg(unix)]
+    #[test]
+    fn inferred_names_preserve_colliding_non_utf8_bytes() {
+        use std::os::unix::ffi::{OsStrExt as _, OsStringExt as _};
+
+        let first =
+            filename_with_suffix(Some(std::ffi::OsStr::from_bytes(b"name-\xff")), ".torrent");
+        let second =
+            filename_with_suffix(Some(std::ffi::OsStr::from_bytes(b"name-\xfe")), ".torrent");
+        assert_eq!(first.into_vec(), b"name-\xff.torrent");
+        assert_eq!(second.into_vec(), b"name-\xfe.torrent");
+    }
 }

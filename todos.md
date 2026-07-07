@@ -5355,8 +5355,8 @@ remain adapters over `btpc-core` throughout.
      `RUSTSEC-2026-0204` advisory for `crossbeam-epoch 0.9.18`; bans, licenses, and
      sources pass, so the unrelated dependency update remains separate.
 
-110. [ ] [Review] Complete lossless filesystem-path schemas on every supported platform
-   Claimed by:
+110. [-] [Review] Complete lossless filesystem-path schemas on every supported platform
+   Claimed by: Codex implementer (2026-07-06 19:35 PDT)
    Context:
    Todo 78 added exact Unix path objects but explicitly left Windows using a lossy
    UTF-8 fallback. Several CLI structures also continue to carry a legacy lossy

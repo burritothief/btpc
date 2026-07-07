@@ -14,7 +14,7 @@ use btpc_core::edit::MetainfoEditor;
 use btpc_core::magnet::MagnetOptions;
 use btpc_core::verify::{ExtraFilePolicy, MismatchMode, Verifier, VerifyOptions};
 use btpc_core::{Metainfo, ParseLimits, ParseOptions};
-use errors::{filesystem_path_bytes, to_python_error};
+use errors::to_python_error;
 use progress::{PythonCancellationToken, PythonProgress};
 use pyo3::buffer::PyBuffer;
 use pyo3::prelude::*;
@@ -348,7 +348,7 @@ pub(crate) fn verify_payload(
                 py,
                 NativePayloadMismatch {
                     kind: mismatch_kind_name(mismatch.kind()),
-                    path: filesystem_path_bytes(mismatch.path()),
+                    path: mismatch.path().to_path_buf(),
                     piece: mismatch.piece(),
                 },
             )

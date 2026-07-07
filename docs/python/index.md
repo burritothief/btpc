@@ -229,6 +229,10 @@ All public failures derive from `BtpcError` and may expose `offset`, `field`, or
 - `UnsupportedError`: unsupported policy or object.
 - `CancelledError`: cooperative cancellation.
 
+Native filesystem errors attach a platform-native `pathlib.Path` directly. Unix
+byte paths use Python's filesystem surrogate handling, while Windows paths retain
+their original UTF-16 units without an intermediate UTF-8 conversion.
+
 A normal verification mismatch is returned in `PayloadVerificationReport` rather
 than raised. Inspect `mismatches`, each containing a stable `MismatchKind`, path,
 and optional piece index.

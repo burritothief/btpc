@@ -19,8 +19,11 @@ Verify and warm the canonical ISO without invoking any benchmark tool:
 make benchmark-iso ISO=/path/to/debian-13.5.0-amd64-DVD-1.iso
 ```
 
-This writes versioned preflight JSON with path, name, size, mtime, SHA-256, and
-ordered 4 MiB SHA-1 piece digests. `benches/torrent_creation.py` is the stable
+This writes schema-v2 preflight JSON with path, name, size, mtime, SHA-256, and
+ordered 4 MiB SHA-1 piece digests. Dataset paths use
+`btpc.filesystem-path.v2`: Unix bytes are hexadecimal and Windows paths are UTF-16
+code-unit arrays, with a separate escaped display string. Result readers continue
+to accept legacy schema-v1 string paths. `benches/torrent_creation.py` is the stable
 executable wrapper; `python -m benches.btpc_bench` exposes the same commands.
 
 Run the quick preset against every registered adapter:

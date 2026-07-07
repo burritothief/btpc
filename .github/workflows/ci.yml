@@ -135,6 +135,26 @@ jobs:
           scripts/check_python_types.sh
           uv run python scripts/check_native_stub.py
 
+  python-windows-paths:
+    name: Python / Windows path identity
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@fa04a1451ff1842e2626ccb99004d0195b455a88 # master
+        with:
+          toolchain: 1.94.1
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+          python-version: "3.14"
+      - run: uv sync --all-groups --locked
+      - run: uv run maturin develop
+      - run: uv run pytest tests/python/test_verify.py -k "path"
+
   dependencies:
     name: Dependencies / policy
     runs-on: ubuntu-latest

@@ -7,8 +7,9 @@ import json
 import statistics
 from dataclasses import dataclass
 from enum import StrEnum
-from pathlib import Path
 from typing import Any
+
+from .paths import filesystem_path_document, filesystem_path_from_document, path_name
 
 
 class ToolStatus(StrEnum):
@@ -143,7 +144,7 @@ class BenchmarkResult:
     ) -> BenchmarkResult:
         """Build a compact deterministic fixture result."""
         return cls(
-            schema_version=1,
+            schema_version=2,
             harness_version="0.1.0",
             started_at="2026-01-01T00:00:00Z",
             seed=1,
@@ -169,9 +170,12 @@ class BenchmarkResult:
         """Deserialize a result document."""
         raw = json.loads(value)
         schema_version = raw.get("schema_version")
-        if schema_version != 1:
+        if schema_version not in {1, 2}:
             msg = f"unsupported benchmark schema version: {schema_version!r}"
             raise ValueError(msg)
+        dataset = dict(raw["dataset"])
+        dataset_path = filesystem_path_from_document(dataset.pop("path"))
+        dataset.pop("path_display", None)
         return cls(
             schema_version=schema_version,
             harness_version=raw["harness_version"],
@@ -186,12 +190,11 @@ class BenchmarkResult:
             piece_exponent=raw["piece_exponent"],
             dataset=DatasetFingerprint(
                 **{
-                    **raw["dataset"],
-                    "name": raw["dataset"].get(
-                        "name", Path(raw["dataset"]["path"]).name
-                    ),
-                    "mtime_ns": raw["dataset"].get("mtime_ns"),
-                    "piece_sha1": tuple(raw["dataset"]["piece_sha1"]),
+                    **dataset,
+                    "path": dataset_path,
+                    "name": dataset.get("name", path_name(dataset_path)),
+                    "mtime_ns": dataset.get("mtime_ns"),
+                    "piece_sha1": tuple(dataset["piece_sha1"]),
                 }
             ),
             machine=raw["machine"],
@@ -224,6 +227,17 @@ class BenchmarkResult:
 
 
 def _encode(value: object) -> object:
+    if isinstance(value, DatasetFingerprint):
+        return {
+            "path": filesystem_path_document(value.path),
+            "path_display": filesystem_path_document(value.path)["display"],
+            "size_bytes": value.size_bytes,
+            "sha256": value.sha256,
+            "piece_length": value.piece_length,
+            "piece_sha1": _encode(value.piece_sha1),
+            "name": value.name,
+            "mtime_ns": value.mtime_ns,
+        }
     if dataclasses.is_dataclass(value) and not isinstance(value, type):
         return {
             field.name: _encode(getattr(value, field.name))
@@ -236,3 +250,12 @@ def _encode(value: object) -> object:
     if isinstance(value, dict):
         return {key: _encode(item) for key, item in value.items()}
     return value
+
+
+def dataset_fingerprint_document(value: DatasetFingerprint) -> dict[str, object]:
+    """Return the v2 JSON representation for one dataset fingerprint."""
+    encoded = _encode(value)
+    if not isinstance(encoded, dict):
+        msg = "dataset fingerprint did not encode as an object"
+        raise TypeError(msg)
+    return encoded

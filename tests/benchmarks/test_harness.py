@@ -159,7 +159,8 @@ def test_cli_preflight_writes_versioned_json_without_running_tools(
 
     assert main(["preflight", str(payload), "--output", str(output)]) == 0
     document = json.loads(output.read_text())
-    assert document["schema_version"] == 1
+    assert document["schema_version"] == 2
+    assert document["dataset"]["path"]["schema"] == "btpc.filesystem-path.v2"
     assert document["dataset"]["name"] == "payload.bin"
     assert document["dataset"]["size_bytes"] == 7
     assert "elapsed_seconds" in document
@@ -651,6 +652,20 @@ def test_result_json_rejects_unknown_future_schema() -> None:
 
     with pytest.raises(ValueError, match="unsupported benchmark schema"):
         BenchmarkResult.from_json(json.dumps(document))
+
+
+def test_result_json_parses_legacy_v1_dataset_paths() -> None:
+    result = BenchmarkResult.example(
+        DatasetFingerprint("payload.bin", 1, "00", 1, ("11",)), ()
+    )
+    document = json.loads(result.to_json())
+    document["schema_version"] = 1
+    document["dataset"]["path"] = document["dataset"].pop("path_display")
+
+    decoded = BenchmarkResult.from_json(json.dumps(document))
+
+    assert decoded.schema_version == 1
+    assert decoded.dataset.path == "payload.bin"
 
 
 def test_report_ties_are_sorted_by_tool_name_and_unicode_is_stable() -> None:

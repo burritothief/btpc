@@ -4,7 +4,6 @@
 
 from __future__ import annotations
 
-import os
 from collections import abc
 from pathlib import Path
 
@@ -90,12 +89,12 @@ def _convert_error(error: _native._NativeError) -> BtpcError:
     if error_type is None:
         message = f"unrecognized native BTPC exception: {type(error).__name__}"
         raise RuntimeError(message) from error
-    raw_path = getattr(error, "path", None)
+    native_path = getattr(error, "path", None)
     return error_type(
         str(error),
         offset=getattr(error, "offset", None),
         field=getattr(error, "field", None),
-        path=Path(os.fsdecode(raw_path)) if raw_path is not None else None,
+        path=Path(native_path) if native_path is not None else None,
         limit=getattr(error, "limit", None),
         actual=getattr(error, "actual", None),
         maximum=getattr(error, "maximum", None),

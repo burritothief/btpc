@@ -135,7 +135,7 @@ pub(crate) struct NativeCreateResult {
 #[pyclass(name = "_NativePayloadMismatch", module = "btpc._native", frozen)]
 pub(crate) struct NativePayloadMismatch {
     pub(crate) kind: &'static str,
-    pub(crate) path: Vec<u8>,
+    pub(crate) path: std::path::PathBuf,
     pub(crate) piece: Option<u64>,
 }
 
@@ -147,7 +147,7 @@ impl NativePayloadMismatch {
     }
 
     #[getter]
-    fn path(&self) -> &[u8] {
+    fn path(&self) -> &std::path::Path {
         &self.path
     }
 
@@ -158,8 +158,10 @@ impl NativePayloadMismatch {
 
     fn __repr__(&self) -> String {
         format!(
-            "_NativePayloadMismatch(kind='{}', path={:?}, piece={:?})",
-            self.kind, self.path, self.piece
+            "_NativePayloadMismatch(kind='{}', path={}, piece={:?})",
+            self.kind,
+            self.path.display(),
+            self.piece
         )
     }
 }
