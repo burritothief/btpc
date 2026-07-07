@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import ast
 import os
 import re
 import shutil
@@ -8,11 +9,14 @@ import subprocess
 import sys
 from pathlib import Path
 
+import yaml
+
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_SITE_DIR = ROOT / "site"
 STAGING_DIR = ROOT / ".tmp/docs-site"
 RUSTDOC_TARGET_DIR = ROOT / ".tmp/docs-rustdoc-target"
 CLI_REFERENCE_DIR = ROOT / "docs/cli/reference"
+PYTHON_PACKAGE_DIR = ROOT / "python/btpc"
 STAGES = ("cli", "mkdocs", "rustdoc", "validate")
 PAGES_ROOT = "/btpc/"
 RUSTDOC_ENTRIES = (
@@ -66,6 +70,38 @@ def _stage_cli() -> None:
 
 
 def _stage_mkdocs(output: Path) -> None:
+    source = STAGING_DIR / "mkdocs-source"
+    shutil.copytree(ROOT / "docs", source)
+    for page in source.joinpath("python/reference").glob("*.md"):
+        module = page.stem
+        tree = ast.parse((PYTHON_PACKAGE_DIR / f"{module}.py").read_text())
+        exports: list[str] | None = None
+        for node in tree.body:
+            if isinstance(node, ast.Assign) and any(
+                isinstance(target, ast.Name) and target.id == "__all__"
+                for target in node.targets
+            ):
+                exports = ast.literal_eval(node.value)
+                break
+        if exports is None:
+            raise RuntimeError(f"missing __all__ for btpc.{module}")
+        marker = f"<!-- btpc-python-api: btpc.{module} -->"
+        directive = "\n".join(
+            [f"::: btpc.{module}", "    options:", "      members:"]
+            + [f"        - {symbol}" for symbol in exports]
+        )
+        content = page.read_text()
+        if content.count(marker) != 1:
+            raise RuntimeError(f"missing unique BTPC Python API marker in {page}")
+        page.write_text(content.replace(marker, directive))
+    config = STAGING_DIR / "mkdocs.yml"
+    values = yaml.safe_load((ROOT / "mkdocs.yml").read_text())
+    values["docs_dir"] = str(source)
+    values["theme"]["custom_dir"] = str(source / "overrides")
+    values["plugins"][1]["mkdocstrings"]["handlers"]["python"]["paths"] = [
+        str(ROOT / "python")
+    ]
+    config.write_text(yaml.safe_dump(values, sort_keys=False))
     _run(
         (
             sys.executable,
@@ -74,7 +110,7 @@ def _stage_mkdocs(output: Path) -> None:
             "build",
             "--strict",
             "--config-file",
-            str(ROOT / "mkdocs.yml"),
+            str(config),
             "--site-dir",
             str(output),
         )

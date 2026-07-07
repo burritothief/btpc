@@ -47,6 +47,7 @@ dev = [
     "zizmor>=1.26.1",
 ]
 docs = [
+    "griffelib==2.1.0",
     "mkdocs-material>=9,<10",
     "mkdocstrings-python>=2.0.5",
 ]

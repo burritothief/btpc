@@ -110,7 +110,7 @@ def test_important_fragments_resolve_after_one_redirect(tmp_path: Path) -> None:
     )
     baseline = json.loads(BASELINE.read_text())
     for route, anchors in baseline["anchors"].items():
-        if route.startswith(("rust/", "python/reference/")):
+        if route.startswith("rust/"):
             continue
         page = _inspect(site / route)
         target = (
@@ -147,8 +147,5 @@ def test_handwritten_and_cli_rendered_links_resolve(tmp_path: Path) -> None:
                 target /= "index.html"
             assert target.is_file(), f"{relative}: {link}"
             if not parsed.fragment:
-                continue
-            target_relative = target.relative_to(site).as_posix()
-            if target_relative.startswith("python/reference/"):
                 continue
             assert parsed.fragment in _inspect(target).ids, f"{relative}: {link}"

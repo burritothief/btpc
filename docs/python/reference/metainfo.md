@@ -1,12 +1,3 @@
 # Metainfo API
 
-::: btpc.metainfo
-    options:
-      members:
-        - BencodeDictionary
-        - BencodeList
-        - BencodeValue
-        - Metainfo
-        - TorrentFile
-        - UnknownField
-        - ValidationReport
+<!-- btpc-python-api: btpc.metainfo -->

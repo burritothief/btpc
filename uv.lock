@@ -47,6 +47,7 @@ dev = [
     { name = "zizmor" },
 ]
 docs = [
+    { name = "griffelib" },
     { name = "mkdocs-material" },
     { name = "mkdocstrings-python" },
 ]
@@ -68,6 +69,7 @@ dev = [
     { name = "zizmor", specifier = ">=1.26.1" },
 ]
 docs = [
+    { name = "griffelib", specifier = "==2.1.0" },
     { name = "mkdocs-material", specifier = ">=9,<10" },
     { name = "mkdocstrings-python", specifier = ">=2.0.5" },
 ]

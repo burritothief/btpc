@@ -64,9 +64,8 @@ def test_reference_pages_cover_the_static_public_inventory_once() -> None:
         exports = _exports(module)
         page = ROOT / f"docs/python/reference/{module}.md"
         source = page.read_text()
-        assert f"::: btpc.{module}" in source
+        assert source.count(f"<!-- btpc-python-api: btpc.{module} -->") == 1
         for symbol in exports:
-            assert source.count(f"        - {symbol}\n") == 1
             assert symbol not in defining_modules
             defining_modules[symbol] = module
 

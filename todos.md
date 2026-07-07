@@ -5686,7 +5686,7 @@ remain adapters over `btpc-core` throughout.
      191-route MkDocs baseline comparison, rustdoc, links, and artifact budgets.
    Notes:
 
-115. [-] Replace mkdocstrings with a Griffe-backed mdBook Python API preprocessor
+115. [x] Replace mkdocstrings with a Griffe-backed mdBook Python API preprocessor
    Claimed by: Codex implementer (2026-07-06 22:54 PDT)
    Requirements:
    `DOCSITE-PYTHON-001`, `DOCSITE-ARCH-002`, `DOCSITE-QUALITY-001`,
@@ -5729,7 +5729,33 @@ remain adapters over `btpc-core` throughout.
    Python docstring tests, the side-by-side mdBook build, rendered-site checks,
    spec validation, and the unchanged MkDocs gate.
    Evidence:
+   - TDD failures retained during implementation: the initial focused run failed
+     because the unqualified `cancel` method role lacked class context, and the
+     first real mdBook 0.5.3
+     build failed because its protocol uses `items` rather than the legacy
+     `sections` key. The implementation now tests both failures through
+     `tests/docs/test_mdbook_python_api.py`.
+   - `uv run --group docs pytest tests/docs/test_mdbook_python_api.py -q` passed
+     all 5 protocol, deterministic rendering, public inventory, malformed context,
+     marker, and duplicate-module tests.
+   - `make docs-mdbook-site` built the complete side artifact with mdBook 0.5.3;
+     `tests/docs/test_mdbook_content_port.py` passed all 4 route, anchor, and
+     rendered-link checks including Python API fragments.
+   - `scripts/check_python_types.sh` passed Pyrefly with 0 positive-fixture errors,
+     retained the expected 3 negative-fixture errors, and passed Pyright with
+     0 errors. `uv run pytest tests/python/test_docstrings.py
+     tests/docs/test_mdbook_python_api.py tests/docs/test_python_reference.py
+     tests/docs/test_mdbook_content_port.py -q` passed all 19 tests.
+   - Focused `uv run ruff check` and `uv run ruff format --check` passed for every
+     changed Python file. `uv run python scripts/check_specs.py` validated 16 specs
+     and 121 requirements. `git diff --check` passed.
+   - `make docs-check` preserved the production MkDocs gate during migration:
+     58 docs tests passed, 406 generated files and 191 baseline routes validated,
+     Markdown links and codespell passed, and rustdoc completed without warnings.
    Notes:
+   - Griffe is locked directly as `griffelib==2.1.0`. Static loading uses
+     `allow_inspection=False`; generated output rejects private/native paths and
+     never imports the compiled extension.
 
 116. [ ] Integrate CLI reference, Rust chapter tests, and rustdoc into the mdBook artifact
    Claimed by:

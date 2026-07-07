@@ -16,6 +16,7 @@ CONFIG = ROOT / "mkdocs.yml"
 def test_documentation_dependencies_are_locked_outside_runtime() -> None:
     project = tomllib.loads((ROOT / "pyproject.toml").read_text())
     docs = project["dependency-groups"]["docs"]
+    assert "griffelib==2.1.0" in docs
     assert any(requirement.startswith("mkdocs-material") for requirement in docs)
     assert any(requirement.startswith("mkdocstrings-python") for requirement in docs)
     runtime = project["project"].get("dependencies", [])

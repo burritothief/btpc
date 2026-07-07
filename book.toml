@@ -12,6 +12,10 @@ extra-watch-dirs = ["python/btpc", "crates/btpc-cli/src", "crates/btpc-core/src"
 [rust]
 edition = "2024"
 
+[preprocessor.btpc-python-api]
+command = "btpc-mdbook-python-api"
+before = ["links"]
+
 [output.html]
 additional-css = ["docs/stylesheets/mdbook.css"]
 default-theme = "light"
