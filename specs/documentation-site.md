@@ -155,8 +155,8 @@ Pages artifact/deployment actions pinned to immutable revisions.
 ### DOCSITE-OPS-001 — Keep production documentation observable and recoverable
 
 - **Status:** Accepted
-- **Sources:** `DOCUMENTATION_PLAN.md`, `.github/workflows/maintenance.yml`
-- **Verification:** `.github/workflows/maintenance.yml`
+- **Sources:** `DOCUMENTATION_PLAN.md`, `CONTRIBUTING.md`, `.github/workflows/maintenance.yml`
+- **Verification:** `scripts/check_docs_health.py`, `scripts/check_docs_live.py`, `.github/workflows/maintenance.yml`
 - **Depends on:** `DOCSITE-DEPLOY-001`
 
 Maintainers **MUST** have documented procedures for enabling Pages, manually

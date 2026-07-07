@@ -5991,7 +5991,7 @@ remain adapters over `btpc-core` throughout.
      and setup-uv actions; actionlint and zizmor still passed and no action pins were
      changed outside this todo's renderer installation scope.
 
-119. [-] Verify the live mdBook cutover and update documentation operations monitoring
+119. [x] Verify the live mdBook cutover and update documentation operations monitoring
    Claimed by: Codex implementation agent, 2026-07-06 23:47:10 PDT
    Requirements:
    `DOCSITE-MIGRATE-001`, `DOCSITE-OPS-001`, `DOCSITE-DEPLOY-001`,
@@ -6031,4 +6031,64 @@ remain adapters over `btpc-core` throughout.
    canonical URL. Run the canonical docs gate, offline/live validators, spec
    validation, and `git diff --check`.
    Evidence:
+   - TDD retained the initial failure for the route-complete monitor: adding
+     `tests/docs/test_live_documentation.py` first produced 3 failures because
+     `scripts/check_docs_live.py` did not exist. The implemented tests now pass and
+     cover `/btpc/` URL construction, one valid document redirect, and rejection of
+     `tests/docs/fixtures/health/redirect-loop.html`. The existing
+     `github-404.json` negative fixture continues to prove that the focused live
+     monitor rejects generic GitHub Pages error content.
+   - `scripts/check_docs_live.py` compares every live HTML response byte-for-byte
+     with the locally generated artifact, requires HTTPS and expected content type,
+     rejects mixed content and generic Pages errors, validates all recorded anchors,
+     and permits only one project-subpath-safe `btpc-redirect` hop. `make docs-health`
+     now runs this route-complete check alongside the existing focused markers and
+     Lychee inventory, and both checkers append actionable GitHub step summaries.
+   - `.github/docs-health.json` now uses mdBook homepage/Getting Started/CLI/Python/
+     Rust markers, the hashed `searchindex-916064b3.js`, sitemap, local
+     `stylesheets/mdbook.css`, and mdBook custom 404. Focused health checks passed
+     with the expected status, HTTPS final URL, content type, and marker for all 9
+     entries.
+   - The deployed production URL is https://burritothief.github.io/btpc/ using
+     mdBook 0.5.3. Documentation run
+     https://github.com/burritothief/btpc/actions/runs/28847565991 deployed commit
+     `c440c4c671dcb8302c31a36db87d3458eb754fcb` successfully at
+     `2026-07-07 07:00:40 UTC` / `2026-07-07 00:00:40 PDT`. Its build and deploy
+     jobs both succeeded.
+   - Live comparison against the locally generated artifact from that deployed SHA
+     passed all 247 HTML responses (192 direct pages and 55 compatibility redirects)
+     and reported status/final URL/marker results for every one of Todo 112's 191
+     baseline routes. All 9 important-anchor groups resolved; homepage, Getting
+     Started, guides, concepts, complete CLI and Python indexes, representative API
+     anchors, Rust overview/rustdoc, sitemap, hashed search index, local theme, and
+     custom 404 were included. `scripts/check_docs_site.py` and
+     `scripts/docs_renderer_baseline.py compare` also passed against the downloaded
+     deployed artifact.
+   - Manual Repository maintenance run
+     https://github.com/burritothief/btpc/actions/runs/28847850852 completed
+     successfully for the same SHA. It installed pinned mdBook 0.5.3 and Lychee
+     0.24.2, ran the canonical documentation gate, external-link inventory, focused
+     live contract, all-route live artifact comparison, and published the health
+     summary.
+   - `CONTRIBUTING.md` now documents exact mdBook installation and preview,
+     preprocessor protocol diagnosis, missing `SUMMARY.md` chapters, route redirect
+     diagnosis, hashed search-index problems, known-good-commit rollback, and an
+     upgrade checklist covering preprocessor, theme, route/anchor, 404, artifact
+     size, artifact inspection, deployment, and live smoke baselines. It explicitly
+     rejects a second live documentation branch as a rollback mechanism.
+   - Final verification passed `make docs-check` with 65 documentation tests and the
+     complete 446-file/247-HTML artifact, focused and route-complete live validators,
+     all 191 migration routes, `uv run python scripts/check_specs.py` (16 specs, 121
+     requirements), repository-wide Ruff check/format, `make hooks-manual`,
+     codespell, and `git diff --check`.
+   - `git ls-remote --heads origin` showed only `main` and a Dependabot branch, with
+     no `gh-pages` branch. `gh secret list --app actions` returned no Actions
+     secrets. Repository scans found no MkDocs runtime dependency, deployment token,
+     or stale `search/search_index.json`, `stylesheets/extra.css`, or alternate
+     canonical repository URL outside explicit historical migration records and
+     tests that assert those retired values stay absent.
    Notes:
+   - GitHub again emitted the existing Node.js 20 deprecation annotation for the
+     immutable checkout/setup-uv action pins. This is unrelated to the mdBook
+     cutover; actionlint, offline zizmor, and the complete maintenance workflow all
+     passed.
