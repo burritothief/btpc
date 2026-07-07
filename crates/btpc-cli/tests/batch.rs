@@ -30,8 +30,28 @@ fn multiple_inputs_use_output_dir_and_report_in_input_order() {
         .assert()
         .success();
     let lines = String::from_utf8(assertion.get_output().stdout.clone()).unwrap();
-    assert!(lines.lines().next().unwrap().ends_with("a.torrent"));
-    assert!(lines.lines().nth(1).unwrap().ends_with("b.torrent"));
+    #[cfg(not(windows))]
+    {
+        assert!(lines.lines().next().unwrap().ends_with("a.torrent"));
+        assert!(lines.lines().nth(1).unwrap().ends_with("b.torrent"));
+    }
+    #[cfg(windows)]
+    {
+        let decoded = lines
+            .lines()
+            .map(|line| {
+                let units = line
+                    .strip_prefix("windows-utf16:")
+                    .unwrap()
+                    .split(',')
+                    .map(|unit| u16::from_str_radix(unit, 16).unwrap())
+                    .collect::<Vec<_>>();
+                String::from_utf16(&units).unwrap()
+            })
+            .collect::<Vec<_>>();
+        assert!(decoded[0].ends_with("a.torrent"));
+        assert!(decoded[1].ends_with("b.torrent"));
+    }
     assert!(output.join("a.torrent").exists());
     assert!(output.join("b.torrent").exists());
 }
