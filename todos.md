@@ -5472,7 +5472,7 @@ remain adapters over `btpc-core` throughout.
      sources pass. The first crates.io publication remains an explicit owner action,
      and documentation does not claim that a registry or docs.rs release is live.
 
-112. [-] Freeze the current MkDocs site as the mdBook migration baseline
+112. [x] Freeze the current MkDocs site as the mdBook migration baseline
    Claimed by: Codex implementer (2026-07-06 20:52 PDT)
    Requirements:
    `DOCSITE-MIGRATE-001`, `DOCSITE-QUALITY-001`, `DOCSITE-OPS-001`,
@@ -5512,6 +5512,33 @@ remain adapters over `btpc-core` throughout.
    route over HTTPS and record its deployed commit. Run Ruff, docs tests, link
    checks, codespell, and spec validation.
    Evidence:
+   - Added the deterministic `btpc.docs-renderer-baseline.v1` fixture and a
+     renderer-neutral generator/comparator. The initial contract test failed with
+     the fixture and helper absent; the completed focused suite passes 2/2 and its
+     synthetic failure case reports both `missing route` and `missing anchor`.
+   - The fixture records all 191 generated HTML routes as direct routes, 61
+     navigation pages, 64 canonical URLs, 63 sitemap routes, the root and custom
+     404, four static-asset classes, every CLI/Python reference page, key CLI,
+     Python, and rustdoc anchors, required search/theme/edit/copy/keyboard features,
+     and the no-analytics/no-tracking/local-asset privacy contract.
+   - The measured baseline contains 404 files and 191 HTML pages, totals 12,722,862
+     uncompressed bytes and 3,267,519 normalized-gzip bytes, and built locally in
+     2,774 ms end to end. Two independent generator runs produced byte-identical
+     JSON and both matched the checked-in fixture exactly.
+   - `make docs-check` now compares every recorded route, anchor, canonical URL,
+     asset class, sitemap route, and custom 404 against the generated artifact. It
+     passed 45 documentation tests, the 191-route comparison, link validation for
+     92 Markdown files, codespell, rustdoc, and the existing artifact budgets.
+   - HTTPS smoke checks returned 200 for the homepage, Getting Started, CLI,
+     Python, embedded rustdoc, search index, sitemap, and local CSS; a nested absent
+     route returned the expected custom 404. The latest completed deployment at
+     smoke time was workflow run 28839992593 for commit
+     `980688188deef21702ee75e6659f1a60ce202f67`, completed at
+     2026-07-07 03:50:01 UTC.
+   - Ruff check/format and specification validation passed; the registry remains at
+     16 specs and 121 requirements. `mkdocs.yml`, dependency metadata, and the live
+     Pages workflow were not changed, and no generated site or screenshot artifact
+     was committed.
    Notes:
 
 113. [ ] Bootstrap pinned mdBook beside the working MkDocs build

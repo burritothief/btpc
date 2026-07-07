@@ -127,9 +127,9 @@ merge gates.
 
 ### DOCSITE-MIGRATE-001 — Preserve public routes during renderer migration
 
-- **Status:** Accepted
-- **Sources:** `DOCUMENTATION_PLAN.md`, `docs`
-- **Verification:** `scripts/check_docs_site.py`
+- **Status:** Implemented
+- **Sources:** `DOCUMENTATION_PLAN.md`, `docs`, `tests/docs/fixtures/renderer_migration_baseline.json`
+- **Verification:** `scripts/check_docs_site.py`, `scripts/docs_renderer_baseline.py`, `tests/docs/test_renderer_migration_baseline.py`
 - **Depends on:** `DOCSITE-ARCH-002`, `DOCSITE-QUALITY-001`
 
 Before replacing the production MkDocs deployment, BTPC **MUST** record the existing

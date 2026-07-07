@@ -25,6 +25,7 @@ docs-check:
 	uv run pytest tests/docs -q
 	$(MAKE) docs-site
 	uv run python scripts/check_docs_site.py site
+	uv run python scripts/docs_renderer_baseline.py compare --site-dir site --manifest tests/docs/fixtures/renderer_migration_baseline.json
 	uv run python scripts/check_docs.py
 	uv run codespell README.md CONTRIBUTING.md SECURITY.md CHANGELOG.md DOCUMENTATION_PLAN.md AGENTS.md docs specs --skip='docs/completions/*,docs/reference/*,docs/cli/reference/*'
 

@@ -1,0 +1,1050 @@
+{
+  "anchors": {
+    "cli/reference/create/index.html": [
+      "btpc-create",
+      "synopsis",
+      "options"
+    ],
+    "cli/reference/inspect/index.html": [
+      "btpc-inspect",
+      "synopsis",
+      "options"
+    ],
+    "cli/reference/verify/index.html": [
+      "btpc-verify",
+      "synopsis",
+      "options"
+    ],
+    "python/reference/creation/index.html": [
+      "btpc.creation.CreateOptions",
+      "btpc.creation.create"
+    ],
+    "python/reference/errors/index.html": [
+      "btpc.errors.BtpcError",
+      "btpc.errors.PathError"
+    ],
+    "python/reference/metainfo/index.html": [
+      "btpc.metainfo.Metainfo",
+      "btpc.metainfo.Metainfo.from_bytes"
+    ],
+    "python/reference/types/index.html": [
+      "btpc.types.ParseOptions",
+      "btpc.types.TorrentPath"
+    ],
+    "python/reference/verification/index.html": [
+      "btpc.verification.PayloadVerificationReport",
+      "btpc.verification.verify"
+    ],
+    "rust/btpc_core/index.html": [
+      "main-content",
+      "reexport.Metainfo",
+      "functions"
+    ]
+  },
+  "artifact": {
+    "build_duration_milliseconds": 2774,
+    "files": 404,
+    "html_pages": 191,
+    "normalized_gzip_bytes": 3267519,
+    "uncompressed_bytes": 12722862
+  },
+  "assets": [
+    "assets/javascripts/",
+    "assets/stylesheets/",
+    "rust/static.files/",
+    "stylesheets/"
+  ],
+  "canonical_urls": {
+    "404.html": "https://burritothief.github.io/btpc/404/",
+    "404/index.html": "https://burritothief.github.io/btpc/404/",
+    "cli/completion/index.html": "https://burritothief.github.io/btpc/cli/completion/",
+    "cli/configuration/index.html": "https://burritothief.github.io/btpc/cli/configuration/",
+    "cli/index.html": "https://burritothief.github.io/btpc/cli/",
+    "cli/reference/completion-generate/index.html": "https://burritothief.github.io/btpc/cli/reference/completion-generate/",
+    "cli/reference/completion-install/index.html": "https://burritothief.github.io/btpc/cli/reference/completion-install/",
+    "cli/reference/completion-uninstall/index.html": "https://burritothief.github.io/btpc/cli/reference/completion-uninstall/",
+    "cli/reference/completion/index.html": "https://burritothief.github.io/btpc/cli/reference/completion/",
+    "cli/reference/config-check/index.html": "https://burritothief.github.io/btpc/cli/reference/config-check/",
+    "cli/reference/config-explain-create/index.html": "https://burritothief.github.io/btpc/cli/reference/config-explain-create/",
+    "cli/reference/config-explain/index.html": "https://burritothief.github.io/btpc/cli/reference/config-explain/",
+    "cli/reference/config-init/index.html": "https://burritothief.github.io/btpc/cli/reference/config-init/",
+    "cli/reference/config-path/index.html": "https://burritothief.github.io/btpc/cli/reference/config-path/",
+    "cli/reference/config-preset-list/index.html": "https://burritothief.github.io/btpc/cli/reference/config-preset-list/",
+    "cli/reference/config-preset-remove/index.html": "https://burritothief.github.io/btpc/cli/reference/config-preset-remove/",
+    "cli/reference/config-preset-save/index.html": "https://burritothief.github.io/btpc/cli/reference/config-preset-save/",
+    "cli/reference/config-preset-show/index.html": "https://burritothief.github.io/btpc/cli/reference/config-preset-show/",
+    "cli/reference/config-preset/index.html": "https://burritothief.github.io/btpc/cli/reference/config-preset/",
+    "cli/reference/config-show/index.html": "https://burritothief.github.io/btpc/cli/reference/config-show/",
+    "cli/reference/config-tracker-add/index.html": "https://burritothief.github.io/btpc/cli/reference/config-tracker-add/",
+    "cli/reference/config-tracker-list/index.html": "https://burritothief.github.io/btpc/cli/reference/config-tracker-list/",
+    "cli/reference/config-tracker-remove/index.html": "https://burritothief.github.io/btpc/cli/reference/config-tracker-remove/",
+    "cli/reference/config-tracker/index.html": "https://burritothief.github.io/btpc/cli/reference/config-tracker/",
+    "cli/reference/config/index.html": "https://burritothief.github.io/btpc/cli/reference/config/",
+    "cli/reference/create/index.html": "https://burritothief.github.io/btpc/cli/reference/create/",
+    "cli/reference/edit/index.html": "https://burritothief.github.io/btpc/cli/reference/edit/",
+    "cli/reference/index.html": "https://burritothief.github.io/btpc/cli/reference/",
+    "cli/reference/inspect/index.html": "https://burritothief.github.io/btpc/cli/reference/inspect/",
+    "cli/reference/magnet/index.html": "https://burritothief.github.io/btpc/cli/reference/magnet/",
+    "cli/reference/manpage/index.html": "https://burritothief.github.io/btpc/cli/reference/manpage/",
+    "cli/reference/validate/index.html": "https://burritothief.github.io/btpc/cli/reference/validate/",
+    "cli/reference/verify/index.html": "https://burritothief.github.io/btpc/cli/reference/verify/",
+    "compatibility/index.html": "https://burritothief.github.io/btpc/compatibility/",
+    "concepts/hybrid/index.html": "https://burritothief.github.io/btpc/concepts/hybrid/",
+    "concepts/index.html": "https://burritothief.github.io/btpc/concepts/",
+    "concepts/piece-length/index.html": "https://burritothief.github.io/btpc/concepts/piece-length/",
+    "concepts/reproducibility-bytes/index.html": "https://burritothief.github.io/btpc/concepts/reproducibility-bytes/",
+    "concepts/v1/index.html": "https://burritothief.github.io/btpc/concepts/v1/",
+    "concepts/v2/index.html": "https://burritothief.github.io/btpc/concepts/v2/",
+    "contributing/index.html": "https://burritothief.github.io/btpc/contributing/",
+    "getting-started/cli/index.html": "https://burritothief.github.io/btpc/getting-started/cli/",
+    "getting-started/index.html": "https://burritothief.github.io/btpc/getting-started/",
+    "getting-started/installation/index.html": "https://burritothief.github.io/btpc/getting-started/installation/",
+    "getting-started/python/index.html": "https://burritothief.github.io/btpc/getting-started/python/",
+    "getting-started/rust/index.html": "https://burritothief.github.io/btpc/getting-started/rust/",
+    "guides/configuration-presets/index.html": "https://burritothief.github.io/btpc/guides/configuration-presets/",
+    "guides/creating/index.html": "https://burritothief.github.io/btpc/guides/creating/",
+    "guides/editing/index.html": "https://burritothief.github.io/btpc/guides/editing/",
+    "guides/index.html": "https://burritothief.github.io/btpc/guides/",
+    "guides/inspecting-validating/index.html": "https://burritothief.github.io/btpc/guides/inspecting-validating/",
+    "guides/verifying/index.html": "https://burritothief.github.io/btpc/guides/verifying/",
+    "index.html": "https://burritothief.github.io/btpc/",
+    "performance/index.html": "https://burritothief.github.io/btpc/performance/",
+    "python/examples/index.html": "https://burritothief.github.io/btpc/python/examples/",
+    "python/index.html": "https://burritothief.github.io/btpc/python/",
+    "python/reference/creation/index.html": "https://burritothief.github.io/btpc/python/reference/creation/",
+    "python/reference/errors/index.html": "https://burritothief.github.io/btpc/python/reference/errors/",
+    "python/reference/metainfo/index.html": "https://burritothief.github.io/btpc/python/reference/metainfo/",
+    "python/reference/types/index.html": "https://burritothief.github.io/btpc/python/reference/types/",
+    "python/reference/verification/index.html": "https://burritothief.github.io/btpc/python/reference/verification/",
+    "release-checklist/index.html": "https://burritothief.github.io/btpc/release-checklist/",
+    "rust/index.html": "https://burritothief.github.io/btpc/rust/",
+    "security/index.html": "https://burritothief.github.io/btpc/security/"
+  },
+  "custom_404": "404.html",
+  "deployed": {
+    "commit": "980688188deef21702ee75e6659f1a60ce202f67",
+    "completed_at": "2026-07-07T03:50:01Z",
+    "required_urls": [
+      "https://burritothief.github.io/btpc/",
+      "https://burritothief.github.io/btpc/getting-started/",
+      "https://burritothief.github.io/btpc/cli/",
+      "https://burritothief.github.io/btpc/python/",
+      "https://burritothief.github.io/btpc/rust/btpc_core/",
+      "https://burritothief.github.io/btpc/search/search_index.json",
+      "https://burritothief.github.io/btpc/sitemap.xml",
+      "https://burritothief.github.io/btpc/stylesheets/extra.css"
+    ],
+    "workflow_run": "28839992593"
+  },
+  "navigation_routes": [
+    "cli/completion/index.html",
+    "cli/configuration/index.html",
+    "cli/index.html",
+    "cli/reference/completion-generate/index.html",
+    "cli/reference/completion-install/index.html",
+    "cli/reference/completion-uninstall/index.html",
+    "cli/reference/completion/index.html",
+    "cli/reference/config-check/index.html",
+    "cli/reference/config-explain-create/index.html",
+    "cli/reference/config-explain/index.html",
+    "cli/reference/config-init/index.html",
+    "cli/reference/config-path/index.html",
+    "cli/reference/config-preset-list/index.html",
+    "cli/reference/config-preset-remove/index.html",
+    "cli/reference/config-preset-save/index.html",
+    "cli/reference/config-preset-show/index.html",
+    "cli/reference/config-preset/index.html",
+    "cli/reference/config-show/index.html",
+    "cli/reference/config-tracker-add/index.html",
+    "cli/reference/config-tracker-list/index.html",
+    "cli/reference/config-tracker-remove/index.html",
+    "cli/reference/config-tracker/index.html",
+    "cli/reference/config/index.html",
+    "cli/reference/create/index.html",
+    "cli/reference/edit/index.html",
+    "cli/reference/index.html",
+    "cli/reference/inspect/index.html",
+    "cli/reference/magnet/index.html",
+    "cli/reference/manpage/index.html",
+    "cli/reference/validate/index.html",
+    "cli/reference/verify/index.html",
+    "compatibility/index.html",
+    "concepts/hybrid/index.html",
+    "concepts/index.html",
+    "concepts/piece-length/index.html",
+    "concepts/reproducibility-bytes/index.html",
+    "concepts/v1/index.html",
+    "concepts/v2/index.html",
+    "contributing/index.html",
+    "getting-started/cli/index.html",
+    "getting-started/index.html",
+    "getting-started/installation/index.html",
+    "getting-started/python/index.html",
+    "getting-started/rust/index.html",
+    "guides/configuration-presets/index.html",
+    "guides/creating/index.html",
+    "guides/editing/index.html",
+    "guides/index.html",
+    "guides/inspecting-validating/index.html",
+    "guides/verifying/index.html",
+    "index.html",
+    "performance/index.html",
+    "python/examples/index.html",
+    "python/index.html",
+    "python/reference/creation/index.html",
+    "python/reference/errors/index.html",
+    "python/reference/metainfo/index.html",
+    "python/reference/types/index.html",
+    "python/reference/verification/index.html",
+    "release-checklist/index.html",
+    "security/index.html"
+  ],
+  "pages_root": "/btpc/",
+  "privacy": [
+    "no-remote-runtime-assets",
+    "no-analytics",
+    "no-tracking",
+    "local-search-index"
+  ],
+  "required_features": [
+    "client-side-search",
+    "light-dark-theme-toggle",
+    "edit-links",
+    "code-copy-buttons",
+    "keyboard-navigation",
+    "custom-404"
+  ],
+  "routes": [
+    {
+      "mode": "direct",
+      "path": "404.html"
+    },
+    {
+      "mode": "direct",
+      "path": "404/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "cli/completion/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "cli/configuration/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "cli/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "cli/reference/completion-generate/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "cli/reference/completion-install/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "cli/reference/completion-uninstall/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "cli/reference/completion/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "cli/reference/config-check/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "cli/reference/config-explain-create/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "cli/reference/config-explain/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "cli/reference/config-init/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "cli/reference/config-path/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "cli/reference/config-preset-list/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "cli/reference/config-preset-remove/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "cli/reference/config-preset-save/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "cli/reference/config-preset-show/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "cli/reference/config-preset/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "cli/reference/config-show/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "cli/reference/config-tracker-add/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "cli/reference/config-tracker-list/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "cli/reference/config-tracker-remove/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "cli/reference/config-tracker/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "cli/reference/config/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "cli/reference/create/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "cli/reference/edit/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "cli/reference/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "cli/reference/inspect/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "cli/reference/magnet/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "cli/reference/manpage/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "cli/reference/validate/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "cli/reference/verify/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "compatibility/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "concepts/hybrid/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "concepts/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "concepts/piece-length/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "concepts/reproducibility-bytes/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "concepts/v1/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "concepts/v2/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "contributing/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "getting-started/cli/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "getting-started/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "getting-started/installation/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "getting-started/python/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "getting-started/rust/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "guides/configuration-presets/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "guides/creating/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "guides/editing/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "guides/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "guides/inspecting-validating/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "guides/verifying/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "performance/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "python/examples/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "python/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "python/reference/creation/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "python/reference/errors/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "python/reference/metainfo/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "python/reference/types/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "python/reference/verification/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "release-checklist/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/all.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/bencode/enum.OwnedValue.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/bencode/enum.ValueKind.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/bencode/fn.parse.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/bencode/fn.parse_with_limits.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/bencode/fn.validate_canonical.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/bencode/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/bencode/struct.ByteString.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/bencode/struct.Integer.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/bencode/struct.Span.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/bencode/struct.Value.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/create/atomic_output/fn.write_atomic.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/create/constant.PIECE_LENGTH_POLICY_ID.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/create/constant.V2_BLOCK_LENGTH.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/create/enum.CreateMode.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/create/enum.DurabilityPolicy.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/create/enum.EmptyDirectoryPolicy.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/create/enum.EmptyFilePolicy.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/create/enum.HashThreads.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/create/enum.HiddenPolicy.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/create/enum.OverwritePolicy.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/create/enum.PieceLength.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/create/enum.PieceLengthMode.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/create/enum.RootName.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/create/enum.SpecialFilePolicy.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/create/enum.SymlinkPolicy.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/create/fn.automatic_piece_length.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/create/fn.hash_v1_parallel.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/create/fn.hash_v1_sequential.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/create/fn.hash_v2_file_sequential.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/create/fn.scan_manifest.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/create/fn.sort_manifest_entries.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/create/fn.v2_zero_hash.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/create/fn.validate_piece_length.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/create/fn.write_atomic.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/create/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/create/piece_length/constant.PIECE_LENGTH_POLICY_ID.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/create/piece_length/enum.PieceLengthMode.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/create/piece_length/fn.automatic_piece_length.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/create/piece_length/fn.validate_piece_length.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/create/progress/struct.CancellationToken.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/create/progress/struct.HashProgress.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/create/progress/struct.NoProgress.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/create/progress/trait.ProgressSink.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/create/struct.CancellationToken.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/create/struct.CreateMetrics.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/create/struct.CreateOptions.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/create/struct.CreateOptionsBuilder.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/create/struct.CreateResult.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/create/struct.Creator.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/create/struct.HashProgress.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/create/struct.ManifestEntry.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/create/struct.ManifestOptions.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/create/struct.ManifestOptionsBuilder.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/create/struct.NoProgress.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/create/struct.ParallelHashOptions.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/create/struct.PayloadManifest.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/create/struct.V1HashResult.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/create/struct.V2HashResult.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/create/trait.ProgressSink.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/edit/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/edit/struct.MetainfoEditor.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/enum.Error.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/enum.ErrorCategory.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/error/enum.Error.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/error/enum.ErrorCategory.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/error/type.Result.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/fn.version.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/limits/struct.ParseLimits.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/limits/struct.ParseOptions.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/magnet/fn.generate.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/magnet/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/magnet/struct.MagnetOptions.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/magnet/struct.MagnetOptionsBuilder.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/metadata/struct.DhtNode.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/metadata/struct.OptionalMetadata.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/metainfo/enum.Canonicality.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/metainfo/enum.TorrentMode.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/metainfo/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/metainfo/path_types/struct.TorrentBytes.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/metainfo/path_types/struct.TorrentPath.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/metainfo/struct.InfoHashV1.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/metainfo/struct.InfoHashV2.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/metainfo/struct.Metainfo.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/metainfo/struct.RawMetainfo.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/metainfo/struct.TorrentBytes.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/metainfo/struct.TorrentFile.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/metainfo/struct.TorrentPath.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/metainfo/struct.UnknownField.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/metainfo/struct.V1File.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/metainfo/struct.V1Metainfo.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/metainfo/struct.V2File.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/metainfo/struct.V2Metainfo.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/metainfo/struct.ValidationReport.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/metainfo/struct.ValidationWarning.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/struct.DhtNode.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/struct.OptionalMetadata.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/struct.ParseLimits.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/struct.ParseOptions.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/type.Result.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/verify/enum.ExtraFilePolicy.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/verify/enum.MismatchKind.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/verify/enum.MismatchMode.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/verify/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/verify/struct.Mismatch.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/verify/struct.VerificationReport.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/verify/struct.Verifier.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/verify/struct.VerifyOptions.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/btpc_core/verify/struct.VerifyOptionsBuilder.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/help.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/index.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/settings.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/src/btpc_core/bencode.rs.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/src/btpc_core/create/atomic_output.rs.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/src/btpc_core/create/mod.rs.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/src/btpc_core/create/piece_length.rs.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/src/btpc_core/create/progress.rs.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/src/btpc_core/edit.rs.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/src/btpc_core/error.rs.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/src/btpc_core/lib.rs.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/src/btpc_core/limits.rs.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/src/btpc_core/magnet.rs.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/src/btpc_core/metadata.rs.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/src/btpc_core/metainfo/mod.rs.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/src/btpc_core/metainfo/path_types.rs.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/src/btpc_core/verify.rs.html"
+    },
+    {
+      "mode": "direct",
+      "path": "rust/src/btpc_core/verify/safe_fs.rs.html"
+    },
+    {
+      "mode": "direct",
+      "path": "security/index.html"
+    }
+  ],
+  "schema": "btpc.docs-renderer-baseline.v1",
+  "site_url": "https://burritothief.github.io/btpc/",
+  "sitemap_routes": [
+    "/btpc/",
+    "/btpc/404/",
+    "/btpc/cli/",
+    "/btpc/cli/completion/",
+    "/btpc/cli/configuration/",
+    "/btpc/cli/reference/",
+    "/btpc/cli/reference/completion-generate/",
+    "/btpc/cli/reference/completion-install/",
+    "/btpc/cli/reference/completion-uninstall/",
+    "/btpc/cli/reference/completion/",
+    "/btpc/cli/reference/config-check/",
+    "/btpc/cli/reference/config-explain-create/",
+    "/btpc/cli/reference/config-explain/",
+    "/btpc/cli/reference/config-init/",
+    "/btpc/cli/reference/config-path/",
+    "/btpc/cli/reference/config-preset-list/",
+    "/btpc/cli/reference/config-preset-remove/",
+    "/btpc/cli/reference/config-preset-save/",
+    "/btpc/cli/reference/config-preset-show/",
+    "/btpc/cli/reference/config-preset/",
+    "/btpc/cli/reference/config-show/",
+    "/btpc/cli/reference/config-tracker-add/",
+    "/btpc/cli/reference/config-tracker-list/",
+    "/btpc/cli/reference/config-tracker-remove/",
+    "/btpc/cli/reference/config-tracker/",
+    "/btpc/cli/reference/config/",
+    "/btpc/cli/reference/create/",
+    "/btpc/cli/reference/edit/",
+    "/btpc/cli/reference/inspect/",
+    "/btpc/cli/reference/magnet/",
+    "/btpc/cli/reference/manpage/",
+    "/btpc/cli/reference/validate/",
+    "/btpc/cli/reference/verify/",
+    "/btpc/compatibility/",
+    "/btpc/concepts/",
+    "/btpc/concepts/hybrid/",
+    "/btpc/concepts/piece-length/",
+    "/btpc/concepts/reproducibility-bytes/",
+    "/btpc/concepts/v1/",
+    "/btpc/concepts/v2/",
+    "/btpc/contributing/",
+    "/btpc/getting-started/",
+    "/btpc/getting-started/cli/",
+    "/btpc/getting-started/installation/",
+    "/btpc/getting-started/python/",
+    "/btpc/getting-started/rust/",
+    "/btpc/guides/",
+    "/btpc/guides/configuration-presets/",
+    "/btpc/guides/creating/",
+    "/btpc/guides/editing/",
+    "/btpc/guides/inspecting-validating/",
+    "/btpc/guides/verifying/",
+    "/btpc/performance/",
+    "/btpc/python/",
+    "/btpc/python/examples/",
+    "/btpc/python/reference/creation/",
+    "/btpc/python/reference/errors/",
+    "/btpc/python/reference/metainfo/",
+    "/btpc/python/reference/types/",
+    "/btpc/python/reference/verification/",
+    "/btpc/release-checklist/",
+    "/btpc/rust/",
+    "/btpc/security/"
+  ]
+}
