@@ -34,7 +34,7 @@ redundant-cast = "warn"
 
 [dependency-groups]
 dev = [
-    "codespell>=2.4.2",
+    "codespell>=2.4.3",
     "maturin>=1.9,<2",
     "pre-commit>=4,<5",
     "psutil>=7,<8",
@@ -42,7 +42,7 @@ dev = [
     "pyright>=1.1.400,<2",
     "pytest>=8.4,<10",
     "pytest-cov>=7.1.0",
-    "ruff>=0.12,<1",
+    "ruff>=0.15.22,<1",
     "types-psutil>=7.2.2.20260518",
     "zizmor>=1.26.1",
 ]
