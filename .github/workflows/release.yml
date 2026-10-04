@@ -116,14 +116,14 @@ jobs:
           toolchain: 1.94.1
       - uses: taiki-e/install-action@16b05812d776ae1dfaabc8277e421fb6d2506419 # v2
         with:
-          tool: cargo-semver-checks@0.42.0
+          tool: cargo-semver-checks@0.50.0
       - name: Compare with previous release tag
         env:
           RELEASE_VERSION: ${{ needs.version.outputs.version }}
         shell: bash
         run: |
           current="v${RELEASE_VERSION}"
-          baseline=$(git tag --sort=-version:refname --list 'v*' | grep -Fxv "$current" | head -n 1 || true)
+          baseline=$(git tag --merged HEAD --sort=-version:refname --list 'v*' | grep -Fxv "$current" | head -n 1 || true)
           if [[ -z "$baseline" ]]; then
             echo "No previous release tag exists; skipping initial-release comparison."
           else
@@ -314,7 +314,7 @@ jobs:
 
   validate:
     name: Validate assembled artifacts
-    needs: [version, quality, documentation, rust-package, wheels, source-distribution, cli]
+    needs: [version, quality, documentation, rust-api, rust-package, wheels, source-distribution, cli]
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:

@@ -76,10 +76,19 @@ jobs:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           ref: ${{ inputs.revision || github.sha }}
+          fetch-depth: 0
           persist-credentials: false
       - uses: dtolnay/rust-toolchain@fa04a1451ff1842e2626ccb99004d0195b455a88 # master
         with:
           toolchain: 1.94.1
+      - uses: taiki-e/install-action@16b05812d776ae1dfaabc8277e421fb6d2506419 # v2
+        with:
+          tool: cargo-semver-checks@0.50.0
+      - name: Compare Rust API with the pull request base
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_REVISION: ${{ github.event.pull_request.base.sha }}
+        run: scripts/check_rust_api.sh "$BASE_REVISION"
       - run: cargo check --manifest-path tests/rust-consumer/Cargo.toml --locked
       - run: cargo test -p btpc-core --test compile_fail
 

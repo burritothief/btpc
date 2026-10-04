@@ -119,6 +119,10 @@ Local Markdown links and generated CLI references **MUST** also be checked.
 The release workflow **MUST** resolve the selected revision once and pass that
 immutable commit to every checkout. Full CI and offline documentation gates
 **MUST** pass for that commit before assembled artifacts become publishable.
+Rust API compatibility **MUST** also pass before assembled-artifact validation.
+The pinned API checker **MUST** support the selected Rust documentation format.
+Pull requests compare against their base commit. Release comparisons select a
+previous version tag reachable from the release commit.
 
 ### RELEASE-REPORT-001 — Publish compatibility and performance evidence
 

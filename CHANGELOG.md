@@ -6,6 +6,12 @@ breaking changes documented in their release notes.
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-10-03
+
+- Updated the Rust API checker to support Rust 1.94.1. Pull requests now compare
+  against their base commit, and API compatibility gates assembled artifacts.
+- Release API comparisons use a previous version tag reachable from the candidate.
+
 ## [0.1.1] - 2026-10-03
 
 - Fixed packaged Rust crate checks with an empty Cargo cache. Locked test
@@ -35,6 +41,7 @@ breaking changes documented in their release notes.
   Release gates now check one resolved commit and support a TestPyPI rehearsal.
   Rust crate publication is opt-in for Python releases.
 
-[Unreleased]: https://github.com/burritothief/btpc/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/burritothief/btpc/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/burritothief/btpc/tree/v0.1.2
 [0.1.1]: https://github.com/burritothief/btpc/tree/v0.1.1
 [0.1.0]: https://github.com/burritothief/btpc/tree/v0.1.0

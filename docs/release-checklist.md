@@ -129,7 +129,10 @@ post-publication check does not roll back an upload.
   testing the extracted package and an external consumer offline. Confirm that
   it also passes with an empty Cargo cache on the release runner.
 - Run `cargo publish -p btpc-core --locked --dry-run` and the Rust API compatibility
-  check against the previous release tag when one exists.
+  check against the previous release tag when one exists. Install the CI-pinned
+  checker with `cargo install cargo-semver-checks --version 0.50.0 --locked`.
+  Run `scripts/check_rust_api.sh v<previous-version>` with Rust 1.94.1 before
+  creating a tag. Check its result for both API changes and tool errors.
 - Protect the `crates-io` GitHub environment, configure its narrowly scoped
   `CRATES_IO_TOKEN`, and approve the manual release job only for an existing
   version-matching tag. Ordinary pushes never publish the crate.
