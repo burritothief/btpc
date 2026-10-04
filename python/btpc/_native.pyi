@@ -9,7 +9,7 @@ __subinterpreters_supported__: Literal[False]
 class _NativeError(Exception):
     offset: int | None
     field: str | None
-    path: bytes | None
+    path: PathLike[str] | None
     limit: str | None
     actual: int | None
     maximum: int | None

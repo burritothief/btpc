@@ -747,7 +747,8 @@ class Metainfo:
         """Compare validated objects by exact source bytes."""
         return isinstance(other, Metainfo) and self._native == other._native
 
-    __hash__ = None  # type: ignore[assignment]
+    # Python disables hashing with None, although the base signature is callable.
+    __hash__: None = None  # type: ignore[assignment]
 
     def __repr__(self) -> str:
         """Return a compact representation without expanding files or bytes."""

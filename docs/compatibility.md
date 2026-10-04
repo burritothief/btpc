@@ -11,6 +11,11 @@ The matrix describes source and CI support. BTPC is pre-1.0 and no public packag
 registry release has been made. Final wheels and native archives must pass clean
 artifact smoke tests before publication.
 
+The release wheel targets are Linux x86-64/AArch64 with glibc 2.28 or later,
+macOS Intel/Apple Silicon, and Windows x86-64. The [installation guide](getting-started/installation.md)
+explains wheel selection and source-build requirements. The Python wheel contains
+the library; the CLI is distributed separately.
+
 ### Python Runtime Model
 
 BTPC currently requires the CPython global interpreter lock. The extension
@@ -45,6 +50,13 @@ Release wheels and archives must be produced from one verified version, install 
 clean environments, run all three torrent modes, inspect and magnetize output, and
 verify payloads. Publication should use least privilege and provenance. Normative
 requirements live in the [release specification][release-spec].
+
+The manual workflow resolves a release tag to one commit before it starts checks
+and builds. It runs the full CI and documentation gates against that commit.
+Each wheel runs behavior checks and external Pyrefly/Pyright consumers in a fresh
+environment outside the checkout. A TestPyPI publication exercises the registry
+download and install path before the owner selects PyPI. See the
+[release checklist](release-checklist.md) for registry setup and publication steps.
 
 The Cargo workspace package version is the single source. Start a release bump
 with `make version VERSION=X.Y.Z`, update `CHANGELOG.md`, then validate the tag

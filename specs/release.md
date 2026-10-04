@@ -11,6 +11,8 @@ source_paths:
   - "rust-toolchain.toml"
   - "docs/compatibility.md"
   - ".github/workflows/release.yml"
+  - "scripts/check_wheel.py"
+  - "scripts/check_native_stub.py"
   - "scripts/package_source.py"
   - "scripts/check_crate_package.sh"
   - "scripts/verify_artifacts.py"
@@ -50,7 +52,7 @@ systems, and every supported CPython minor version before release.
 ### RELEASE-ARTIFACT-001 — Test final distributable artifacts
 
 - **Status:** Implemented
-- **Sources:** `pyproject.toml`, `LICENSE`, `.github/workflows/release.yml`, `scripts/package_cli.py`, `scripts/package_source.py`, `scripts/verify_artifacts.py`
+- **Sources:** `pyproject.toml`, `LICENSE`, `.github/workflows/release.yml`, `scripts/package_cli.py`, `scripts/package_source.py`, `scripts/verify_artifacts.py`, `scripts/check_wheel.py`
 - **Verification:** `tests/python/test_release.py`, `scripts/smoke_wheel.py`, `scripts/smoke_cli.py`
 - **Depends on:** `RELEASE-VERSION-001`, `RELEASE-MATRIX-001`
 
@@ -62,10 +64,14 @@ The manual workflow builds CPython 3.11–3.14 wheels and native CLI archives on
 Linux x86-64/AArch64, macOS x86-64/AArch64, and Windows x86-64, plus a Python
 sdist and full project source archive. It validates metadata, license inclusion,
 and checksums in dry-run mode. Publication remains disabled unless the operator
-explicitly selects it; publishing requires the protected `pypi` environment and
-an existing version-matching tag, creates a draft GitHub release, uses PyPI
-Trusted Publishing, emits GitHub build provenance, and publishes `btpc-core` only
-through the protected `crates-io` environment with a narrowly scoped token.
+explicitly selects it. The registry defaults to TestPyPI. Publishing requires
+dispatching from an existing version-matching tag and a matching protected
+`testpypi` or `pypi` environment with a Trusted Publisher. Both paths emit build
+provenance and download a published wheel for clean-install checks. Only the PyPI
+path creates a draft GitHub release. Crate publication is disabled by default and
+requires the separate `publish_crate=true` input on a PyPI publishing run. It uses
+the protected `crates-io` environment with a narrowly scoped token. A Python-only
+release does not require crates.io credentials.
 
 ### RELEASE-RUST-CRATE-001 — Publish only the protocol crate
 
@@ -99,15 +105,18 @@ gates.
 
 ### RELEASE-QUALITY-001 — Pass all source and artifact quality gates
 
-- **Status:** Accepted
-- **Sources:** `.github/workflows/ci.yml`, `AGENTS.md`
-- **Verification:** `.github/workflows/ci.yml`
+- **Status:** Implemented
+- **Sources:** `.github/workflows/ci.yml`, `.github/workflows/release.yml`, `AGENTS.md`
+- **Verification:** `.github/workflows/ci.yml`, `tests/python/test_release.py`
 - **Depends on:** `RELEASE-MATRIX-001`, `RELEASE-ARTIFACT-001`, `TEST-TRACE-001`
 
 Every release **MUST** pass protocol, Rust, Python, CLI, specification, formatting,
 lint, documentation, dependency-policy, and clean-install artifact checks. Public
 Rust APIs **MUST** be documented, and no required check may be silently skipped.
 Local Markdown links and generated CLI references **MUST** also be checked.
+The release workflow **MUST** resolve the selected revision once and pass that
+immutable commit to every checkout. Full CI and offline documentation gates
+**MUST** pass for that commit before assembled artifacts become publishable.
 
 ### RELEASE-REPORT-001 — Publish compatibility and performance evidence
 
@@ -136,7 +145,7 @@ reference, and completion scripts for every supported shell. Native archives
 ### RELEASE-PY-TYPING-001 — Validate typing from built Python artifacts
 
 - **Status:** Implemented
-- **Sources:** `pyproject.toml`, `python/btpc/py.typed`, `python/btpc/_native.pyi`, `.github/workflows/release.yml`
+- **Sources:** `pyproject.toml`, `python/btpc/py.typed`, `python/btpc/_native.pyi`, `.github/workflows/release.yml`, `scripts/check_wheel.py`, `scripts/check_native_stub.py`
 - **Verification:** `tests/python`, `tests/python/test_release.py`, `scripts/smoke_wheel.py`
 - **Depends on:** `PYAPI-TYPE-COMPLETE-001`, `RELEASE-ARTIFACT-001`
 
@@ -144,6 +153,9 @@ Release validation **MUST** install the built wheel into a clean environment and
 run external Pyrefly and Pyright compatibility examples against that installation. Wheels
 and sdists **MUST** include `py.typed` and the private extension stub, and the
 installed package **MUST NOT** resolve type information from the source checkout.
+Each matrix wheel **MUST** check positive and negative typing consumers and public
+typing completeness. Native parity **MUST** cover class methods, parameter names,
+parameter kinds, required parameters, and properties in addition to module exports.
 
 ## Design Rationale
 

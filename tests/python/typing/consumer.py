@@ -21,6 +21,7 @@ options = btpc.CreateOptions(
 )
 assert_type(CreateOptions, type[btpc.CreateOptions])
 assert_type(Metainfo, type[btpc.Metainfo])
+assert_type(Metainfo.__hash__, None)
 assert_type(TorrentMode, type[btpc.TorrentMode])
 assert_type(PayloadVerificationReport, type[btpc.PayloadVerificationReport])
 result = btpc.create_bytes(payload, options=options)

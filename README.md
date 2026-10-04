@@ -34,6 +34,16 @@ Windows, and CPython 3.11 through 3.14.
 Python wheels currently require the CPython GIL and do not support
 subinterpreters. Native hashing releases the GIL while it runs.
 
+After the first PyPI release, install the Python library with `python -m pip install
+btpc`. The Python wheel does not include the `btpc` CLI. Use the native release
+archive or build the CLI from source. Before publication, you can install a wheel
+from a validated release candidate with `python -m pip install /path/to/btpc.whl`.
+
+The planned wheel matrix covers CPython 3.11–3.14 on Linux x86-64/AArch64
+(glibc 2.28 or later), macOS Intel/Apple Silicon, and Windows x86-64. See the
+[installation guide](docs/getting-started/installation.md) for source builds and
+runtime limits.
+
 ## Five-Minute CLI Tour
 
 ```console

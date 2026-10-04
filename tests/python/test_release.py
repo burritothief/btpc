@@ -93,6 +93,7 @@ def test_btpc_core_package_contains_publication_assets() -> None:
 
 
 # Spec: RELEASE-ARTIFACT-001
+# Spec: RELEASE-QUALITY-001
 def test_release_automation_and_changelog_are_present() -> None:
     assert (ROOT / "CHANGELOG.md").is_file()
     workflow = (ROOT / ".github" / "workflows" / "release.yml").read_text()
@@ -106,12 +107,38 @@ def test_release_automation_and_changelog_are_present() -> None:
     assert "cargo publish -p btpc-core --locked" in workflow
     assert "CARGO_REGISTRY_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}" in workflow
     assert "needs: [version, rust-api, validate, attest]" in workflow
-    assert "ref: ${{ inputs.tag }}" in workflow
-    tagged_build_checkout_count = 7
+    # Resolve the tag once; every build and publication uses that immutable commit.
+    assert workflow.count("ref: ${{ inputs.tag || github.sha }}") == 1
+    assert "commit: ${{ steps.version.outputs.commit }}" in workflow
+    assert "ref: ${{ needs.version.outputs.commit }}" in workflow
     assert (
-        workflow.count("ref: ${{ inputs.tag || github.sha }}")
-        == tagged_build_checkout_count
+        "needs: [version, quality, documentation, rust-package, "
+        "wheels, source-distribution, cli]" in workflow
     )
+    assert "uses: ./.github/workflows/ci.yml" in workflow
+    assert "revision: ${{ needs.version.outputs.commit }}" in workflow
+    assert "default: testpypi" in workflow
+    assert "environment: ${{ inputs.repository }}" in workflow
+    assert "https://test.pypi.org/legacy/" in workflow
+    assert (
+        "publish_crate:\n"
+        "        description: Also publish btpc-core to crates.io "
+        "(PyPI releases only)\n"
+        "        required: true\n"
+        "        default: false\n"
+        "        type: boolean" in workflow
+    )
+    crate_job = workflow.split("  crates-io:\n", 1)[1].split("\n  registry-check:", 1)[
+        0
+    ]
+    assert (
+        "if: inputs.publish == true && inputs.repository == 'pypi' "
+        "&& inputs.publish_crate == true" in crate_job
+    )
+    assert "scripts/check_wheel.py" in workflow
+    ci = (ROOT / ".github/workflows/ci.yml").read_text()
+    assert "workflow_call:" in ci
+    assert "ref: ${{ inputs.revision || github.sha }}" in ci
     assert 'test "$(git describe --tags --exact-match)" = "$RELEASE_TAG"' in workflow
     assert 'toolchain: ["1.85.0", "1.94.1"]' in workflow
     assert "scripts/check_crate_package.sh" in workflow
@@ -292,3 +319,14 @@ def test_wheel_and_sdist_include_complete_typing_artifacts(tmp_path: Path) -> No
         names = archive.getnames()
         assert any(name.endswith("/python/btpc/py.typed") for name in names)
         assert any(name.endswith("/python/btpc/_native.pyi") for name in names)
+    subprocess.run(  # noqa: S603
+        [
+            sys.executable,
+            ROOT / "scripts/check_wheel.py",
+            wheel,
+            "--work-dir",
+            tmp_path / "installed",
+        ],
+        cwd=tmp_path,
+        check=True,
+    )
