@@ -44,7 +44,7 @@ dependencies = [
 
 [[package]]
 name = "btpc-core"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "cap-fs-ext",
  "cap-std",

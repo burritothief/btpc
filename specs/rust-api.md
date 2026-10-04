@@ -43,9 +43,9 @@ them.
 
 ### RUSTAPI-COMPAT-001 — Verify feature and semver compatibility
 
-- **Status:** Accepted
+- **Status:** Implemented
 - **Sources:** `crates/btpc-core/src/lib.rs`
-- **Verification:** `Cargo.toml`
+- **Verification:** `.github/workflows/ci.yml`, `.github/workflows/release.yml`, `scripts/check_rust_api.sh`
 - **Depends on:** `RUSTAPI-FACADE-001`
 
 Public items **MUST** be documented. Supported feature combinations, MSRV, and
