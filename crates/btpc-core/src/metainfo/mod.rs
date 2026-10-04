@@ -2118,23 +2118,19 @@ mod checked_arithmetic_tests {
 
     // Spec: META-V1-001
     // Spec: META-V2-001
-    #[cfg(windows)]
     #[test]
-    fn rejects_case_collisions_separated_by_raw_byte_order() {
-        for paths in [
-            vec![
-                vec![b"A".to_vec()],
-                vec![b"B".to_vec()],
-                vec![b"a".to_vec()],
-            ],
-            vec![
-                vec![b"A".to_vec()],
-                vec![b"B".to_vec()],
-                vec![b"a".to_vec(), b"child".to_vec()],
-            ],
-        ] {
-            let error = super::validate_torrent_path_graph(paths, "info.files").unwrap_err();
-            assert_eq!(error.category(), ErrorCategory::Metainfo);
+    fn platform_mapping_checks_case_collisions_separated_by_raw_byte_order() {
+        let cases: [Vec<Vec<&[u8]>>; 2] = [
+            vec![vec![b"A"], vec![b"B"], vec![b"a"]],
+            vec![vec![b"A"], vec![b"B"], vec![b"a", b"child"]],
+        ];
+        for paths in cases {
+            let result = super::validate_torrent_path_graph(paths, "info.files");
+            if cfg!(windows) {
+                assert_eq!(result.unwrap_err().category(), ErrorCategory::Metainfo);
+            } else {
+                assert!(result.is_ok());
+            }
         }
     }
 
