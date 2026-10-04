@@ -180,7 +180,11 @@ The private native `.pyi` **MUST** remain synchronized with the extension's runt
 symbols and callable signatures. CI **MUST** run Pyrefly plus a strict Pyright compatibility smoke on
 external-consumer examples installed from the built wheel and run an automated
 stub/runtime parity check. Wheel/sdist tests **MUST** verify `py.typed` and every
-required `.pyi` file are included. Typing examples **MUST** use `assert_type` or
+required `.pyi` file are included. Native parity **MUST** compare class members,
+properties, and callable parameter names, kinds, and required/default states.
+Installed-wheel checks **MUST** report complete public typing and reject the
+negative external consumer with both type checkers. Typing examples **MUST** use
+`assert_type` or
 equivalent assertions for creation, parsing, inspection, editing, verification,
 progress callbacks, cancellation, errors, hashes, files, and raw-byte values.
 

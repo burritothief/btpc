@@ -1328,7 +1328,7 @@ pub(crate) fn hash_v2_open_file_sequential(
     cancellation: &CancellationToken,
     progress: &impl ProgressSink,
 ) -> Result<V2HashResult> {
-    let piece_length = validate_piece_length(piece_length, PieceLengthMode::V2)?;
+    let piece_length = crate::metainfo::validate_v2_piece_length(piece_length)?;
     let blocks_per_piece = usize::try_from(piece_length / V2_BLOCK_LENGTH as u64)
         .map_err(|_| Error::metainfo_field("piece length", "cannot be represented"))?;
     cancellation.check()?;

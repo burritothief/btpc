@@ -470,8 +470,18 @@ pub(crate) fn validate_torrent_path_graph(
                 "duplicate or prefix-colliding file path",
             ));
         }
-        #[cfg(windows)]
-        if windows_path_key(&pair[0]) == windows_path_key(&pair[1]) {
+    }
+    #[cfg(windows)]
+    {
+        let mut mapped = paths
+            .iter()
+            .map(|path| windows_path_key(path))
+            .collect::<Vec<_>>();
+        mapped.sort_unstable();
+        if mapped
+            .windows(2)
+            .any(|pair| pair[0] == pair[1] || pair[1].starts_with(&pair[0]))
+        {
             return Err(Error::metainfo_field(
                 field,
                 "paths collide after Windows filesystem mapping",
@@ -707,12 +717,7 @@ impl<'a> V2Metainfo<'a> {
         let name = required_bytes(info, b"name", "info.name")?;
         validate_path_component(name, "info.name")?;
         let piece_length = positive_integer(info, b"piece length", "info.piece length")?;
-        if piece_length < 16_384 || !piece_length.is_power_of_two() {
-            return Err(Error::metainfo_field(
-                "info.piece length",
-                "must be a power of two and at least 16384",
-            ));
-        }
+        validate_v2_piece_length(piece_length)?;
         let tree = required_field(info, b"file tree", "info.file tree")?;
         let root_entries = dictionary_entries(tree, "info.file tree")?;
         if root_entries.iter().any(|(key, _)| key.bytes().is_empty()) {
@@ -724,6 +729,10 @@ impl<'a> V2Metainfo<'a> {
         let mut pending = Vec::new();
         let mut path = Vec::new();
         walk_file_tree(root_entries, &mut path, &mut pending)?;
+        validate_torrent_path_graph(
+            pending.iter().map(|file| file.path.clone()).collect(),
+            "info.file tree",
+        )?;
         if pending.is_empty() {
             return Err(Error::metainfo_field(
                 "info.file tree",
@@ -908,36 +917,41 @@ fn parse_v2_file<'a>(properties: &'a Value<'a>, path: &[&'a [u8]]) -> Result<Pen
     })
 }
 
+pub(crate) fn validate_v2_piece_length(piece_length: u64) -> Result<u64> {
+    if piece_length < 16_384 || !piece_length.is_power_of_two() {
+        return Err(Error::metainfo_field(
+            "info.piece length",
+            "must be a power of two and at least 16384",
+        ));
+    }
+    Ok(piece_length)
+}
+
 fn validate_piece_layers<'a>(
     pending: Vec<PendingV2File<'a>>,
     layer_entries: &'a [(ByteString<'a>, Value<'a>)],
     piece_length: u64,
 ) -> Result<Vec<V2File<'a>>> {
-    let mut used = vec![false; layer_entries.len()];
+    let mut layers = std::collections::BTreeMap::new();
+    for (key, value) in layer_entries {
+        if layers.insert(key.bytes(), (value, false)).is_some() {
+            return Err(Error::metainfo_field(
+                "piece layers",
+                "duplicate pieces root",
+            ));
+        }
+    }
     let mut files = Vec::with_capacity(pending.len());
     for file in pending {
         let piece_count = file.length.div_ceil(piece_length);
         let piece_layer = if piece_count > 1 {
             let root = file.pieces_root.expect("non-empty files have roots");
-            let mut matches =
-                layer_entries
-                    .iter()
-                    .enumerate()
-                    .filter_map(|(index, (key, value))| {
-                        (key.bytes() == root).then_some((index, value))
-                    });
-            let Some((index, value)) = matches.next() else {
+            let Some((value, validated)) = layers.get_mut(root.as_slice()) else {
                 return Err(Error::metainfo_field(
                     "piece layers",
                     "missing layer for a multi-piece file",
                 ));
             };
-            if matches.next().is_some() {
-                return Err(Error::metainfo_field(
-                    "piece layers",
-                    "duplicate pieces root",
-                ));
-            }
             let bytes = value_bytes(value, "piece layers")?;
             let expected_len = usize::try_from(piece_count)
                 .ok()
@@ -949,13 +963,15 @@ fn validate_piece_layers<'a>(
                     "layer length does not match file piece count",
                 ));
             }
-            if merkle_root_from_piece_layer(bytes, piece_length)? != *root {
-                return Err(Error::metainfo_field(
-                    "piece layers",
-                    "layer hashes do not match the pieces root",
-                ));
+            if !*validated {
+                if merkle_root_from_piece_layer(bytes, piece_length)? != *root {
+                    return Err(Error::metainfo_field(
+                        "piece layers",
+                        "layer hashes do not match the pieces root",
+                    ));
+                }
+                *validated = true;
             }
-            used[index] = true;
             Some(bytes)
         } else {
             None
@@ -969,7 +985,7 @@ fn validate_piece_layers<'a>(
             properties: file.properties,
         });
     }
-    if used.iter().any(|used| !used) {
+    if layers.values().any(|(_, validated)| !validated) {
         return Err(Error::metainfo_field(
             "piece layers",
             "contains a layer not required by the file tree",
@@ -979,6 +995,8 @@ fn validate_piece_layers<'a>(
 }
 
 fn merkle_root_from_piece_layer(bytes: &[u8], piece_length: u64) -> Result<[u8; 32]> {
+    #[cfg(test)]
+    PIECE_LAYER_VALIDATIONS.with(|count| count.set(count.get() + 1));
     let mut hashes = bytes
         .chunks_exact(32)
         .map(|chunk| <[u8; 32]>::try_from(chunk).expect("exact chunks"))
@@ -994,6 +1012,52 @@ fn merkle_root_from_piece_layer(bytes: &[u8], piece_length: u64) -> Result<[u8; 
     hashes
         .pop()
         .ok_or_else(|| Error::metainfo_field("piece layers", "layer must not be empty"))
+}
+
+#[cfg(test)]
+thread_local! {
+    static PIECE_LAYER_VALIDATIONS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+}
+
+#[cfg(test)]
+mod piece_layer_work_tests {
+    use super::{PIECE_LAYER_VALIDATIONS, RawMetainfo, V2Metainfo, hash_pair};
+    use crate::bencode::OwnedValue;
+
+    // Spec: SEC-PARSE-001
+    #[test]
+    fn shared_piece_layer_is_hashed_once() {
+        let hashes = [[1; 32], [2; 32]];
+        let root = hash_pair(hashes[0], hashes[1]);
+        let properties = OwnedValue::dictionary([
+            (b"length".to_vec(), OwnedValue::integer(32_768)),
+            (b"pieces root".to_vec(), OwnedValue::bytes(root.to_vec())),
+        ])
+        .unwrap();
+        let leaf = OwnedValue::dictionary([(Vec::new(), properties)]).unwrap();
+        let tree = OwnedValue::dictionary(
+            (0..100).map(|index| (format!("file-{index:03}").into_bytes(), leaf.clone())),
+        )
+        .unwrap();
+        let info = OwnedValue::dictionary([
+            (b"file tree".to_vec(), tree),
+            (b"meta version".to_vec(), OwnedValue::integer(2)),
+            (b"name".to_vec(), OwnedValue::bytes(b"payload".to_vec())),
+            (b"piece length".to_vec(), OwnedValue::integer(16_384)),
+        ])
+        .unwrap();
+        let layers =
+            OwnedValue::dictionary([(root.to_vec(), OwnedValue::bytes(hashes.concat()))]).unwrap();
+        let bytes =
+            OwnedValue::dictionary([(b"info".to_vec(), info), (b"piece layers".to_vec(), layers)])
+                .unwrap()
+                .to_vec()
+                .unwrap();
+        let raw = RawMetainfo::from_bytes(&bytes).unwrap();
+        PIECE_LAYER_VALIDATIONS.with(|count| count.set(0));
+        assert_eq!(V2Metainfo::from_raw(&raw).unwrap().files().len(), 100);
+        assert_eq!(PIECE_LAYER_VALIDATIONS.with(std::cell::Cell::get), 1);
+    }
 }
 
 fn zero_hash_for_piece_length(piece_length: u64) -> [u8; 32] {
@@ -2051,6 +2115,24 @@ fn inspection_snapshot(
 mod checked_arithmetic_tests {
     use super::{checked_piece_count, checked_total_length};
     use crate::ErrorCategory;
+
+    // Spec: META-V1-001
+    // Spec: META-V2-001
+    #[test]
+    fn platform_mapping_checks_case_collisions_separated_by_raw_byte_order() {
+        let cases: [Vec<Vec<&[u8]>>; 2] = [
+            vec![vec![b"A"], vec![b"B"], vec![b"a"]],
+            vec![vec![b"A"], vec![b"B"], vec![b"a", b"child"]],
+        ];
+        for paths in cases {
+            let result = super::validate_torrent_path_graph(paths, "info.files");
+            if cfg!(windows) {
+                assert_eq!(result.unwrap_err().category(), ErrorCategory::Metainfo);
+            } else {
+                assert!(result.is_ok());
+            }
+        }
+    }
 
     #[test]
     fn aggregate_boundaries_return_structured_errors() {

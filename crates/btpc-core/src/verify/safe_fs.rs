@@ -1,11 +1,12 @@
+use std::cell::RefCell;
+use std::collections::{BTreeMap, BTreeSet};
 use std::ffi::OsString;
 use std::fs;
 use std::path::{Component, Path, PathBuf};
 
-use cap_fs_ext::{DirExt as _, FollowSymlinks, OpenOptionsFollowExt as _};
+use cap_fs_ext::{DirExt as _, FollowSymlinks, MetadataExt as _, OpenOptionsFollowExt as _};
 use cap_std::ambient_authority;
 use cap_std::fs::{Dir, OpenOptions};
-use same_file::Handle;
 
 use crate::{Error, Result};
 
@@ -18,6 +19,7 @@ pub(super) enum SafePathError {
 pub(super) struct SafeRoot {
     path: PathBuf,
     inner: RootKind,
+    names: RefCell<BTreeMap<(u64, u64), BTreeSet<OsString>>>,
 }
 
 enum RootKind {
@@ -31,8 +33,27 @@ enum RootKind {
 
 pub(super) struct OpenedFile {
     file: fs::File,
-    identity: Handle,
+    snapshot: FileSnapshot,
+}
+
+#[derive(Clone, Eq, PartialEq)]
+pub(super) struct FileSnapshot {
+    identity: (u64, u64),
     state: FileState,
+}
+
+impl FileSnapshot {
+    fn from_file(file: &fs::File, display_path: &Path) -> Result<Self> {
+        let metadata = file
+            .metadata()
+            .map_err(|source| Error::io(display_path, source))?;
+        let identity = cap_std::fs::Metadata::from_file(file)
+            .map_err(|source| Error::io(display_path, source))?;
+        Ok(Self {
+            identity: (identity.dev(), identity.ino()),
+            state: FileState::from_metadata(&metadata),
+        })
+    }
 }
 
 #[derive(Clone, Eq, PartialEq)]
@@ -74,24 +95,20 @@ impl OpenedFile {
                 std::io::Error::new(std::io::ErrorKind::InvalidInput, "payload is not a file"),
             ));
         }
-        let identity = Handle::from_file(
-            file.try_clone()
-                .map_err(|source| Error::io(display_path, source))?,
-        )
-        .map_err(|source| Error::io(display_path, source))?;
-        Ok(Self {
-            file,
-            identity,
-            state: FileState::from_metadata(&metadata),
-        })
+        let snapshot = FileSnapshot::from_file(&file, display_path)?;
+        Ok(Self { file, snapshot })
     }
 
     pub(super) fn length(&self) -> u64 {
-        self.state.length
+        self.snapshot.state.length
     }
 
     pub(super) fn file_mut(&mut self) -> &mut fs::File {
         &mut self.file
+    }
+
+    pub(super) fn snapshot(&self) -> FileSnapshot {
+        self.snapshot.clone()
     }
 
     pub(super) fn rewind(&mut self, display_path: &Path) -> Result<()> {
@@ -101,10 +118,7 @@ impl OpenedFile {
     }
 
     pub(super) fn unchanged(&self, display_path: &Path) -> Result<bool> {
-        self.file
-            .metadata()
-            .map(|metadata| FileState::from_metadata(&metadata) == self.state)
-            .map_err(|source| Error::io(display_path, source))
+        FileSnapshot::from_file(&self.file, display_path).map(|snapshot| snapshot == self.snapshot)
     }
 }
 
@@ -120,9 +134,13 @@ impl SafeRoot {
             return Ok(Self {
                 path: path.to_path_buf(),
                 inner: RootKind::Directory(directory),
+                names: RefCell::default(),
             });
         }
-        let parent_path = path.parent().unwrap_or_else(|| Path::new("."));
+        let parent_path = path
+            .parent()
+            .filter(|parent| !parent.as_os_str().is_empty())
+            .unwrap_or_else(|| Path::new("."));
         let name = path
             .file_name()
             .ok_or(SafePathError::Unsafe)?
@@ -136,6 +154,7 @@ impl SafeRoot {
             Ok(Self {
                 path: path.to_path_buf(),
                 inner: RootKind::Directory(directory),
+                names: RefCell::default(),
             })
         } else if metadata.is_file() {
             let file = open_file_nofollow(&parent, &name, path)?;
@@ -147,6 +166,7 @@ impl SafeRoot {
                     name,
                     opened,
                 },
+                names: RefCell::default(),
             })
         } else {
             Err(SafePathError::Missing)
@@ -182,7 +202,7 @@ impl SafeRoot {
                 OpenedFile::new(file, &self.path).map_err(SafePathError::Io)
             }
             RootKind::Directory(directory) => {
-                let (parent, name) = open_parent(directory, relative, &self.path)?;
+                let (parent, name) = self.open_parent(directory, relative)?;
                 let display = self.path.join(relative);
                 let file = open_file_nofollow(&parent, &name, &display)?;
                 OpenedFile::new(file, &display).map_err(SafePathError::Io)
@@ -193,18 +213,78 @@ impl SafeRoot {
     pub(super) fn same_file(
         &self,
         relative: &Path,
-        opened: &OpenedFile,
+        snapshot: &FileSnapshot,
     ) -> std::result::Result<bool, SafePathError> {
         let current = match &self.inner {
             RootKind::File { parent, name, .. } => open_file_nofollow(parent, name, &self.path)?,
             RootKind::Directory(directory) => {
-                let (parent, name) = open_parent(directory, relative, &self.path)?;
+                let (parent, name) = self.open_parent(directory, relative)?;
                 open_file_nofollow(&parent, &name, &self.path.join(relative))?
             }
         };
-        let identity = Handle::from_file(current)
-            .map_err(|source| SafePathError::Io(Error::io(self.display_path(relative), source)))?;
-        Ok(identity == opened.identity)
+        let current = FileSnapshot::from_file(&current, &self.display_path(relative))
+            .map_err(SafePathError::Io)?;
+        Ok(current == *snapshot)
+    }
+
+    pub(super) fn refresh_names(&self) {
+        self.names.borrow_mut().clear();
+    }
+
+    fn exact_name(
+        &self,
+        directory: &Dir,
+        name: &std::ffi::OsStr,
+        display: &Path,
+    ) -> std::result::Result<(), SafePathError> {
+        let metadata = directory
+            .dir_metadata()
+            .map_err(|source| SafePathError::Io(Error::io(display, source)))?;
+        let identity = (metadata.dev(), metadata.ino());
+        let mut names = self.names.borrow_mut();
+        if let std::collections::btree_map::Entry::Vacant(entry) = names.entry(identity) {
+            let entries = directory
+                .entries()
+                .map_err(|source| SafePathError::Io(Error::io(display, source)))?;
+            let found = entries
+                .map(|entry| entry.map(|entry| entry.file_name()))
+                .collect::<std::io::Result<BTreeSet<_>>>()
+                .map_err(|source| SafePathError::Io(Error::io(display, source)))?;
+            entry.insert(found);
+        }
+        if names[&identity].contains(name) {
+            return Ok(());
+        }
+        // A lookup that succeeds without the exact name aliases a directory entry.
+        match directory.symlink_metadata(name) {
+            Ok(_) => Err(SafePathError::Unsafe),
+            Err(source) => Err(classify_io(display, source)),
+        }
+    }
+
+    fn open_parent(
+        &self,
+        root: &Dir,
+        relative: &Path,
+    ) -> std::result::Result<(Dir, OsString), SafePathError> {
+        let mut components = relative.components().peekable();
+        let mut directory = root
+            .try_clone()
+            .map_err(|source| SafePathError::Io(Error::io(&self.path, source)))?;
+        while let Some(component) = components.next() {
+            let Component::Normal(name) = component else {
+                return Err(SafePathError::Unsafe);
+            };
+            let display = self.path.join(relative);
+            self.exact_name(&directory, name, &display)?;
+            if components.peek().is_none() {
+                return Ok((directory, name.to_os_string()));
+            }
+            directory = directory
+                .open_dir_nofollow(name)
+                .map_err(|source| classify_open(&directory, name, &display, source))?;
+        }
+        Err(SafePathError::Unsafe)
     }
 
     pub(super) fn collect_files(
@@ -226,30 +306,6 @@ impl SafeRoot {
         )?;
         Ok((files, unsafe_paths))
     }
-}
-
-fn open_parent(
-    root: &Dir,
-    relative: &Path,
-    root_path: &Path,
-) -> std::result::Result<(Dir, OsString), SafePathError> {
-    let mut components = relative.components().peekable();
-    let mut directory = root
-        .try_clone()
-        .map_err(|source| SafePathError::Io(Error::io(root_path, source)))?;
-    while let Some(component) = components.next() {
-        let Component::Normal(name) = component else {
-            return Err(SafePathError::Unsafe);
-        };
-        if components.peek().is_none() {
-            return Ok((directory, name.to_os_string()));
-        }
-        let display = root_path.join(relative);
-        directory = directory
-            .open_dir_nofollow(name)
-            .map_err(|source| classify_open(&directory, name, &display, source))?;
-    }
-    Err(SafePathError::Unsafe)
 }
 
 fn open_file_nofollow(

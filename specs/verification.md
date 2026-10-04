@@ -24,6 +24,12 @@ last_reviewed: "2026-07-01"
 
 Verification **MUST** reject absolute paths, traversal components, and symlink
 escape by default, and **MUST** map every torrent path beneath the selected root.
+Bare relative payload paths **MUST** resolve from the current directory. Distinct
+torrent paths **MUST NOT** alias one filesystem entry after case or Unicode
+mapping. Distinct directory entries that are hard links **MAY** share content.
+Verification **MUST** keep a bounded number of files open, independent of the
+number of payload files. It **MUST** check file identity and state before and after
+hashing and again before returning a valid report.
 
 ### VERIFY-HASH-001 — Verify every applicable hash domain
 
@@ -34,6 +40,10 @@ escape by default, and **MUST** map every torrent path beneath the selected root
 
 Verification **MUST** check v1 pieces, v2 file roots/piece layers, or both for
 hybrid torrents and report deterministic mismatch locations.
+Verification **MUST** stream v1 hashes through a fixed-size read buffer. Parsed
+piece lengths **MUST NOT** control payload-buffer allocations. The creation
+policy's piece-length maximum **MUST NOT** restrict verification of valid imported
+v2 metainfo.
 
 ### VERIFY-REPORT-001 — Support fail-fast and complete reports
 
@@ -44,6 +54,8 @@ hybrid torrents and report deterministic mismatch locations.
 
 Callers **MUST** be able to choose fail-fast or collect-all behavior. Reports
 **MUST** distinguish missing, extra, wrong-sized, unsafe, and hash-mismatched data.
+Once fail-fast finds a mismatch, final path checks **MUST NOT** replace that report
+with an unrelated later I/O failure.
 
 ## Design Rationale
 

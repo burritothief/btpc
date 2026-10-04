@@ -28,6 +28,8 @@ Untrusted bencode parsing **MUST** reject resource-limit violations and checked
 arithmetic overflow without panicking or allocating from attacker-declared lengths.
 All owned metainfo loading surfaces, including Rust, CLI, and Python path loaders,
 **MUST** apply the same configurable input and ownership budgets.
+Piece layers **MUST** be indexed by root and each shared layer **MUST** be hashed
+at most once per validation pass. Per-file layer lengths **MUST** still be checked.
 
 ### SEC-PATH-001 — Prevent payload-root escape
 

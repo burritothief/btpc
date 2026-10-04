@@ -21,6 +21,138 @@ fn torrent(payload: &std::path::Path, mode: CreateMode) -> Metainfo {
     Metainfo::from_bytes(result.bytes()).unwrap()
 }
 
+// Spec: VERIFY-HASH-001
+#[test]
+fn imported_piece_lengths_do_not_control_verification_allocations() {
+    use btpc_core::bencode::OwnedValue;
+    use sha1::Digest as _;
+
+    let temp = tempfile::tempdir().unwrap();
+    let payload = temp.path().join("x");
+    fs::write(&payload, b"x").unwrap();
+    for piece_length in [3, 1 << 30, 1 << 63, u64::MAX] {
+        let info = OwnedValue::dictionary([
+            (b"length".to_vec(), OwnedValue::integer(1)),
+            (b"name".to_vec(), OwnedValue::bytes(b"x".to_vec())),
+            (
+                b"piece length".to_vec(),
+                OwnedValue::integer_bytes(piece_length.to_string().into_bytes()).unwrap(),
+            ),
+            (
+                b"pieces".to_vec(),
+                OwnedValue::bytes(sha1::Sha1::digest(b"x").to_vec()),
+            ),
+        ])
+        .unwrap();
+        let bytes = OwnedValue::dictionary([(b"info".to_vec(), info)])
+            .unwrap()
+            .to_vec()
+            .unwrap();
+        let metainfo = Metainfo::from_bytes(&bytes).unwrap();
+        assert!(
+            Verifier::new(&metainfo, &payload)
+                .verify(&NoProgress)
+                .unwrap()
+                .is_valid()
+        );
+    }
+}
+
+// Spec: VERIFY-HASH-001
+#[test]
+fn verifies_imported_v2_piece_lengths_above_creation_policy() {
+    use btpc_core::bencode::OwnedValue;
+    use sha2::Digest as _;
+
+    let temp = tempfile::tempdir().unwrap();
+    let payload = temp.path().join("x");
+    fs::write(&payload, b"x").unwrap();
+    let properties = OwnedValue::dictionary([
+        (b"length".to_vec(), OwnedValue::integer(1)),
+        (
+            b"pieces root".to_vec(),
+            OwnedValue::bytes(sha2::Sha256::digest(b"x").to_vec()),
+        ),
+    ])
+    .unwrap();
+    let leaf = OwnedValue::dictionary([(Vec::new(), properties)]).unwrap();
+    for piece_length in [32 * 1024 * 1024, 1_u64 << 63] {
+        let info = OwnedValue::dictionary([
+            (
+                b"file tree".to_vec(),
+                OwnedValue::dictionary([(b"x".to_vec(), leaf.clone())]).unwrap(),
+            ),
+            (b"meta version".to_vec(), OwnedValue::integer(2)),
+            (b"name".to_vec(), OwnedValue::bytes(b"x".to_vec())),
+            (
+                b"piece length".to_vec(),
+                OwnedValue::integer_bytes(piece_length.to_string().into_bytes()).unwrap(),
+            ),
+        ])
+        .unwrap();
+        let bytes = OwnedValue::dictionary([(b"info".to_vec(), info)])
+            .unwrap()
+            .to_vec()
+            .unwrap();
+        let metainfo = Metainfo::from_bytes(&bytes).unwrap();
+        assert!(
+            Verifier::new(&metainfo, &payload)
+                .verify(&NoProgress)
+                .unwrap()
+                .is_valid()
+        );
+    }
+}
+
+// Spec: VERIFY-PATH-001
+#[test]
+fn rejects_filesystem_aliases_but_accepts_distinct_hard_links() {
+    use btpc_core::bencode::OwnedValue;
+
+    let temp = tempfile::tempdir().unwrap();
+    let payload = temp.path().join("payload");
+    fs::create_dir(&payload).unwrap();
+    fs::write(payload.join("A"), b"").unwrap();
+    let aliases = payload.join("a").exists();
+    if !aliases {
+        fs::hard_link(payload.join("A"), payload.join("a")).unwrap();
+    }
+    let properties =
+        OwnedValue::dictionary([(b"length".to_vec(), OwnedValue::integer(0))]).unwrap();
+    let leaf = OwnedValue::dictionary([(Vec::new(), properties)]).unwrap();
+    let tree =
+        OwnedValue::dictionary([(b"A".to_vec(), leaf.clone()), (b"a".to_vec(), leaf)]).unwrap();
+    let info = OwnedValue::dictionary([
+        (b"file tree".to_vec(), tree),
+        (b"meta version".to_vec(), OwnedValue::integer(2)),
+        (b"name".to_vec(), OwnedValue::bytes(b"payload".to_vec())),
+        (b"piece length".to_vec(), OwnedValue::integer(16_384)),
+    ])
+    .unwrap();
+    let bytes = OwnedValue::dictionary([(b"info".to_vec(), info)])
+        .unwrap()
+        .to_vec()
+        .unwrap();
+    let metainfo = Metainfo::from_bytes(&bytes);
+    if cfg!(windows) && aliases {
+        assert!(metainfo.is_err());
+        return;
+    }
+    let metainfo = metainfo.unwrap();
+    let report = Verifier::new(&metainfo, &payload)
+        .verify(&NoProgress)
+        .unwrap();
+    assert_eq!(report.is_valid(), !aliases);
+    if aliases {
+        assert!(
+            report
+                .mismatches()
+                .iter()
+                .any(|item| item.kind() == MismatchKind::UnsafePath)
+        );
+    }
+}
+
 #[test]
 fn verifies_valid_payloads_in_every_hash_domain() {
     for mode in [CreateMode::V1, CreateMode::V2, CreateMode::Hybrid] {

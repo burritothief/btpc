@@ -57,6 +57,9 @@ original bencoded `info` slice, not a re-encoded representation.
 V1 validation **MUST** enforce the single-file versus multi-file shape, non-negative
 checked lengths, safe non-empty path components, positive piece length, 20-byte
 piece digest width, and the expected piece count including zero-length payloads.
+Platform-mapped path collisions **MUST** be checked independently of raw-byte
+ordering. For Windows ASCII case folding, `A`, `B`, `a` **MUST** reject the
+collision even though the colliding names are not adjacent in raw-byte order.
 
 ### META-V2-001 — Validate BEP 52 file trees and piece layers
 
@@ -76,6 +79,12 @@ entry. For larger files, the layer value **MUST** contain the ordered 32-byte pi
 roots and have exactly `ceil(file length / piece length) * 32` bytes. The shared
 sequential Merkle oracle defines the creation, validation, and verification
 primitive.
+
+Imported v2 piece lengths **MUST** be powers of two at least 16 KiB; the creation
+policy's 16 MiB maximum **MUST NOT** restrict parsing or verification. V2 file
+paths **MUST** use the same unambiguous platform mapping as v1 paths. Piece layers
+**MUST** be indexed by root, checked against each file's expected length, and
+Merkle-validated at most once per shared root in one validation pass.
 
 ### META-HYBRID-001 — Require equivalent hybrid payloads
 

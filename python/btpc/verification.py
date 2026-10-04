@@ -74,8 +74,16 @@ def verify(  # noqa: PLR0913
     ``payload`` points directly to a single-file payload or to the root directory of
     a multi-file torrent. v1 verification hashes the logical concatenated file
     stream; v2 verification checks each file's Merkle root; hybrid torrents check
-    both. Content mismatches are returned, while unsafe paths and operational I/O
-    failures raise exceptions.
+    both. Missing files, unsafe paths, and content mismatches are returned in the
+    report. Operational I/O failures raise exceptions.
+
+    Relative roots use the current directory. Torrent paths must match actual
+    directory entries exactly, including on case-insensitive filesystems, and must
+    not cross symlinks. Verification keeps a bounded number of files open and checks
+    saved file identity and state before and after hashing and before it reports
+    successful verification.
+    These checks do not provide an atomic filesystem snapshot. Imported v2 torrents
+    can use BEP 52 piece lengths above the creation policy's 16 MiB limit.
 
     Args:
         metainfo: Parsed torrent describing the expected payload.
@@ -90,7 +98,7 @@ def verify(  # noqa: PLR0913
         A report containing zero or more deterministic mismatches.
 
     Raises:
-        PathError: If a required payload path cannot be read safely.
+        PathError: If an operational filesystem read fails.
         VerificationError: If verification cannot be completed under the selected
             policy.
         CancelledError: If ``cancellation`` is requested.

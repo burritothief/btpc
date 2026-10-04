@@ -11,7 +11,7 @@ use sha1::Digest as _;
 use crate::create::{CancellationToken, HashProgress, ProgressSink, hash_v2_open_file_sequential};
 use crate::metainfo::{RawMetainfo, V1Metainfo, V2Metainfo};
 use crate::{Error, Metainfo, Result, TorrentMode};
-use safe_fs::{OpenedFile, SafePathError, SafeRoot};
+use safe_fs::{FileSnapshot, SafePathError, SafeRoot};
 
 #[cfg(test)]
 type TestHook = std::sync::Arc<dyn Fn(TestEvent) + Send + Sync>;
@@ -171,7 +171,7 @@ pub struct Verifier<'a> {
 
 struct OpenPayload {
     expected: BTreeSet<PathBuf>,
-    opened: BTreeMap<PathBuf, OpenedFile>,
+    snapshots: BTreeMap<PathBuf, FileSnapshot>,
     mismatches: Vec<Mismatch>,
 }
 
@@ -211,6 +211,12 @@ impl<'a> Verifier<'a> {
 
     /// Verifies structural and applicable hash domains.
     ///
+    /// Relative payload roots use the current directory. Expected paths must match
+    /// actual directory entries exactly and must not cross symlinks. Verification
+    /// keeps a bounded number of files open and checks saved file identity and
+    /// state before hashing, after hashing, and before reporting successful
+    /// verification. These checks do not provide an atomic filesystem snapshot.
+    ///
     /// # Errors
     ///
     /// Returns cancellation, metainfo reparse, or operational filesystem errors.
@@ -226,7 +232,7 @@ impl<'a> Verifier<'a> {
         };
         let OpenPayload {
             expected,
-            mut opened,
+            snapshots,
             mut mismatches,
         } = self.open_expected_files(&root)?;
         self.report_extras(&root, &expected, &mut mismatches)?;
@@ -234,7 +240,7 @@ impl<'a> Verifier<'a> {
         if let Some(hook) = &self.test_hook {
             hook(TestEvent::AfterStructure);
         }
-        self.revalidate_opened(&root, &opened, &mut mismatches)?;
+        self.revalidate_snapshots(&root, &snapshots, &mut mismatches)?;
         let structural_mismatch = mismatches.iter().any(|mismatch| {
             matches!(
                 mismatch.kind,
@@ -246,29 +252,31 @@ impl<'a> Verifier<'a> {
                 self.verify_v1(
                     &raw,
                     &root,
-                    &mut opened,
+                    &snapshots,
                     structural_mismatch,
                     &mut mismatches,
                     progress,
                 )?;
             }
             TorrentMode::V2 => {
-                self.verify_v2(&raw, &root, &mut opened, &mut mismatches, progress)?;
+                self.verify_v2(&raw, &root, &snapshots, &mut mismatches, progress)?;
             }
             TorrentMode::Hybrid => {
                 self.verify_v1(
                     &raw,
                     &root,
-                    &mut opened,
+                    &snapshots,
                     structural_mismatch,
                     &mut mismatches,
                     progress,
                 )?;
                 if !should_stop(&mismatches, self.options.mismatch_mode) {
-                    self.verify_v2(&raw, &root, &mut opened, &mut mismatches, progress)?;
+                    self.verify_v2(&raw, &root, &snapshots, &mut mismatches, progress)?;
                 }
             }
         }
+        self.revalidate_snapshots(&root, &snapshots, &mut mismatches)?;
+        self.check_cancelled()?;
         Ok(finish(mismatches))
     }
 
@@ -293,14 +301,15 @@ impl<'a> Verifier<'a> {
         if root.is_file() && !single_file {
             return Ok(OpenPayload {
                 expected: BTreeSet::new(),
-                opened: BTreeMap::new(),
+                snapshots: BTreeMap::new(),
                 mismatches: root_mismatches(MismatchKind::Missing),
             });
         }
         let mut expected = BTreeSet::new();
-        let mut opened = BTreeMap::new();
+        let mut snapshots = BTreeMap::new();
         let mut mismatches = Vec::new();
         for file in payload_files {
+            self.check_cancelled()?;
             let relative = path_from_components(file.path_components())?;
             expected.insert(relative.clone());
             #[cfg(test)]
@@ -309,7 +318,7 @@ impl<'a> Verifier<'a> {
             }
             match root.open_file(&relative) {
                 Ok(payload_file) if payload_file.length() == file.length() => {
-                    opened.insert(relative, payload_file);
+                    snapshots.insert(relative, payload_file.snapshot());
                 }
                 Ok(_) => push_mismatch(
                     &mut mismatches,
@@ -340,7 +349,7 @@ impl<'a> Verifier<'a> {
         }
         Ok(OpenPayload {
             expected,
-            opened,
+            snapshots,
             mismatches,
         })
     }
@@ -386,14 +395,19 @@ impl<'a> Verifier<'a> {
         Ok(())
     }
 
-    fn revalidate_opened(
+    fn revalidate_snapshots(
         &self,
         root: &SafeRoot,
-        opened: &BTreeMap<PathBuf, OpenedFile>,
+        snapshots: &BTreeMap<PathBuf, FileSnapshot>,
         mismatches: &mut Vec<Mismatch>,
     ) -> Result<()> {
-        for (relative, payload_file) in opened {
-            let kind = match root.same_file(relative, payload_file) {
+        root.refresh_names();
+        for (relative, snapshot) in snapshots {
+            if should_stop(mismatches, self.options.mismatch_mode) {
+                break;
+            }
+            self.check_cancelled()?;
+            let kind = match root.same_file(relative, snapshot) {
                 Ok(true) => continue,
                 Ok(false) | Err(SafePathError::Unsafe) => MismatchKind::UnsafePath,
                 Err(SafePathError::Missing) => MismatchKind::Missing,
@@ -414,7 +428,7 @@ impl<'a> Verifier<'a> {
         &self,
         raw: &RawMetainfo<'_>,
         root: &SafeRoot,
-        opened: &mut BTreeMap<PathBuf, OpenedFile>,
+        snapshots: &BTreeMap<PathBuf, FileSnapshot>,
         structural_mismatch: bool,
         mismatches: &mut Vec<Mismatch>,
         progress: &impl ProgressSink,
@@ -423,7 +437,7 @@ impl<'a> Verifier<'a> {
         if structural_mismatch {
             return Ok(());
         }
-        let actual = hash_v1_payload(&v1, root, opened, &self.cancellation, progress)?;
+        let actual = hash_v1_payload(&v1, root, snapshots, &self.cancellation, progress)?;
         let expected_count = v1.pieces().len() / 20;
         if actual.len() != expected_count {
             push_mismatch(
@@ -460,7 +474,7 @@ impl<'a> Verifier<'a> {
         &self,
         raw: &RawMetainfo<'_>,
         root: &SafeRoot,
-        opened: &mut BTreeMap<PathBuf, OpenedFile>,
+        snapshots: &BTreeMap<PathBuf, FileSnapshot>,
         mismatches: &mut Vec<Mismatch>,
         progress: &impl ProgressSink,
     ) -> Result<()> {
@@ -470,8 +484,36 @@ impl<'a> Verifier<'a> {
         let mut pieces_before = 0_u64;
         for file in v2.files() {
             let relative = path_from_borrowed_components(file.path_components())?;
-            let Some(payload_file) = opened.get_mut(&relative) else {
+            let Some(snapshot) = snapshots.get(&relative) else {
                 continue;
+            };
+            self.check_cancelled()?;
+            if should_stop(mismatches, self.options.mismatch_mode) {
+                break;
+            }
+            let mut payload_file = match root.open_file(&relative) {
+                Ok(file) if file.snapshot() == *snapshot => file,
+                Ok(_) | Err(SafePathError::Unsafe) => {
+                    push_mismatch(
+                        mismatches,
+                        self.options.mismatch_mode,
+                        MismatchKind::UnsafePath,
+                        relative,
+                        None,
+                    );
+                    continue;
+                }
+                Err(SafePathError::Missing) => {
+                    push_mismatch(
+                        mismatches,
+                        self.options.mismatch_mode,
+                        MismatchKind::Missing,
+                        relative,
+                        None,
+                    );
+                    continue;
+                }
+                Err(SafePathError::Io(error)) => return Err(error),
             };
             let path = root.display_path(&relative);
             payload_file.rewind(&path)?;
@@ -489,8 +531,7 @@ impl<'a> Verifier<'a> {
                 &self.cancellation,
                 &aggregate,
             )?;
-            if !payload_file.unchanged(&path)? || !same_opened_file(root, &relative, payload_file)?
-            {
+            if !payload_file.unchanged(&path)? || !same_snapshot(root, &relative, snapshot)? {
                 push_mismatch(
                     mismatches,
                     self.options.mismatch_mode,
@@ -539,12 +580,10 @@ impl<'a> Verifier<'a> {
 fn hash_v1_payload(
     v1: &V1Metainfo<'_>,
     root: &SafeRoot,
-    opened: &mut BTreeMap<PathBuf, OpenedFile>,
+    snapshots: &BTreeMap<PathBuf, FileSnapshot>,
     cancellation: &CancellationToken,
     progress: &impl ProgressSink,
 ) -> Result<Vec<[u8; 20]>> {
-    let piece_length = usize::try_from(v1.piece_length())
-        .map_err(|_| Error::metainfo_field("piece length", "cannot be represented"))?;
     let total_real = crate::metainfo::checked_total_length(
         v1.files()
             .iter()
@@ -552,73 +591,124 @@ fn hash_v1_payload(
             .map(crate::metainfo::V1File::length),
         "verification payload length",
     )?;
-    let mut piece = Vec::with_capacity(piece_length);
-    let mut pieces = Vec::new();
+    let mut stream = V1Stream::new(v1.piece_length());
     let mut bytes_hashed = 0_u64;
     let mut buffer = vec![0_u8; 64 * 1024];
     for file in v1.files() {
-        if cancellation.is_cancelled() {
-            return Err(Error::cancelled());
-        }
+        cancellation.check()?;
         if file.is_padding() {
+            buffer.fill(0);
             let mut remaining = file.length();
             while remaining > 0 {
-                let take = usize::try_from(remaining)
-                    .unwrap_or(usize::MAX)
-                    .min(buffer.len());
-                buffer[..take].fill(0);
-                append_piece_bytes(&buffer[..take], piece_length, &mut piece, &mut pieces);
-                remaining -= u64::try_from(take).unwrap_or(u64::MAX);
+                cancellation.check()?;
+                let take = usize::try_from(remaining.min(buffer.len() as u64))
+                    .expect("read buffer length fits usize");
+                stream.append(&buffer[..take]);
+                remaining -= take as u64;
             }
             continue;
         }
         let relative = path_from_borrowed_components(file.path_components())?;
         let path = root.display_path(&relative);
-        let input = opened.get_mut(&relative).ok_or_else(|| {
-            Error::io(
-                &path,
-                std::io::Error::new(
-                    std::io::ErrorKind::NotFound,
-                    "payload disappeared before hashing",
-                ),
-            )
-        })?;
-        input.rewind(&path)?;
-        loop {
-            if cancellation.is_cancelled() {
-                return Err(Error::cancelled());
+        let snapshot = snapshots
+            .get(&relative)
+            .ok_or_else(|| changed_payload(&path))?;
+        let mut input = match root.open_file(&relative) {
+            Ok(input) if input.snapshot() == *snapshot => input,
+            Ok(_) | Err(SafePathError::Missing | SafePathError::Unsafe) => {
+                return Err(changed_payload(&path));
             }
+            Err(SafePathError::Io(error)) => return Err(error),
+        };
+        input.rewind(&path)?;
+        let mut consumed = 0_u64;
+        loop {
+            cancellation.check()?;
             let read = std::io::Read::read(input.file_mut(), &mut buffer)
                 .map_err(|source| Error::io(&path, source))?;
             if read == 0 {
                 break;
             }
-            append_piece_bytes(&buffer[..read], piece_length, &mut piece, &mut pieces);
-            bytes_hashed += u64::try_from(read).unwrap_or(u64::MAX);
+            consumed = consumed
+                .checked_add(read as u64)
+                .ok_or_else(|| changed_payload(&path))?;
+            if consumed > file.length() {
+                return Err(changed_payload(&path));
+            }
+            stream.append(&buffer[..read]);
+            bytes_hashed = bytes_hashed.checked_add(read as u64).ok_or_else(|| {
+                Error::metainfo_field("verification progress", "byte count overflowed")
+            })?;
             progress.on_progress(HashProgress::new(
                 bytes_hashed,
                 total_real,
-                u64::try_from(pieces.len()).unwrap_or(u64::MAX),
+                stream.pieces.len() as u64,
             ));
         }
-        if !input.unchanged(&path)? || !same_opened_file(root, &relative, input)? {
-            return Err(Error::io(
-                &path,
-                std::io::Error::new(
-                    std::io::ErrorKind::InvalidData,
-                    "payload changed during verification",
-                ),
-            ));
+        if consumed != file.length()
+            || !input.unchanged(&path)?
+            || !same_snapshot(root, &relative, snapshot)?
+        {
+            return Err(changed_payload(&path));
         }
     }
-    if !piece.is_empty() {
-        pieces.push(sha1::Sha1::digest(&piece).into());
+    if stream.bytes_in_piece != 0 {
+        stream.pieces.push(stream.hasher.finalize().into());
     }
-    Ok(pieces)
+    cancellation.check()?;
+    progress.on_progress(HashProgress::new(
+        bytes_hashed,
+        total_real,
+        stream.pieces.len() as u64,
+    ));
+    Ok(stream.pieces)
 }
 
-fn same_opened_file(root: &SafeRoot, relative: &Path, opened: &OpenedFile) -> Result<bool> {
-    match root.same_file(relative, opened) {
+struct V1Stream {
+    hasher: sha1::Sha1,
+    piece_length: u64,
+    bytes_in_piece: u64,
+    pieces: Vec<[u8; 20]>,
+}
+
+impl V1Stream {
+    fn new(piece_length: u64) -> Self {
+        Self {
+            hasher: sha1::Sha1::new(),
+            piece_length,
+            bytes_in_piece: 0,
+            pieces: Vec::new(),
+        }
+    }
+
+    fn append(&mut self, mut bytes: &[u8]) {
+        while !bytes.is_empty() {
+            let take =
+                usize::try_from((self.piece_length - self.bytes_in_piece).min(bytes.len() as u64))
+                    .expect("read buffer length fits usize");
+            self.hasher.update(&bytes[..take]);
+            self.bytes_in_piece += take as u64;
+            bytes = &bytes[take..];
+            if self.bytes_in_piece == self.piece_length {
+                self.pieces.push(self.hasher.finalize_reset().into());
+                self.bytes_in_piece = 0;
+            }
+        }
+    }
+}
+
+fn changed_payload(path: &Path) -> Error {
+    Error::io(
+        path,
+        std::io::Error::new(
+            std::io::ErrorKind::InvalidData,
+            "payload changed during verification",
+        ),
+    )
+}
+
+fn same_snapshot(root: &SafeRoot, relative: &Path, snapshot: &FileSnapshot) -> Result<bool> {
+    match root.same_file(relative, snapshot) {
         Ok(same) => Ok(same),
         Err(SafePathError::Missing | SafePathError::Unsafe) => Ok(false),
         Err(SafePathError::Io(error)) => Err(error),
@@ -643,23 +733,6 @@ impl<P: ProgressSink> ProgressSink for VerifyProgress<'_, P> {
                 .checked_add(progress.pieces_hashed())
                 .expect("verified piece progress fits the checked aggregate"),
         ));
-    }
-}
-
-fn append_piece_bytes(
-    mut bytes: &[u8],
-    piece_length: usize,
-    piece: &mut Vec<u8>,
-    pieces: &mut Vec<[u8; 20]>,
-) {
-    while !bytes.is_empty() {
-        let take = (piece_length - piece.len()).min(bytes.len());
-        piece.extend_from_slice(&bytes[..take]);
-        bytes = &bytes[take..];
-        if piece.len() == piece_length {
-            pieces.push(sha1::Sha1::digest(&*piece).into());
-            piece.clear();
-        }
     }
 }
 
@@ -724,13 +797,16 @@ fn finish(mut mismatches: Vec<Mismatch>) -> VerificationReport {
 #[cfg(test)]
 mod race_tests {
     use std::fs;
+    use std::sync::atomic::{AtomicBool, Ordering};
     use std::sync::{Arc, Mutex};
 
     #[cfg(unix)]
     use std::os::unix::fs::symlink;
 
     use crate::Metainfo;
-    use crate::create::{CreateMode, CreateOptions, Creator, NoProgress, PieceLength};
+    use crate::create::{
+        CreateMode, CreateOptions, Creator, HashProgress, NoProgress, PieceLength, ProgressSink,
+    };
 
     #[cfg(unix)]
     use super::{ExtraFilePolicy, VerifyOptions};
@@ -747,6 +823,98 @@ mod race_tests {
             .create(&NoProgress)
             .unwrap();
         Metainfo::from_bytes(result.bytes()).unwrap()
+    }
+
+    struct ReplaceEarlierFile {
+        target: std::path::PathBuf,
+        replaced: AtomicBool,
+    }
+
+    #[cfg(unix)]
+    struct DenyEarlierFile {
+        target: std::path::PathBuf,
+    }
+
+    #[cfg(unix)]
+    impl ProgressSink for DenyEarlierFile {
+        fn on_progress(&self, progress: HashProgress) {
+            use std::os::unix::fs::PermissionsExt as _;
+            if progress.bytes_hashed() == progress.total_bytes() {
+                fs::set_permissions(&self.target, fs::Permissions::from_mode(0o0)).unwrap();
+            }
+        }
+    }
+
+    // Spec: VERIFY-REPORT-001
+    #[cfg(unix)]
+    #[test]
+    fn fail_fast_returns_the_hash_mismatch_without_final_path_io() {
+        use super::MismatchMode;
+        use std::os::unix::fs::PermissionsExt as _;
+
+        let temp = tempfile::tempdir().unwrap();
+        let payload = temp.path().join("payload");
+        fs::create_dir(&payload).unwrap();
+        let target = payload.join("a");
+        fs::write(&target, b"a").unwrap();
+        fs::write(payload.join("b"), b"b").unwrap();
+        let metainfo = torrent(&payload, CreateMode::V1);
+        fs::write(&target, b"x").unwrap();
+        let progress = DenyEarlierFile {
+            target: target.clone(),
+        };
+        let result = Verifier::new(&metainfo, &payload)
+            .options(
+                VerifyOptions::builder()
+                    .mismatch_mode(MismatchMode::FailFast)
+                    .build(),
+            )
+            .verify(&progress);
+        fs::set_permissions(&target, fs::Permissions::from_mode(0o600)).unwrap();
+        let report = result.unwrap();
+        assert_eq!(report.mismatches().len(), 1);
+        assert_eq!(report.mismatches()[0].kind(), MismatchKind::V1Hash);
+    }
+
+    impl ProgressSink for ReplaceEarlierFile {
+        fn on_progress(&self, progress: HashProgress) {
+            if progress.bytes_hashed() == progress.total_bytes()
+                && !self.replaced.swap(true, Ordering::SeqCst)
+            {
+                let replacement = self.target.with_extension("replacement");
+                fs::write(&replacement, b"a").unwrap();
+                fs::remove_file(&self.target).unwrap();
+                fs::rename(replacement, &self.target).unwrap();
+            }
+        }
+    }
+
+    // Spec: VERIFY-PATH-001
+    #[test]
+    fn replacing_an_already_hashed_file_before_return_is_rejected() {
+        for mode in [CreateMode::V1, CreateMode::V2, CreateMode::Hybrid] {
+            let temp = tempfile::tempdir().unwrap();
+            let payload = temp.path().join("payload");
+            fs::create_dir(&payload).unwrap();
+            fs::write(payload.join("a"), b"a").unwrap();
+            fs::write(payload.join("b"), b"b").unwrap();
+            let metainfo = torrent(&payload, mode);
+            let progress = ReplaceEarlierFile {
+                target: payload.join("a"),
+                replaced: AtomicBool::new(false),
+            };
+            let report = Verifier::new(&metainfo, &payload)
+                .verify(&progress)
+                .unwrap();
+            assert!(progress.replaced.load(Ordering::SeqCst));
+            assert!(
+                report.mismatches().iter().any(|mismatch| {
+                    mismatch.kind() == MismatchKind::UnsafePath
+                        && mismatch.path() == std::path::Path::new("a")
+                }),
+                "{mode:?}"
+            );
+        }
     }
 
     #[cfg(unix)]
