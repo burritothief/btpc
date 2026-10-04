@@ -6,8 +6,14 @@ breaking changes documented in their release notes.
 
 ## [Unreleased]
 
-- Release automation remains manual and non-publishing until package ownership,
-  trusted publishers, and the GitHub release environment are configured.
+## [0.1.0] - 2026-10-03
+
+- Added byte-safe v1, v2, and hybrid metainfo parsing and canonical serialization.
+- Added deterministic streaming creation, payload verification, editing, magnets,
+  native CLI, typed Python bindings, interoperability fixtures, fuzzing, and
+  reproducible benchmark infrastructure.
+- Release automation remains manual. Publication requires a matching release tag,
+  a configured Trusted Publisher, and approval through the GitHub environment.
 - Added `btpc completion generate|install|uninstall`. The hidden
   `btpc completions SHELL` compatibility alias remains available through the
   0.1.x release line and may be removed no earlier than 0.2.0.
@@ -21,12 +27,5 @@ breaking changes documented in their release notes.
   Release gates now check one resolved commit and support a TestPyPI rehearsal.
   Rust crate publication is opt-in for Python releases.
 
-## [0.1.0] - Unreleased
-
-- Added byte-safe v1, v2, and hybrid metainfo parsing and canonical serialization.
-- Added deterministic streaming creation, payload verification, editing, magnets,
-  native CLI, typed Python bindings, interoperability fixtures, fuzzing, and
-  reproducible benchmark infrastructure.
-
-[Unreleased]: https://github.com/burritothief/btpc/commits/main/
-[0.1.0]: https://github.com/burritothief/btpc/blob/main/CHANGELOG.md
+[Unreleased]: https://github.com/burritothief/btpc/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/burritothief/btpc/tree/v0.1.0
