@@ -37,8 +37,9 @@ fn inspect_human_and_json_are_machine_safe() {
     let (_temp, torrent) = fixture();
     let metainfo = btpc_core::Metainfo::from_path(&torrent).unwrap();
     let hash = metainfo.info_hash_v1().unwrap().hex();
+    let version = env!("CARGO_PKG_VERSION");
     let expected = format!(
-        "Torrent info:\n  Name:         payload\n  Mode:         v1\n  Info hash v1: {hash}\n  Size:         4 B\n  Piece length: 16.0 KiB\n  Pieces:       1\n  Magnet:       magnet:?xt=urn:btih:{hash}&dn=payload\n  Created by:   btpc/0.1.0\n"
+        "Torrent info:\n  Name:         payload\n  Mode:         v1\n  Info hash v1: {hash}\n  Size:         4 B\n  Piece length: 16.0 KiB\n  Pieces:       1\n  Magnet:       magnet:?xt=urn:btih:{hash}&dn=payload\n  Created by:   btpc/{version}\n"
     );
     btpc()
         .args(["inspect", torrent.to_str().unwrap()])
@@ -566,12 +567,16 @@ fn verbose_and_pretty_human_inspect_add_details_and_nested_tree() {
     assert!(output.status.success());
     assert!(output.stderr.is_empty());
     let human = String::from_utf8(output.stdout).unwrap();
+    let creator_metadata = format!(
+        "\nAdditional metadata:\n  Created by: btpc/{}\n",
+        env!("CARGO_PKG_VERSION")
+    );
     for expected in [
         "\nDetails:\n",
         "  Canonical: yes\n",
         "  Payload files: 2\n",
         "  Padding files: 0\n",
-        "\nAdditional metadata:\n  Created by: btpc/0.1.0\n",
+        creator_metadata.as_str(),
         "\nFile tree:\nroot/\n",
         "|-- directory/\n",
         "|   `-- nested/\n",

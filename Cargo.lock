@@ -161,7 +161,7 @@ dependencies = [
 
 [[package]]
 name = "btpc-cli"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anstyle",
  "assert_cmd",
@@ -184,7 +184,7 @@ dependencies = [
 
 [[package]]
 name = "btpc-core"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "cap-fs-ext",
  "cap-std",
@@ -202,7 +202,7 @@ dependencies = [
 
 [[package]]
 name = "btpc-python"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "btpc-core",
  "pyo3",

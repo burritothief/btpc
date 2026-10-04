@@ -232,7 +232,10 @@ fn creator_identity_defaults_overrides_and_omits_without_changing_info_hash() {
             .and_then(btpc_core::bencode::Value::as_bytes)
             .map(ToOwned::to_owned)
     };
-    assert_eq!(creator(default.bytes()), Some(b"btpc/0.1.0".to_vec()));
+    assert_eq!(
+        creator(default.bytes()),
+        Some(format!("btpc/{}", env!("CARGO_PKG_VERSION")).into_bytes())
+    );
     assert_eq!(
         creator(explicit.bytes()),
         Some("custom/π".as_bytes().to_vec())

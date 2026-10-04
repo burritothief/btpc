@@ -434,8 +434,9 @@ fn creator_identity_defaults_overrides_and_omits() {
     let temp = TempDir::new().unwrap();
     let payload = temp.path().join("payload");
     fs::write(&payload, b"creator").unwrap();
+    let default_creator = format!("btpc/{}\n", env!("CARGO_PKG_VERSION"));
     for (name, extra, expected) in [
-        ("default", vec![], "btpc/0.1.0\n"),
+        ("default", vec![], default_creator.as_str()),
         ("override", vec!["--created-by", "custom/π"], "custom/π\n"),
         ("omit", vec!["--no-created-by"], "\n"),
     ] {
@@ -459,7 +460,7 @@ fn creator_identity_defaults_overrides_and_omits() {
             ])
             .assert()
             .success()
-            .stdout(expected);
+            .stdout(expected.to_owned());
     }
     btpc()
         .args([

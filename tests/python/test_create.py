@@ -347,7 +347,9 @@ def test_creator_identity_defaults_overrides_and_omits(tmp_path: Path) -> None:
     omitted = btpc.create_bytes(
         payload, options=btpc.CreateOptions(omit_created_by=True)
     )
-    assert b"10:created by10:btpc/0.1.0" in default.bytes
+    assert btpc.Metainfo.from_bytes(default.bytes).created_by == (
+        f"btpc/{btpc.__version__}".encode()
+    )
     assert "custom/π".encode() in explicit.bytes
     assert b"10:created by" not in omitted.bytes
     assert default.info_hash_v1 == explicit.info_hash_v1 == omitted.info_hash_v1
