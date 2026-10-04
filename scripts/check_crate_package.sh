@@ -24,6 +24,9 @@ for required in Cargo.toml Cargo.lock LICENSE README.md examples/inspect.rs src/
   fi
 done
 
+# A clean Cargo cache has no test dependencies after package verification.
+"${cargo[@]}" fetch --manifest-path "$package_root/Cargo.toml" --locked
+
 "${cargo[@]}" test \
   --manifest-path "$package_root/Cargo.toml" \
   --locked \

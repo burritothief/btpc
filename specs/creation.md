@@ -36,6 +36,10 @@ Hashing **MUST** validate both the path and opened file handle before reading an
 again after reading. If a path or handle no longer matches the snapshot, creation
 **MUST** fail rather than combine bytes from ambiguous filesystem states.
 
+These metadata checks do not provide an atomic filesystem snapshot. Callers
+**MUST** keep payload files unchanged during creation; in-place edits with
+unchanged observable metadata may escape detection.
+
 ### CREATE-V1-001 — Stream canonical v1 creation
 
 - **Status:** Accepted

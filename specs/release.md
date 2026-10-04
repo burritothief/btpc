@@ -85,6 +85,8 @@ package **MUST** declare the project license, MSRV, repository, docs.rs metadata
 README, and a compiling public example. Adapter crates **MUST** remain private.
 The packaged crate **MUST** build and test offline at the MSRV and current stable,
 and an external consumer **MUST** compile against the extracted archive.
+The package check **MUST** fetch the extracted package's locked dependencies
+before offline tests so it can start with an empty Cargo cache.
 
 Crates.io publication **MUST** be a protected manual release action for an
 existing version-matching tag, after artifact and public-API validation. Ordinary

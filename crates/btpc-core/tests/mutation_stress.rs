@@ -80,13 +80,21 @@ impl ProgressSink for OverwriteOnProgress {
         let mut fired = self.fired.lock().unwrap();
         if !*fired {
             fs::write(&self.path, &self.replacement).unwrap();
+            // Rapid writes can share a filesystem clock tick. Make the change explicit.
+            let times = fs::FileTimes::new().set_modified(SystemTime::UNIX_EPOCH);
+            fs::OpenOptions::new()
+                .write(true)
+                .open(&self.path)
+                .unwrap()
+                .set_times(times)
+                .unwrap();
             *fired = true;
         }
     }
 }
 
 #[test]
-fn same_length_mutation_during_v1_and_v2_hashing_is_not_silently_accepted() {
+fn same_length_mutation_with_changed_mtime_during_v1_and_v2_hashing_is_rejected() {
     for v2 in [false, true] {
         let temp = TempDir::new().unwrap();
         let payload = temp.path().join("payload");

@@ -6,6 +6,14 @@ breaking changes documented in their release notes.
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-10-03
+
+- Fixed packaged Rust crate checks with an empty Cargo cache. Locked test
+  dependencies are downloaded before offline validation.
+- Made the creation mutation test independent of filesystem timestamp timing.
+  Documented the limits of file metadata checks during creation.
+- Removed fixed release versions from creator metadata tests.
+
 ## [0.1.0] - 2026-10-03
 
 - Added byte-safe v1, v2, and hybrid metainfo parsing and canonical serialization.
@@ -27,5 +35,6 @@ breaking changes documented in their release notes.
   Release gates now check one resolved commit and support a TestPyPI rehearsal.
   Rust crate publication is opt-in for Python releases.
 
-[Unreleased]: https://github.com/burritothief/btpc/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/burritothief/btpc/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/burritothief/btpc/tree/v0.1.1
 [0.1.0]: https://github.com/burritothief/btpc/tree/v0.1.0

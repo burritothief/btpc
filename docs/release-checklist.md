@@ -43,6 +43,9 @@ Record ownership and publisher setup privately. Do not publish account credentia
 1. Choose a version and update it with `make version VERSION=X.Y.Z`. Update the
    changelog and its release date when publication is scheduled. Confirm that the
    README identifies the actual publication state and installation commands.
+   Refresh the local Python build with
+   `uv sync --refresh-package btpc --reinstall-package btpc` before testing. This
+   clears cached Python metadata from the previous Cargo workspace version.
 2. Run the required source gates in `AGENTS.md`, `make docs-check`, and
    `cargo deny check`. Confirm that the spec and generated CLI checks pass.
 3. Build a release wheel with `uv run maturin build --release --locked --out dist`.
@@ -122,7 +125,9 @@ post-publication check does not roll back an upload.
 - Run `scripts/check_crate_package.sh 1.85.0` and
   `scripts/check_crate_package.sh 1.94.1`, then inspect
   `target/package/btpc-core-<version>.crate` for `README.md`, `LICENSE`, sources,
-  and `examples/inspect.rs`.
+  and `examples/inspect.rs`. The script downloads locked dependencies before
+  testing the extracted package and an external consumer offline. Confirm that
+  it also passes with an empty Cargo cache on the release runner.
 - Run `cargo publish -p btpc-core --locked --dry-run` and the Rust API compatibility
   check against the previous release tag when one exists.
 - Protect the `crates-io` GitHub environment, configure its narrowly scoped
