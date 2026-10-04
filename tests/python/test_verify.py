@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import subprocess
 import sys
 import threading
 from typing import TYPE_CHECKING
@@ -12,6 +13,57 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 GIL_PROGRESS_MINIMUM = 100
+
+
+# Spec: VERIFY-PATH-001
+@pytest.mark.parametrize("mode", list(btpc.TorrentMode))
+@pytest.mark.parametrize("directory", [False, True])
+def test_bare_relative_payload_paths(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    mode: btpc.TorrentMode,
+    *,
+    directory: bool,
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    payload = tmp_path / "payload"
+    if directory:
+        payload.mkdir()
+        (payload / "x").write_bytes(b"x")
+    else:
+        payload.write_bytes(b"x")
+    torrent = btpc.Metainfo.from_bytes(
+        btpc.create_bytes(payload, options=btpc.CreateOptions(mode=mode)).bytes
+    )
+    assert torrent.verify("payload").is_valid
+
+
+# Spec: VERIFY-HASH-001
+@pytest.mark.skipif(sys.platform == "win32", reason="Unix descriptor limits")
+def test_many_files_verify_under_a_small_descriptor_limit(tmp_path: Path) -> None:
+    script = """
+import resource
+from pathlib import Path
+import btpc
+
+payload = Path('payload').resolve()
+payload.mkdir()
+for index in range(100):
+    (payload / f'{index:03}').write_bytes(b'x')
+torrents = [
+    btpc.Metainfo.from_bytes(
+        btpc.create_bytes(
+            payload, options=btpc.CreateOptions(mode=mode, threads=1)
+        ).bytes
+    )
+    for mode in btpc.TorrentMode
+]
+soft, hard = resource.getrlimit(resource.RLIMIT_NOFILE)
+resource.setrlimit(resource.RLIMIT_NOFILE, (min(128, soft), hard))
+for torrent in torrents:
+    assert torrent.verify(payload).is_valid
+"""
+    subprocess.run([sys.executable, "-c", script], cwd=tmp_path, check=True)  # noqa: S603
 
 
 def test_metainfo_and_top_level_verify_all_modes(tmp_path: Path) -> None:

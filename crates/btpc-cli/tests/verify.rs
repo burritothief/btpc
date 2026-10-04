@@ -6,7 +6,23 @@ use btpc_core::create::{CreateMode, CreateOptions, Creator, NoProgress};
 use predicates::prelude::*;
 
 fn btpc() -> Command {
-    Command::cargo_bin("btpc").unwrap()
+    let mut command = Command::cargo_bin("btpc").unwrap();
+    command.arg("--no-config");
+    command
+}
+
+// Spec: VERIFY-PATH-001
+#[test]
+fn verifies_bare_relative_payload_paths() {
+    for mode in [CreateMode::V1, CreateMode::V2, CreateMode::Hybrid] {
+        let (temp, _payload, _torrent) = fixture(mode);
+        btpc()
+            .current_dir(temp.path())
+            .args(["verify", "payload.torrent", "payload"])
+            .assert()
+            .success()
+            .stdout("valid\n");
+    }
 }
 
 fn fixture(mode: CreateMode) -> (tempfile::TempDir, std::path::PathBuf, std::path::PathBuf) {

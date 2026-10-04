@@ -73,6 +73,9 @@ Zero-length payloads use 16 KiB. Explicit v1 lengths **MUST** be powers of two
 from 1 KiB through 16 MiB; v2 and hybrid lengths **MUST** be powers of two from
 the BEP 52 minimum of 16 KiB through 16 MiB. Changing these bands requires a new
 policy identifier, compatibility note, and boundary-test update.
+These bounds apply to creation options. The shared Merkle
+primitive **MUST** also support imported BEP 52 piece lengths above 16 MiB for
+verification.
 
 ### CREATE-V2-001 — Create BEP 52 Merkle metadata
 
