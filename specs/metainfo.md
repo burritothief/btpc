@@ -22,13 +22,17 @@ last_reviewed: "2026-10-07"
 ### META-RAW-001 — Preserve original metainfo and info bytes
 
 - **Status:** Implemented
-- **Sources:** `crates/btpc-core/src/metainfo/mod.rs`
-- **Verification:** `crates/btpc-core/tests/raw_metainfo.rs`
+- **Sources:** `crates/btpc-core/src/metainfo/mod.rs`, `python/btpc/metainfo.py`, `crates/btpc-python/src/views.rs`
+- **Verification:** `crates/btpc-core/tests/raw_metainfo.rs`, `tests/python/test_ergonomics.py`
 - **Depends on:** `BENC-BYTES-001`
 
 Raw metainfo parsing **MUST** require a top-level dictionary with exactly one
 dictionary-valued `info` key and expose both the original bytes and exact original
 `info` bytes/span.
+
+Python `Metainfo.write()` **MUST** preserve those bytes by default. Canonical
+output and destination replacement **MUST** require explicit options. The existing
+`to_bytes(canonical=True)` default **MUST** remain compatible.
 
 ### META-FIELD-001 — Preserve byte-safe top-level fields
 

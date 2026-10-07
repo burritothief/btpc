@@ -59,6 +59,9 @@ def check_mode(root: Path, mode: btpc.TorrentMode) -> None:
     require(events[-1][0] == result.payload_bytes, "incomplete creation progress")
     require(all(a[0] <= b[0] for a, b in pairwise(events)), "unordered progress")
     torrent = btpc.Metainfo.read(destination)
+    require(result.metainfo is result.metainfo, "created metainfo cache")
+    require(result.metainfo == torrent, "created metainfo identity")
+    require(torrent.validation is torrent.validate(), "validation compatibility")
     require(torrent.mode is mode, "mode mismatch")
     require(torrent.magnet().startswith("magnet:?xt="), "invalid magnet")
     events.clear()
@@ -84,6 +87,12 @@ def check_mode(root: Path, mode: btpc.TorrentMode) -> None:
         "extension conversion",
     )
     require(edited.comment == b"edited", "text conversion")
+    require(edited.comment_text == "edited", "decoded metadata")
+    saved = root / f"edited-{mode.value}.torrent"
+    edited.write(saved)
+    require(btpc.Metainfo.read(saved) == edited, "atomic metainfo write")
+    expect_error(btpc.PathError, lambda: edited.write(saved))
+    edited.write(saved, overwrite=True, durable=True, canonical=True)
     expect_error(
         btpc.PathError, lambda: btpc.create(payload, destination, options=options)
     )
@@ -184,6 +193,30 @@ def check_callbacks(
     )
 
 
+def check_ergonomics(root: Path) -> None:
+    trackers = [["https://tracker.invalid/announce"]]
+    options = btpc.CreateOptions(trackers=trackers)
+    trackers[0].clear()
+    require(
+        options.trackers == (("https://tracker.invalid/announce",),),
+        "immutable creation options",
+    )
+    source = b"d4:infod6:lengthi00e4:name1:x12:piece lengthi16384e6:pieces0:ee"
+    torrent = btpc.Metainfo.from_bytes(source)
+    edited = torrent.edit(comment="reviewed")
+    destination = root / "noncanonical.torrent"
+    edited.write(destination)
+    require(
+        btpc.Metainfo.read(destination).info_hash_v1 == torrent.info_hash_v1,
+        "identity-preserving save",
+    )
+    edited.write(destination, canonical=True, overwrite=True)
+    require(
+        btpc.Metainfo.read(destination).info_hash_v1 != torrent.info_hash_v1,
+        "explicit canonicalization",
+    )
+
+
 def check_bencode_collections() -> None:
     values = btpc.BencodeList((1, b"raw"))
     require(list(values) == [1, b"raw"], "bencode list iteration")
@@ -208,6 +241,7 @@ def main() -> None:
         os.chdir(root)
         for mode in btpc.TorrentMode:
             check_mode(root, mode)
+        check_ergonomics(root)
         check_bencode_collections()
         expect_error(btpc.BencodeError, lambda: btpc.Metainfo.from_bytes(b"invalid"))
     finally:

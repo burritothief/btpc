@@ -10,10 +10,14 @@ from . import _native
 from ._conversion import (
     _convert_error,
     _node_bytes,
+    _node_text,
     _string_sequence_bytes,
+    _string_sequence_text,
     _text_bytes,
     _tracker_bytes,
+    _tracker_text,
 )
+from .metainfo import Metainfo
 from .types import HashValue, TorrentMode
 
 if TYPE_CHECKING:
@@ -26,6 +30,9 @@ if TYPE_CHECKING:
 @dataclass(frozen=True, slots=True)
 class CreateOptions:
     """Configure deterministic torrent creation.
+
+    Tracker tiers, web seeds, and nodes are copied into immutable tuples when
+    options are constructed. Later changes to caller-owned lists have no effect.
 
     Attributes:
         mode: Protocol representation to create. The default is
@@ -79,6 +86,14 @@ class CreateOptions:
     omit_created_by: bool = False
     creation_date: int | None = None
 
+    def __post_init__(self) -> None:
+        """Validate and freeze caller-supplied metadata sequences."""
+        object.__setattr__(self, "trackers", _tracker_text(self.trackers))
+        object.__setattr__(
+            self, "web_seeds", _string_sequence_text(self.web_seeds, "web_seeds")
+        )
+        object.__setattr__(self, "nodes", _node_text(self.nodes))
+
 
 @dataclass(frozen=True, slots=True)
 class CreateMetrics:
@@ -102,6 +117,7 @@ class CreateResult:
         "_bytes_cache",
         "_info_hash_v1_cache",
         "_info_hash_v2_cache",
+        "_metainfo_cache",
         "_metrics_cache",
         "_native",
     )
@@ -110,6 +126,7 @@ class CreateResult:
     _info_hash_v1_cache: HashValue | bool | None
     _info_hash_v2_cache: HashValue | bool | None
     _metrics_cache: CreateMetrics | None
+    _metainfo_cache: Metainfo | None
 
     def __init__(self, native: _NativeCreateResultType) -> None:
         """Own the native result without copying generated metainfo bytes."""
@@ -118,6 +135,34 @@ class CreateResult:
         object.__setattr__(self, "_info_hash_v1_cache", None)
         object.__setattr__(self, "_info_hash_v2_cache", None)
         object.__setattr__(self, "_metrics_cache", None)
+        object.__setattr__(self, "_metainfo_cache", None)
+
+    @property
+    def metainfo(self) -> Metainfo:
+        r"""Return cached metainfo for inspection, editing, magnets, or verification.
+
+        The generated metainfo is parsed once on first access without copying it
+        through Python bytes or reading the payload again.
+
+        Examples:
+            >>> from pathlib import Path
+            >>> from tempfile import TemporaryDirectory
+            >>> from btpc import create_bytes
+            >>> with TemporaryDirectory() as directory:
+            ...     payload = Path(directory) / "hello.txt"
+            ...     _ = payload.write_bytes(b"hello torrent\\n")
+            ...     result = create_bytes(payload)
+            ...     assert result.metainfo.verify(payload).is_valid
+            ...     assert result.metainfo is result.metainfo
+        """
+        cached = self._metainfo_cache
+        if cached is None:
+            try:
+                cached = Metainfo(self._native.metainfo)
+            except _native._NativeError as error:  # noqa: SLF001
+                raise _convert_error(error) from None
+            object.__setattr__(self, "_metainfo_cache", cached)
+        return cached
 
     def __setattr__(self, _name: str, _value: object) -> Never:
         """Keep creation results immutable."""

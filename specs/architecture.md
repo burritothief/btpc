@@ -24,13 +24,18 @@ last_reviewed: "2026-10-07"
 ### ARCH-BOUND-001 — Keep protocol behavior in the core
 
 - **Status:** Accepted
-- **Sources:** `crates/btpc-core/src/lib.rs`, `crates/btpc-cli/src`, `crates/btpc-python/src/lib.rs`
-- **Verification:** `crates/btpc-core/tests`
+- **Sources:** `crates/btpc-core/src/lib.rs`, `crates/btpc-cli/src`, `crates/btpc-python/src/lib.rs`, `crates/btpc-python/src/views.rs`, `python/btpc/creation.py`
+- **Verification:** `crates/btpc-core/tests`, `tests/python/test_ergonomics.py`
 - **Depends on:** None
 
 BitTorrent parsing, validation, hashing, creation, verification, and serialization
 **MUST** live in `btpc-core`. CLI and Python crates **MUST** remain adapters and
 **MUST NOT** implement independent protocol algorithms.
+
+Python creation results **MUST** obtain cached metainfo from the owned native
+result bytes without reading payload files again or materializing Python bytes.
+Python metainfo writes **MUST** use the core atomic writer. Native parsing and
+file writes **MUST** release the GIL.
 
 ### ARCH-DEPS-001 — Preserve one-way dependency direction
 

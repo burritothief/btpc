@@ -93,6 +93,13 @@ class _NativeMetainfo:
     @property
     def validation(self) -> _NativeValidationReport: ...
     def magnet(self, display_name: bool, trackers: bool, web_seeds: bool) -> str: ...
+    def write(
+        self,
+        destination: str | PathLike[str],
+        canonical: bool = ...,
+        overwrite: bool = ...,
+        durable: bool = ...,
+    ) -> None: ...
     def edit(
         self,
         trackers: list[list[bytes]] | None = ...,
@@ -121,6 +128,8 @@ class _NativeMetainfo:
     ) -> _NativeVerificationReport: ...
 
 class _NativeCreateResult:
+    @property
+    def metainfo(self) -> _NativeMetainfo: ...
     @property
     def bytes(self) -> builtins.bytes: ...
     @property

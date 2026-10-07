@@ -10,10 +10,36 @@ from btpc import UNCHANGED, Metainfo
 
 torrent = Metainfo.read("payload.torrent")
 reviewed = torrent.edit(comment="reviewed", source=UNCHANGED)
-reviewed.to_bytes()
+reviewed.write("payload-reviewed.torrent")
 ```
 
 Top-level edits preserve info hashes; info-dictionary edits change them.
+`write()` preserves the edited object's encoding and publishes atomically.
+Pass `overwrite=True` to replace an existing destination. Pass `canonical=True`
+to normalize bencoding, which can change info hashes for noncanonical input.
+
+Reuse creation results directly:
+
+```python
+from btpc import create_bytes
+
+result = create_bytes("payload")
+print(result.metainfo.magnet())
+assert result.metainfo.verify("payload").is_valid
+```
+
+Copy a UTF-8 comment to another torrent without replacement decoding:
+
+```python
+from btpc import Metainfo
+
+source = Metainfo.read("source.torrent")
+destination = Metainfo.read("destination.torrent")
+comment = source.comment_text
+if source.comment is not None and comment is None:
+    raise ValueError("source comment is not UTF-8")
+destination.edit(comment=comment).write("destination-reviewed.torrent")
+```
 
 Inspect an immutable extension value with ordinary collection operations:
 

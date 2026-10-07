@@ -10,6 +10,7 @@ from btpc import creation, errors, metainfo, types, verification
 PUBLIC_MODULES = (creation, errors, metainfo, types, verification)
 HIGH_USE = (
     creation.CreateOptions,
+    creation.CreateResult.metainfo,
     creation.CancellationToken,
     creation.create,
     creation.create_bytes,
@@ -20,6 +21,7 @@ HIGH_USE = (
     metainfo.Metainfo.verify,
     metainfo.Metainfo.magnet,
     metainfo.Metainfo.to_bytes,
+    metainfo.Metainfo.write,
     verification.verify,
     types.ParseOptions,
 )

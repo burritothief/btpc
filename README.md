@@ -96,7 +96,7 @@ bytes, metadata, warnings, and file trees while machine formats remain unchanged
 ## Python Quick Start
 
 ```python
-from btpc import CreateOptions, Metainfo, TorrentMode, create
+from btpc import CreateOptions, TorrentMode, create
 
 result = create(
     "payload",
@@ -108,7 +108,7 @@ result = create(
         threads=1,
     ),
 )
-torrent = Metainfo.from_bytes(result.bytes)
+torrent = result.metainfo
 assert torrent.verify("payload").is_valid
 print(torrent.magnet())
 ```
@@ -120,6 +120,13 @@ Python textual creation/editing inputs are
 ordinary `str` values—for example tracker URLs and `created_by="my-tool"`—while
 keeping raw parsed torrent paths and extension bytes lossless. New torrents will
 default to `created by = btpc/<version>` unless explicitly overridden or omitted.
+Creation options copy metadata sequences into immutable tuples. Parsed metadata
+also has strict UTF-8 views such as `comment_text` and `trackers_text`.
+Use `torrent.edit(comment="reviewed").write("reviewed.torrent")` to save atomically
+while preserving info hashes. `write(canonical=True)` and the existing `to_bytes()`
+default explicitly normalize bencoding and can change hashes for noncanonical
+source info. `torrent.validation` exposes the cached validation report;
+`validate()` remains a compatibility alias.
 BTPC ships `py.typed` and native stubs. Pyrefly is the primary repository checker,
 with a strict Pyright compatibility smoke for Pylance consumers.
 

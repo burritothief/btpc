@@ -288,6 +288,7 @@ fn create_v1(
         NativeCreateResult {
             inner: result,
             bytes: PyOnceLock::new(),
+            metainfo: PyOnceLock::new(),
         },
     )
 }

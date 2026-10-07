@@ -130,6 +130,7 @@ pub(crate) struct NativeMetainfo {
 pub(crate) struct NativeCreateResult {
     pub(crate) inner: btpc_core::create::CreateResult,
     pub(crate) bytes: PyOnceLock<Py<PyAny>>,
+    pub(crate) metainfo: PyOnceLock<Py<NativeMetainfo>>,
 }
 
 #[pyclass(name = "_NativePayloadMismatch", module = "btpc._native", frozen)]
@@ -193,6 +194,18 @@ impl NativeVerificationReport {
 
 #[pymethods]
 impl NativeCreateResult {
+    #[getter]
+    fn metainfo(&self, py: Python<'_>) -> PyResult<Py<NativeMetainfo>> {
+        self.metainfo
+            .get_or_try_init(py, || {
+                let metainfo = py
+                    .detach(|| Metainfo::from_bytes(self.inner.bytes()))
+                    .map_err(|error| to_python_error(py, &error))?;
+                Py::new(py, NativeMetainfo::new(metainfo))
+            })
+            .map(|metainfo| metainfo.clone_ref(py))
+    }
+
     #[getter]
     fn bytes(&self, py: Python<'_>) -> Py<PyAny> {
         self.bytes
@@ -299,6 +312,44 @@ impl NativeMetainfo {
 
     fn magnet(&self, display_name: bool, trackers: bool, web_seeds: bool) -> String {
         crate::magnet_from_metainfo(&self.inner, display_name, trackers, web_seeds)
+    }
+
+    #[allow(clippy::fn_params_excessive_bools)]
+    #[pyo3(signature = (destination, canonical=false, overwrite=false, durable=false))]
+    fn write(
+        &self,
+        py: Python<'_>,
+        destination: std::path::PathBuf,
+        canonical: bool,
+        overwrite: bool,
+        durable: bool,
+    ) -> PyResult<()> {
+        use btpc_core::create::{DurabilityPolicy, OverwritePolicy, write_atomic};
+
+        py.detach(move || {
+            let canonical_bytes = if canonical {
+                Some(self.inner.to_bytes()?)
+            } else {
+                None
+            };
+            write_atomic(
+                &destination,
+                canonical_bytes
+                    .as_deref()
+                    .unwrap_or_else(|| self.inner.original_bytes()),
+                if overwrite {
+                    OverwritePolicy::Replace
+                } else {
+                    OverwritePolicy::Deny
+                },
+                if durable {
+                    DurabilityPolicy::FileAndDirectory
+                } else {
+                    DurabilityPolicy::File
+                },
+            )
+        })
+        .map_err(|error| to_python_error(py, &error))
     }
 
     #[allow(clippy::fn_params_excessive_bools, clippy::too_many_arguments)]

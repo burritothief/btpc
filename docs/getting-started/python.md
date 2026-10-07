@@ -1,7 +1,7 @@
 # Python quick start
 
 ```python
-from btpc import CreateOptions, Metainfo, TorrentMode, create
+from btpc import CreateOptions, TorrentMode, create
 
 result = create(
     "payload",
@@ -13,9 +13,10 @@ result = create(
         threads=1,
     ),
 )
-torrent = Metainfo.from_bytes(result.bytes)
+torrent = result.metainfo
 assert torrent.verify("payload").is_valid
 print(torrent.magnet())
+torrent.edit(comment="reviewed").write("payload-reviewed.torrent")
 ```
 
 Textual inputs use Python `str`; parsed protocol bytes and torrent paths remain

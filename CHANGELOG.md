@@ -6,6 +6,12 @@ breaking changes documented in their release notes.
 
 ## [Unreleased]
 
+- Added identity-preserving atomic `Metainfo.write()` and cached
+  `CreateResult.metainfo` for Python workflows. Canonical output remains explicit
+  through `write(canonical=True)` or the existing `to_bytes()` default.
+- Added strict UTF-8 metadata views and a cached `Metainfo.validation` property.
+  Existing raw-byte properties and `validate()` remain supported.
+- Creation options now own immutable metadata sequences.
 - Bencode values support sequence and dictionary access while preserving their
   existing tuple attributes.
 

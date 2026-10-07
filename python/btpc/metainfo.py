@@ -19,6 +19,8 @@ from typing import (
 from . import _native
 from ._conversion import (
     _convert_error,
+    _decode_strings,
+    _decode_text,
     _node_bytes,
     _string_sequence_bytes,
     _text_bytes,
@@ -283,8 +285,9 @@ class Metainfo:
 
     Parsing retains the original metainfo bytes and computes info hashes from the
     exact raw ``info`` dictionary slice, not from re-serialization. Equality also
-    compares exact original bytes. Use :meth:`to_bytes` for canonical output and
-    :attr:`original_bytes` when byte-for-byte source identity is required. Raw
+    compares exact original bytes. Use :meth:`write` to save while preserving info
+    hashes, :meth:`to_bytes` for canonical output, and :attr:`original_bytes` when
+    byte-for-byte source identity is required. Raw
     protocol strings and paths remain bytes; optional ``*_text`` views decode only
     valid UTF-8.
 
@@ -688,6 +691,17 @@ class Metainfo:
         return cached
 
     @property
+    def trackers_text(self) -> tuple[tuple[str, ...], ...] | None:
+        """Return decoded tracker tiers, or None if any URL is not UTF-8."""
+        tiers: list[tuple[str, ...]] = []
+        for tier in self.trackers:
+            decoded = _decode_strings(tier)
+            if decoded is None:
+                return None
+            tiers.append(decoded)
+        return tuple(tiers)
+
+    @property
     def web_seeds(self) -> tuple[bytes, ...]:
         """Return cached immutable web seeds."""
         cached = self._web_seeds_cache
@@ -695,6 +709,11 @@ class Metainfo:
             cached = self._native.web_seeds
             object.__setattr__(self, "_web_seeds_cache", cached)
         return cached
+
+    @property
+    def web_seeds_text(self) -> tuple[str, ...] | None:
+        """Return decoded web seeds, or None if any URL is not UTF-8."""
+        return _decode_strings(self.web_seeds)
 
     @property
     def private(self) -> bool | None:
@@ -711,9 +730,25 @@ class Metainfo:
         return cached
 
     @property
+    def nodes_text(self) -> tuple[tuple[str, int], ...] | None:
+        """Return decoded DHT nodes, or None if any host is not UTF-8."""
+        nodes: list[tuple[str, int]] = []
+        for host, port in self.nodes:
+            decoded = _decode_text(host)
+            if decoded is None:
+                return None
+            nodes.append((decoded, port))
+        return tuple(nodes)
+
+    @property
     def source(self) -> bytes | None:
         """Return raw source bytes from the info dictionary."""
         return self._native.source
+
+    @property
+    def source_text(self) -> str | None:
+        """Return the source as UTF-8, or None when absent or undecodable."""
+        return _decode_text(self.source)
 
     @property
     def comment(self) -> bytes | None:
@@ -721,9 +756,19 @@ class Metainfo:
         return self._native.comment
 
     @property
+    def comment_text(self) -> str | None:
+        """Return the comment as UTF-8, or None when absent or undecodable."""
+        return _decode_text(self.comment)
+
+    @property
     def created_by(self) -> bytes | None:
         """Return raw top-level creator bytes."""
         return self._native.created_by
+
+    @property
+    def created_by_text(self) -> str | None:
+        """Return creator text as UTF-8, or None when absent or undecodable."""
+        return _decode_text(self.created_by)
 
     @property
     def creation_date(self) -> int | None:
@@ -774,13 +819,57 @@ class Metainfo:
     @property
     def name_text(self) -> str | None:
         """Return the name as UTF-8 when valid."""
+        return _decode_text(self.name)
+
+    def write(
+        self,
+        destination: str | PathLike[str],
+        *,
+        canonical: bool = False,
+        overwrite: bool = False,
+        durable: bool = False,
+    ) -> None:
+        r"""Atomically save metainfo while preserving its info hashes by default.
+
+        Default output retains this object's exact bytes, including edits already
+        applied. ``canonical=True`` normalizes bencoding and can change info hashes
+        when the source info dictionary is noncanonical. Payload files are not read.
+
+        Args:
+            destination: Torrent file to publish.
+            canonical: Normalize all bencoding when true. The default preserves
+                this object's encoding and torrent identity.
+            overwrite: Replace an existing destination when true.
+            durable: Request file and parent-directory synchronization.
+
+        Raises:
+            PathError: If publication fails or overwrite is disallowed. A directory
+                synchronization failure can occur after complete publication.
+
+        Examples:
+            >>> from pathlib import Path
+            >>> from tempfile import TemporaryDirectory
+            >>> from btpc import Metainfo
+            >>> source = (
+            ...     b"d4:infod6:lengthi00e4:name1:x12:piece lengthi16384e6:pieces0:ee"
+            ... )
+            >>> torrent = Metainfo.from_bytes(source)
+            >>> with TemporaryDirectory() as directory:
+            ...     path = Path(directory) / "reviewed.torrent"
+            ...     torrent.edit(comment="reviewed").write(path)
+            ...     assert Metainfo.read(path).info_hash_v1 == torrent.info_hash_v1
+        """
         try:
-            return self.name.decode()
-        except UnicodeDecodeError:
-            return None
+            self._native.write(Path(destination), canonical, overwrite, durable)
+        except _native._NativeError as error:  # noqa: SLF001
+            raise _convert_error(error) from None
 
     def to_bytes(self, *, canonical: bool = True) -> bytes:
         """Serialize canonical metainfo or return the exact original bytes.
+
+        The compatibility default is canonical output. For noncanonical source
+        info this can change info hashes on reparse. Use ``canonical=False`` or
+        :meth:`write` to preserve this object's torrent identity.
 
         Args:
             canonical: Sort dictionary keys by unsigned raw-byte order and normalize
@@ -810,7 +899,8 @@ class Metainfo:
             object.__setattr__(self, "_canonical_bytes_cache", cached)
         return cached
 
-    def validate(self) -> ValidationReport:
+    @property
+    def validation(self) -> ValidationReport:
         """Return the construction-time validation report."""
         cached = self._validation_cache
         if cached is None:
@@ -823,6 +913,10 @@ class Metainfo:
             )
             object.__setattr__(self, "_validation_cache", cached)
         return cached
+
+    def validate(self) -> ValidationReport:
+        """Return :attr:`validation` for compatibility; no new check is performed."""
+        return self.validation
 
     def __eq__(self, other: object) -> bool:
         """Compare validated objects by exact source bytes."""

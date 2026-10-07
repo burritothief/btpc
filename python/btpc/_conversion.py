@@ -20,40 +20,57 @@ from .errors import (
 )
 
 
-def _text_bytes(value: object, parameter: str) -> bytes:
+def _text(value: object, parameter: str) -> str:
     if not isinstance(value, str):
         message = f"{parameter} must be str, not {type(value).__name__}"
         raise TypeError(message)
-    return value.encode("utf-8")
+    return value
 
 
-def _tracker_bytes(trackers: object, parameter: str = "trackers") -> list[list[bytes]]:
+def _text_bytes(value: object, parameter: str) -> bytes:
+    return _text(value, parameter).encode("utf-8")
+
+
+def _tracker_text(
+    trackers: object, parameter: str = "trackers"
+) -> tuple[tuple[str, ...], ...]:
     if not isinstance(trackers, abc.Sequence) or isinstance(trackers, (str, bytes)):
         message = f"{parameter} must be a sequence of string sequences"
         raise TypeError(message)
-    result: list[list[bytes]] = []
+    result: list[tuple[str, ...]] = []
     for tier_index, tier in enumerate(trackers):
         if not isinstance(tier, abc.Sequence) or isinstance(tier, (str, bytes)):
             message = f"{parameter}[{tier_index}] must be a sequence of str"
             raise TypeError(message)
         result.append(
-            [_text_bytes(value, f"{parameter}[{tier_index}]") for value in tier]
+            tuple(_text(value, f"{parameter}[{tier_index}]") for value in tier)
         )
-    return result
+    return tuple(result)
 
 
-def _string_sequence_bytes(values: object, parameter: str) -> list[bytes]:
+def _tracker_bytes(trackers: object, parameter: str = "trackers") -> list[list[bytes]]:
+    return [
+        [value.encode("utf-8") for value in tier]
+        for tier in _tracker_text(trackers, parameter)
+    ]
+
+
+def _string_sequence_text(values: object, parameter: str) -> tuple[str, ...]:
     if not isinstance(values, abc.Sequence) or isinstance(values, (str, bytes)):
         message = f"{parameter} must be a sequence of str"
         raise TypeError(message)
-    return [_text_bytes(value, parameter) for value in values]
+    return tuple(_text(value, parameter) for value in values)
 
 
-def _node_bytes(nodes: object, parameter: str = "nodes") -> list[tuple[bytes, int]]:
+def _string_sequence_bytes(values: object, parameter: str) -> list[bytes]:
+    return [value.encode("utf-8") for value in _string_sequence_text(values, parameter)]
+
+
+def _node_text(nodes: object, parameter: str = "nodes") -> tuple[tuple[str, int], ...]:
     if not isinstance(nodes, abc.Sequence) or isinstance(nodes, (str, bytes)):
         message = f"{parameter} must be a sequence of (str, int) tuples"
         raise TypeError(message)
-    result: list[tuple[bytes, int]] = []
+    result: list[tuple[str, int]] = []
     node_arity = 2
     for index, node in enumerate(nodes):
         if not isinstance(node, tuple) or len(node) != node_arity:
@@ -68,8 +85,28 @@ def _node_bytes(nodes: object, parameter: str = "nodes") -> list[tuple[bytes, in
         ):
             message = f"{parameter}[{index}] port must be an integer from 0 to 65535"
             raise TypeError(message)
-        result.append((_text_bytes(host, f"{parameter}[{index}] host"), port))
-    return result
+        result.append((_text(host, f"{parameter}[{index}] host"), port))
+    return tuple(result)
+
+
+def _node_bytes(nodes: object, parameter: str = "nodes") -> list[tuple[bytes, int]]:
+    return [(host.encode("utf-8"), port) for host, port in _node_text(nodes, parameter)]
+
+
+def _decode_text(value: bytes | None) -> str | None:
+    if value is None:
+        return None
+    try:
+        return value.decode("utf-8")
+    except UnicodeDecodeError:
+        return None
+
+
+def _decode_strings(values: tuple[bytes, ...]) -> tuple[str, ...] | None:
+    try:
+        return tuple(value.decode("utf-8") for value in values)
+    except UnicodeDecodeError:
+        return None
 
 
 def _convert_error(error: _native._NativeError) -> BtpcError:

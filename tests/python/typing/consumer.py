@@ -26,6 +26,7 @@ assert_type(TorrentMode, type[btpc.TorrentMode])
 assert_type(PayloadVerificationReport, type[btpc.PayloadVerificationReport])
 result = btpc.create_bytes(payload, options=options)
 assert_type(result, btpc.CreateResult)
+assert_type(result.metainfo, btpc.Metainfo)
 assert_type(result.bytes, bytes)
 assert_type(result.info_hash_v1, btpc.HashValue | None)
 assert_type(result.metrics, btpc.CreateMetrics)
@@ -40,6 +41,23 @@ assert_type(metainfo.source, bytes | None)
 assert_type(metainfo.comment, bytes | None)
 assert_type(metainfo.created_by, bytes | None)
 assert_type(metainfo.creation_date, int | None)
+assert_type(metainfo.comment_text, str | None)
+assert_type(metainfo.source_text, str | None)
+assert_type(metainfo.created_by_text, str | None)
+assert_type(metainfo.trackers_text, tuple[tuple[str, ...], ...] | None)
+assert_type(metainfo.web_seeds_text, tuple[str, ...] | None)
+assert_type(metainfo.nodes_text, tuple[tuple[str, int], ...] | None)
+assert_type(metainfo.validation, btpc.ValidationReport)
+assert_type(metainfo.write(payload.with_suffix(".torrent")), None)
+assert_type(
+    metainfo.write(
+        payload.with_suffix(".canonical.torrent"),
+        canonical=True,
+        overwrite=True,
+        durable=True,
+    ),
+    None,
+)
 assert_type(metainfo.unknown_fields, tuple[btpc.UnknownField, ...])
 unknown_value: btpc.BencodeValue = btpc.BencodeDictionary(
     ((b"nested", btpc.BencodeList((1, b"value"))),)
