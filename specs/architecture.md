@@ -9,9 +9,12 @@ source_paths:
   - "crates/btpc-core/src/lib.rs"
   - "crates/btpc-cli/src"
   - "crates/btpc-python/src/lib.rs"
+  - "crates/btpc-python/src/views.rs"
+  - "python/btpc/creation.py"
 test_paths:
   - "crates/btpc-core/tests"
-last_reviewed: "2026-07-01"
+  - "tests/python/test_ergonomics.py"
+last_reviewed: "2026-10-07"
 ---
 
 # Workspace Architecture

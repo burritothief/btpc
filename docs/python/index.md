@@ -256,3 +256,9 @@ Pass the same recursive values to `Metainfo.edit(raw_top_level=...)` to preserve
 or replace extension dictionaries and lists. Reserved protocol keys remain
 rejected, and `BencodeDictionary` rejects duplicate keys while sorting unique raw
 keys canonically.
+
+`BencodeList` supports iteration, indexing, slicing, membership, `count`, and
+`index`. Slicing returns another immutable `BencodeList`. `BencodeDictionary`
+supports key iteration, lookup, membership, `get`, `keys()`, `values()`, and
+`dict(value)` conversion. Its existing `items` attribute remains an immutable
+tuple, not a method.

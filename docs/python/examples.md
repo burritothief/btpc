@@ -14,3 +14,15 @@ reviewed.to_bytes()
 ```
 
 Top-level edits preserve info hashes; info-dictionary edits change them.
+
+Inspect an immutable extension value with ordinary collection operations:
+
+```python
+from btpc import BencodeDictionary, BencodeList
+
+values = BencodeList((1, b"raw"))
+extension = BencodeDictionary(((b"values", values),))
+assert values[1:] == BencodeList((b"raw",))
+assert extension[b"values"] == values
+assert dict(extension) == {b"values": values}
+```

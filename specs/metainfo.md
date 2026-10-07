@@ -6,10 +6,13 @@ owners:
   - "protocol maintainers"
 source_paths:
   - "crates/btpc-core/src/metainfo/mod.rs"
+  - "python/btpc/metainfo.py"
+  - "crates/btpc-python/src/views.rs"
 test_paths:
   - "crates/btpc-core/tests/raw_metainfo.rs"
   - "crates/btpc-core/tests/v1_metainfo.rs"
-last_reviewed: "2026-07-01"
+  - "tests/python/test_ergonomics.py"
+last_reviewed: "2026-10-07"
 ---
 
 # BitTorrent Metainfo

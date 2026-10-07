@@ -2,9 +2,19 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Never, Protocol, SupportsIndex, TypeAlias, cast
+from typing import (
+    TYPE_CHECKING,
+    Never,
+    Protocol,
+    SupportsIndex,
+    TypeAlias,
+    TypeVar,
+    cast,
+    overload,
+)
 
 from . import _native
 from ._conversion import (
@@ -27,7 +37,7 @@ from .types import (
 from .verification import PayloadVerificationReport, verify
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Mapping, Sequence
+    from collections.abc import Callable, Mapping
     from os import PathLike
 
     from ._native import _NativeMetainfo as _NativeMetainfoType
@@ -39,7 +49,7 @@ class _Buffer(Protocol):
 
 
 @dataclass(frozen=True, slots=True)
-class BencodeList:
+class BencodeList(Sequence["BencodeValue"]):
     """Store an immutable ordered bencode list.
 
     Attributes:
@@ -56,10 +66,37 @@ class BencodeList:
             tuple(_normalize_bencode_value(value) for value in self.values),
         )
 
+    def __len__(self) -> int:
+        """Return the number of values."""
+        return len(self.values)
+
+    def __iter__(self) -> Iterator[BencodeValue]:
+        """Iterate over values in source order."""
+        return iter(self.values)
+
+    @overload
+    def __getitem__(self, index: SupportsIndex) -> BencodeValue: ...
+
+    @overload
+    def __getitem__(self, index: slice) -> BencodeList: ...
+
+    def __getitem__(self, index: SupportsIndex | slice) -> BencodeValue | BencodeList:
+        """Return a value by index or an immutable list for a slice."""
+        if isinstance(index, slice):
+            return BencodeList(self.values[index])
+        return self.values[index]
+
+
+_DefaultValue = TypeVar("_DefaultValue")
+
 
 @dataclass(frozen=True, slots=True)
 class BencodeDictionary:
     """Store an immutable bencode dictionary in canonical raw-key order.
+
+    Iteration yields keys in canonical order. Indexing, membership, ``get``,
+    ``keys``, and ``values`` provide dictionary-style access. The ``items``
+    attribute remains an immutable tuple of entries for compatibility.
 
     Attributes:
         items: Unique raw-byte keys and recursive values.
@@ -81,6 +118,50 @@ class BencodeDictionary:
             seen.add(key)
             normalized.append((key, _normalize_bencode_value(value)))
         object.__setattr__(self, "items", tuple(sorted(normalized)))
+
+    def __len__(self) -> int:
+        """Return the number of entries."""
+        return len(self.items)
+
+    def __iter__(self) -> Iterator[bytes]:
+        """Iterate over keys in canonical raw-byte order."""
+        return (key for key, _ in self.items)
+
+    def __getitem__(self, key: bytes) -> BencodeValue:
+        """Return the value for a raw key, or raise KeyError when absent."""
+        for current, value in self.items:
+            if current == key:
+                return value
+        raise KeyError(key)
+
+    def __contains__(self, key: object) -> bool:
+        """Return whether a raw key is present."""
+        return any(current == key for current, _ in self.items)
+
+    @overload
+    def get(self, key: bytes) -> BencodeValue | None: ...
+
+    @overload
+    def get(
+        self, key: bytes, default: _DefaultValue
+    ) -> BencodeValue | _DefaultValue: ...
+
+    def get(
+        self, key: bytes, default: _DefaultValue | None = None
+    ) -> BencodeValue | _DefaultValue | None:
+        """Return the value for a raw key, or the supplied default when absent."""
+        try:
+            return self[key]
+        except KeyError:
+            return default
+
+    def keys(self) -> tuple[bytes, ...]:
+        """Return raw keys in canonical order."""
+        return tuple(self)
+
+    def values(self) -> tuple[BencodeValue, ...]:
+        """Return values in canonical key order."""
+        return tuple(value for _, value in self.items)
 
 
 @dataclass(frozen=True, slots=True)

@@ -12,7 +12,8 @@ source_paths:
 test_paths:
   - "tests/python/test_import.py"
   - "tests/python/test_create.py"
-last_reviewed: "2026-07-01"
+  - "tests/python/test_ergonomics.py"
+last_reviewed: "2026-10-07"
 ---
 
 # Python Public API
@@ -263,6 +264,10 @@ existing value, remove the field, or set a typed value. The stable Python API
 rather than paired value and `set_*` booleans. Any transition from the pre-1.0
 paired form **MUST** include explicit compatibility tests and documentation; raw
 extension fields retain their byte-safe types.
+
+`BencodeList` **MUST** support immutable sequence operations.
+`BencodeDictionary` **MUST** support key iteration, lookup, membership, and ordinary
+dictionary conversion while retaining the existing `items` tuple attribute.
 
 ### PYAPI-IDENTITY-001 — Keep metainfo identity exact and predictably priced
 

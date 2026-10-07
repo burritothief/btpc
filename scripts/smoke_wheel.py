@@ -184,6 +184,15 @@ def check_callbacks(
     )
 
 
+def check_bencode_collections() -> None:
+    values = btpc.BencodeList((1, b"raw"))
+    require(list(values) == [1, b"raw"], "bencode list iteration")
+    require(values[1:] == btpc.BencodeList((b"raw",)), "bencode list slicing")
+    mapping = btpc.BencodeDictionary(((b"value", values),))
+    require(dict(mapping) == {b"value": values}, "bencode dictionary conversion")
+    require(mapping.get(b"missing") is None, "bencode dictionary default")
+
+
 def main() -> None:
     root = Path(sys.argv[1]).resolve()
     root.mkdir(parents=True)
@@ -199,6 +208,7 @@ def main() -> None:
         os.chdir(root)
         for mode in btpc.TorrentMode:
             check_mode(root, mode)
+        check_bencode_collections()
         expect_error(btpc.BencodeError, lambda: btpc.Metainfo.from_bytes(b"invalid"))
     finally:
         os.chdir(previous)

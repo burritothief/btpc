@@ -6,6 +6,9 @@ breaking changes documented in their release notes.
 
 ## [Unreleased]
 
+- Bencode values support sequence and dictionary access while preserving their
+  existing tuple attributes.
+
 ## [0.1.2] - 2026-10-03
 
 - Updated the Rust API checker to support Rust 1.94.1. Pull requests now compare
